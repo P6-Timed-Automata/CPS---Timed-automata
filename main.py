@@ -1,4 +1,4 @@
-from TAG.TALearner import TALearner
+from src.TAG.TALearner import TALearner
 #tss = ["a:2 b:5", "a:3 c:6"]
 
 
