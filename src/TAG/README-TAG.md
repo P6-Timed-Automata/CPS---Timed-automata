@@ -21,8 +21,9 @@ event:delay event:delay ... event:delay
 The input sequences can also be provided in a Python list of strings with one sequence per string in the same format.
 
 ### &#128187; Example
+
 ```python
-from TAG.TALearner import TALearner
+from src.TAG.TALearner import TALearner
 
 learner = TALearner(filename, k=3)
 learner.ta.show()

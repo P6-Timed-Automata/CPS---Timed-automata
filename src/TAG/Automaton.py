@@ -8,8 +8,8 @@ try:
 except ImportError:
     has_graphviz = False
 
-from TAG.Edge import Edge
-from TAG.State import State
+from src.TAG.Edge import Edge
+from src.TAG.State import State
 
 
 class Automaton:

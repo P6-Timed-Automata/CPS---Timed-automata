@@ -1,6 +1,6 @@
-from TAG.Automaton import Automaton
-from TAG.State import State
-from TAG.Edge import Edge
+from src.TAG.Automaton import Automaton
+from src.TAG.State import State
+from src.TAG.Edge import Edge
 from typing import Union
 import re
 from datetime import datetime
