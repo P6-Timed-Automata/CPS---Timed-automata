@@ -11,9 +11,5 @@ learner = TALearner(tss_path=tss_path, display=True)
 
 learner.ta.show()
 
-#learner.ta.export_ta_xml(xml_path)
-#print(f"UPPAAL model written to {xml_path}")
-
-
 
 

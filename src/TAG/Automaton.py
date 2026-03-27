@@ -276,7 +276,6 @@ class Automaton:
                 file.write(tmp+'\n')
         file.close()
 
-
     def import_from_dot(self, dot_path: str) -> None:
         """
         Create an Automaton instance from a DOT file
