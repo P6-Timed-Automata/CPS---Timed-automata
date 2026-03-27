@@ -55,7 +55,7 @@ def create_simple_uppaal():
 
     # System declaration
     system = ET.SubElement(nta, "system")
-    system.text = "system SimpleTA;"
+    system.text = "Process = SimpleTA();system Process;"
 
     return ET.ElementTree(nta)
 
@@ -63,3 +63,27 @@ def create_simple_uppaal():
 # Run and save
 tree = create_simple_uppaal()
 tree.write("simple_model.xml", encoding="utf-8", xml_declaration=True)
+
+
+
+# DATA structures
+
+# Node : states, invariant
+
+# Edge: source, destination, guard
+
+# Positions, coordinate points, with node id
+
+#FUNCTIONS
+
+#Symbol assignment: for each symbol, assign a temperature. The temperature is the median of the bin interval
+
+#Guard:  extract  the guard from TAG guard (a[10,20]  --> t>= 10 && t<=20
+
+#Invariant: find the maximum upperbound guard value from the outgoing edges
+
+#Coordinates: extract the coordinates from graphiz
+
+
+
+

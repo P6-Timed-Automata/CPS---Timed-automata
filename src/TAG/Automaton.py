@@ -8,8 +8,8 @@ try:
 except ImportError:
     has_graphviz = False
 
-from src.TAG.Edge import Edge
-from src.TAG.State import State
+from TAG.Edge import Edge
+from TAG.State import State
 
 
 class Automaton:
@@ -275,6 +275,7 @@ class Automaton:
                 tmp += 'p=' + str(round(e.proba, 2)) + '"]'
                 file.write(tmp+'\n')
         file.close()
+
 
     def import_from_dot(self, dot_path: str) -> None:
         """
