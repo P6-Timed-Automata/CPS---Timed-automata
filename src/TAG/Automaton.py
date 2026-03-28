@@ -10,6 +10,7 @@ except ImportError:
 
 from TAG.Edge import Edge
 from TAG.State import State
+import os
 
 
 class Automaton:
