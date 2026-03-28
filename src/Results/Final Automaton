@@ -1,0 +1,33 @@
+digraph G {
+START [style=invisible]
+graph [fontname = "helvetica"]
+node [fontname = "helvetica"]
+edge [fontname = "helvetica"]
+labelloc="t"
+label="Final Automaton"
+S5 [shape="circle"]
+S2 [shape="circle"]
+S11 [shape="doublecircle"]
+S14 [shape="circle"]
+S1 [shape="circle"]
+S4 [shape="circle"]
+S0 [shape="circle"]
+S18 [shape="doublecircle"]
+S3 [shape="circle"]
+START -> S0
+S0 -> S1 [label="b [0, 0] t[0, 0] p=0.5"]
+S0 -> S11 [label="c [0, 0] t[0, 0] p=0.5"]
+S1 -> S2 [label="a [300, 300] t[300, 300] p=0.25"]
+S1 -> S11 [label="b [3000, 3000] t[16500, 16500] p=0.25"]
+S1 -> S5 [label="a [1200, 2100] t[3000, 8400] p=0.5"]
+S11 -> S11 [label="c [300, 15600] t[300, 413400] p=0.6"]
+S11 -> S14 [label="a [3900, 3900] t[27300, 27300] p=0.02"]
+S11 -> S11 [label="b [3300, 18000] t[19800, 549000] p=0.38"]
+S2 -> S4 [label="a [600, 600] t[900, 900] p=1.0"]
+S5 -> S3 [label="a [1500, 2400] t[4500, 10800] p=1.0"]
+S3 -> S1 [label="a [1800, 2700] t[6300, 13500] p=1.0"]
+S4 -> S1 [label="b [900, 900] t[1800, 1800] p=1.0"]
+S14 -> S14 [label="a [4200, 4800] t[31500, 40800] p=0.75"]
+S14 -> S18 [label="b [5100, 5100] t[45900, 45900] p=0.25"]
+S18 -> S18 [label="a [5400, 18000] t[51300, 549000] p=1.0"]
+}
