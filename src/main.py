@@ -6,6 +6,7 @@ tss_path = 'Discretization/output.txt'
 
 xml_path = 'output/model.xml'
 
+print("hej")
 
 learner = TALearner(tss_path=tss_path,display=True)
 
