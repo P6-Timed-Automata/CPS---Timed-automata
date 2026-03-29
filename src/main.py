@@ -1,15 +1,15 @@
-
+import json, os
 from TAG.TALearner import TALearner
-#from TAG.Automaton import export_ta_xml
-
 
 tss_path = 'Discretization/output.txt'
-
 xml_path = 'output/model.xml'
 
-learner = TALearner(tss_path=tss_path, display=True)
+with open('Discretization/symbol_map.json') as f:
+    symbol_map = json.load(f)
 
+learner = TALearner(tss_path=tss_path, display=True)
 learner.ta.show()
 
-
-
+os.makedirs('output', exist_ok=True)
+learner.ta.export_ta(xml_path, symbol_map=symbol_map)
+print(f"UPPAAL model written to {xml_path}")

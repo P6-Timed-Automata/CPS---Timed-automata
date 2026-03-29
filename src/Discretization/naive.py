@@ -130,3 +130,16 @@ print("Symbolic result:", symbolic_res2)
 symbolic_res_list = [symbolic_res1, symbolic_res2]
 
 format_output(symbolic_res_list)
+
+import json
+
+# Compute midpoints: symbol -> rounded midpoint value
+symbol_map = {
+    mapping[i]: round((bins[i] + bins[i + 1]) / 2*100)
+    for i in range(k)
+}
+
+with open('symbol_map.json', 'w') as f:
+    json.dump(symbol_map, f)
+
+print("Symbol map:", symbol_map)
