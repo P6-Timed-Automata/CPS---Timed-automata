@@ -266,11 +266,6 @@ class Automaton:
             print("Saved automaton to:", file_path)
 
     def export_ta(self, path: str) -> None:
-        """
-        Export the automaton as a UPPAAL XML file with Graphviz layout coordinates.
-        Args:
-            path (str): Path for the output .xml file
-        """
         import subprocess
 
         self.update_probas()
@@ -278,7 +273,10 @@ class Automaton:
         state_ids = {s.name: f"id{i}" for i, s in enumerate(self.states)}
         initial = next((s for s in self.states if s.initial), self.states[0])
 
-        # Build DOT string to feed into Graphviz for layout
+        # Assign a unique integer to each symbol for plotting
+        symbol_values = {sym: i for i, sym in enumerate(self.symbols)}
+
+        # Build DOT string for layout
         dot = 'digraph G {\n'
         dot += 'START [style=invisible]\n'
         dot += 'node [shape="circle"]\n'
@@ -291,21 +289,21 @@ class Automaton:
                 dot += f'{e.source.name} -> {e.destination.name} [label="{e.symbol}"]\n'
         dot += '}'
 
-        # Run dot -Tplain to extract positions
+        # Get Graphviz positions
         positions = {}
         try:
             result = subprocess.run(
                 ['dot', '-Tplain'],
                 input=dot, capture_output=True, text=True
             )
-            scale = 150  # graphviz outputs in inches; scale to UPPAAL pixels
+            scale = 400
             for line in result.stdout.splitlines():
                 parts = line.split()
                 if parts[0] == 'node' and parts[1] != 'START':
                     name = parts[1]
                     x = round(float(parts[2]) * scale)
                     y = round(float(parts[3]) * scale)
-                    positions[name] = (x, -y)  # flip y: graphviz y=0 is bottom, UPPAAL y=0 is top
+                    positions[name] = (x, -y)
         except FileNotFoundError:
             print("Warning: 'dot' command not found. Falling back to grid layout.")
 
@@ -315,12 +313,15 @@ class Automaton:
             bounds = [e.reduced_guard()[1] for e in state.edges_out]
             upper_bounds[state.name] = max(bounds) if bounds else None
 
+        # Symbol legend as a comment in the declaration
+        symbol_comment = ' // ' + ', '.join(f'{s}={v}' for s, v in symbol_values.items())
+
         lines = [
             '<?xml version="1.0" encoding="utf-8"?>',
             '<!DOCTYPE nta PUBLIC \'-//Uppaal Team//DTD Flat System 1.6//EN\'',
             '  \'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd\'>',
             '<nta>',
-            '  <declaration>clock x;</declaration>',
+            f'  <declaration>clock x; int temp;{symbol_comment}</declaration>',
             '  <template>',
             '    <name>TagModel</name>',
             '    <declaration></declaration>',
@@ -341,16 +342,23 @@ class Automaton:
         for state in self.states:
             for e in state.edges_out:
                 lo, hi = e.reduced_guard()
+                val = symbol_values.get(e.symbol, 0)
                 lines.append('    <transition>')
                 lines.append(f'      <source ref="{state_ids[e.source.name]}"/>')
                 lines.append(f'      <target ref="{state_ids[e.destination.name]}"/>')
                 lines.append(f'      <label kind="guard">x &gt;= {lo} &amp;&amp; x &lt;= {hi}</label>')
-                lines.append(f'      <label kind="assignment">x = 0</label>')
+                lines.append(f'      <label kind="assignment">temp = {val}, x = 0</label>')
                 lines.append('    </transition>')
 
         lines += [
             '  </template>',
             '  <system>Process = TagModel(); system Process;</system>',
+            '  <queries>',
+            '    <query>',
+            '      <formula>simulate [&lt;=18000] { temp }</formula>',
+            '      <comment/>',
+            '    </query>',
+            '  </queries>',
             '</nta>',
         ]
 
