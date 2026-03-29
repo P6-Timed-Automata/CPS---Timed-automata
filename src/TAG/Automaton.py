@@ -8,8 +8,9 @@ try:
 except ImportError:
     has_graphviz = False
 
-from src.TAG.Edge import Edge
-from src.TAG.State import State
+from TAG.Edge import Edge
+from TAG.State import State
+import os
 
 
 class Automaton:
@@ -224,7 +225,7 @@ class Automaton:
                     return (mem, states)
         return (mem, states)
 
-    def show(self, p_min: float=0, title: str=None) -> None:
+    def show(self, p_min: float=0, title: str=None, savePng: bool=False) -> None:
         """
         Create a temporary file of the automaton graph \n
         Args:
@@ -256,6 +257,17 @@ class Automaton:
         tmp += '}'
         s = graphviz.Source(tmp, filename=tempfile.mktemp('.gv'), format="png")
         display(Image(s.view()))
+
+        #save PNG
+        if savePng:
+            output_path = os.path.join("src","Results", title)
+            os.makedirs(os.path.join("src", "Results"), exist_ok=True)
+
+            s = graphviz.Source(tmp)
+
+            file_path = s.render(filename=output_path, format="png", view=False)
+
+            print("Saved automaton to:", file_path)
 
     def export_ta(self, path: str) -> None:
         """
