@@ -265,7 +265,15 @@ class Automaton:
             file_path = s.render(filename=output_path, format="png", view=False)
             print("Saved automaton to:", file_path)
 
-    def export_ta(self, path: str) -> None:
+    def export_ta(self, path: str, symbol_map: dict = None) -> None:
+        """
+        Export the automaton as a UPPAAL XML file with Graphviz layout coordinates.
+        Args:
+            path (str): Path for the output .xml file
+            symbol_map (dict, optional): Mapping of symbol names to integer values for plotting,
+                                         e.g. {'a': 2090, 'b': 2120, 'c': 2148}.
+                                         If None, symbols are mapped to indices 0, 1, 2, ...
+        """
         import subprocess
 
         self.update_probas()
@@ -273,10 +281,13 @@ class Automaton:
         state_ids = {s.name: f"id{i}" for i, s in enumerate(self.states)}
         initial = next((s for s in self.states if s.initial), self.states[0])
 
-        # Assign a unique integer to each symbol for plotting
-        symbol_values = {sym: i for i, sym in enumerate(self.symbols)}
+        # Use provided symbol map or fall back to integer indices
+        if symbol_map is None:
+            symbol_values = {sym: i for i, sym in enumerate(self.symbols)}
+        else:
+            symbol_values = symbol_map
 
-        # Build DOT string for layout
+        # Build DOT string to feed into Graphviz for layout
         dot = 'digraph G {\n'
         dot += 'START [style=invisible]\n'
         dot += 'node [shape="circle"]\n'
@@ -289,7 +300,7 @@ class Automaton:
                 dot += f'{e.source.name} -> {e.destination.name} [label="{e.symbol}"]\n'
         dot += '}'
 
-        # Get Graphviz positions
+        # Run dot -Tplain to extract positions
         positions = {}
         try:
             result = subprocess.run(
@@ -313,15 +324,17 @@ class Automaton:
             bounds = [e.reduced_guard()[1] for e in state.edges_out]
             upper_bounds[state.name] = max(bounds) if bounds else None
 
-        # Symbol legend as a comment in the declaration
-        symbol_comment = ' // ' + ', '.join(f'{s}={v}' for s, v in symbol_values.items())
+        # Build const int declarations for each symbol
+        const_decls = ' '.join(
+            f'const int {sym} = {val};' for sym, val in symbol_values.items()
+        )
 
         lines = [
             '<?xml version="1.0" encoding="utf-8"?>',
-            '<!DOCTYPE nta PUBLIC \'-//Uppaal Team//DTD Flat System 1.6//EN\'',
-            '  \'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd\'>',
+            "<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'",
+            "  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>",
             '<nta>',
-            f'  <declaration>clock x; int temp;{symbol_comment}</declaration>',
+            f'  <declaration>clock x; int temp; {const_decls}</declaration>',
             '  <template>',
             '    <name>TagModel</name>',
             '    <declaration></declaration>',
