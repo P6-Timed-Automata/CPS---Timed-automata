@@ -67,7 +67,7 @@ def sax_discretization(trace1, trace2, w, k):
     v2 = np.array([v for v, t in trace2])
     t2 = np.array([t for v, t in trace2])
 
-    #Step 1: Z-normalize
+    #Z-normalize
     def znorm(v):
         sigma = v.std()
         return (v - v.mean()) / sigma
@@ -75,8 +75,8 @@ def sax_discretization(trace1, trace2, w, k):
     v1_norm = znorm(v1)
     v2_norm = znorm(v2)
 
-    #Step 2: PAA
-    # Reduces n points to w segment means
+    #PAA
+    #Reduces n points to w segment means
     def paa(v, t, w):
         v_segs = np.array_split(v, w)
         t_segs = np.array_split(t, w)
@@ -87,10 +87,10 @@ def sax_discretization(trace1, trace2, w, k):
     paa_v1, paa_t1 = paa(v1_norm, t1, w)
     paa_v2, paa_t2 = paa(v2_norm, t2, w)
 
-    #Step 3: Gaussian breakpoints
+    #Gaussian breakpoints
     breakpoints = norm.ppf(np.linspace(0, 1, k + 1)[1:-1])
 
-    labels1 = np.digitize(paa_v1, breakpoints)  # already 0..k-1
+    labels1 = np.digitize(paa_v1, breakpoints)
     labels2 = np.digitize(paa_v2, breakpoints)
 
     trace1_discretized = [(int(l), int(t)) for l, t in zip(labels1, paa_t1)]

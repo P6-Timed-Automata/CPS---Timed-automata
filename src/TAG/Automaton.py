@@ -334,7 +334,7 @@ class Automaton:
             "<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'",
             "  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>",
             '<nta>',
-            f'  <declaration>clock x; int temp; {const_decls}</declaration>',
+            f'  <declaration>clock t; int temp; {const_decls}</declaration>',
             '  <template>',
             '    <name>TagModel</name>',
             '    <declaration></declaration>',
@@ -347,7 +347,7 @@ class Automaton:
             lines.append(f'      <name x="{x}" y="{y - 20}">{state.name}</name>')
             ub = upper_bounds.get(state.name)
             if ub is not None:
-                lines.append(f'      <label kind="invariant" x="{x}" y="{y + 20}">x &lt;= {ub}</label>')
+                lines.append(f'      <label kind="invariant" t="{x}" y="{y + 20}">t &lt;= {ub}</label>')
             lines.append('    </location>')
 
         lines.append(f'    <init ref="{state_ids[initial.name]}"/>')
@@ -359,8 +359,8 @@ class Automaton:
                 lines.append('    <transition>')
                 lines.append(f'      <source ref="{state_ids[e.source.name]}"/>')
                 lines.append(f'      <target ref="{state_ids[e.destination.name]}"/>')
-                lines.append(f'      <label kind="guard">x &gt;= {lo} &amp;&amp; x &lt;= {hi}</label>')
-                lines.append(f'      <label kind="assignment">temp = {val}, x = 0</label>')
+                lines.append(f'      <label kind="guard">t &gt;= {lo} &amp;&amp; t &lt;= {hi}</label>')
+                lines.append(f'      <label kind="assignment">temp = {val}, t = 0</label>')
                 lines.append('    </transition>')
 
         lines += [
