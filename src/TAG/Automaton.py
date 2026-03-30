@@ -286,8 +286,7 @@ class Automaton:
             symbol_values = {sym: i for i, sym in enumerate(self.symbols)}
         else:
             symbol_values = symbol_map
-
-        # Build DOT string to feed into Graphviz for layout
+      # Build DOT string to feed into Graphviz for layout
         dot = 'digraph G {\n'
         dot += 'START [style=invisible]\n'
         dot += 'node [shape="circle"]\n'
@@ -328,6 +327,8 @@ class Automaton:
         const_decls = ' '.join(
             f'const int {sym} = {val};' for sym, val in symbol_values.items()
         )
+
+
 
         lines = [
             '<?xml version="1.0" encoding="utf-8"?>',

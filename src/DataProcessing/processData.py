@@ -49,6 +49,7 @@ def format_temperature_data(input_file, output_file):
 
     print(f"Saved formatted data to {output_file}")
 
+
 def extract_time_interval_seconds(input_file
                                   , output_file, start_sec, end_sec):
     # Load data (skip header)
