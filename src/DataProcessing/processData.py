@@ -146,8 +146,12 @@ def extract_time_intervals(input_file, output_folder, output_prefix, trace_days=
 # Full 24-hour traces, one per day
 extract_time_intervals("formated_raw_data.csv", "experiment_1_full_days", "trace")
 
+# Full 1-hour traces, one per day
+extract_time_intervals("formated_raw_data.csv", "experiment_2_daily_windowed", "trace", trace_days=1, window=(0, 3600) )
+
+
 # 7-day traces
-extract_time_intervals("formated_raw_data.csv", "experiment_2_weekly", "trace", trace_days=7)
+extract_time_intervals("formated_raw_data.csv", "experiment_3_weekly", "trace", trace_days=7)
 
 # First 5 hours of each day, grouped into weekly traces
-extract_time_intervals("formated_raw_data.csv", "experiment_3_weekly_windowed", "trace", trace_days=7, window=(0, 18000))
+extract_time_intervals("formated_raw_data.csv", "experiment_4_weekly_windowed", "trace", trace_days=7, window=(0, 18000))
