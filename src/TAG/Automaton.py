@@ -11,6 +11,7 @@ except ImportError:
 from TAG.Edge import Edge
 from TAG.State import State
 import os
+import subprocess
 
 
 class Automaton:
@@ -225,7 +226,7 @@ class Automaton:
                     return (mem, states)
         return (mem, states)
 
-    def show(self, p_min: float=0, title: str=None, savePng: bool=False) -> None:
+    def show(self, p_min: float=0, title: str=None, savePng: bool=False, output_path:str=None) -> None:
         """
         Create a temporary file of the automaton graph \n
         Args:
@@ -259,8 +260,6 @@ class Automaton:
         display(Image(s.view()))
 
         if savePng:
-            output_path = os.path.join("src", "Results", title)
-            os.makedirs(os.path.join("src", "Results"), exist_ok=True)
             s = graphviz.Source(tmp)
             file_path = s.render(filename=output_path, format="png", view=False)
             print("Saved automaton to:", file_path)
@@ -274,7 +273,7 @@ class Automaton:
                                          e.g. {'a': 2090, 'b': 2120, 'c': 2148}.
                                          If None, symbols are mapped to indices 0, 1, 2, ...
         """
-        import subprocess
+
 
         self.update_probas()
 
@@ -376,6 +375,7 @@ class Automaton:
             '</nta>',
         ]
 
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w+') as f:
             f.write('\n'.join(lines))
 
