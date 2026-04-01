@@ -61,15 +61,22 @@ def format_temperature_data(input_file, output_file):
     print(f"Saved {len(result)} rows to {output_file}")
 
 
-def extract_time_intervals(input_file, output_folder, output_prefix, window=None):
+def extract_time_intervals(input_file, output_folder, output_prefix, trace_days=1, window=None):
     """
+    Extracts time traces from a formatted CSV produced by format_temperature_data.
+    Each trace spans trace_days consecutive calendar days.
+
     Args:
         input_file   : formatted CSV from format_temperature_data
         output_folder: folder to save trace files into (created if not exists)
         output_prefix: prefix for output files → {prefix}_trace1.csv, etc.
-        window       : (start_sec, end_sec) within-day offset in seconds
-                       (None = full 24-hour day)
+        trace_days   : number of consecutive days per trace (default 1)
+                       e.g. 7 for weekly traces, 30 for monthly
+        window       : (start_sec, end_sec) within-day offset in seconds applied
+                       to every day in the trace (None = full 24-hour day)
+                       e.g. (0, 18000) for the first 5 hours of each day
     """
+
     os.makedirs(output_folder, exist_ok=True)
 
     data  = np.genfromtxt(input_file, delimiter=';', dtype=str, skip_header=1)
@@ -81,24 +88,49 @@ def extract_time_intervals(input_file, output_folder, output_prefix, window=None
 
     if window is not None:
         win_start, win_end = window
-        assert 0 <= win_start < win_end <= 86400, "window must be within [0, 86400] and start < end"
+        assert 0 <= win_start < win_end <= 86400, "window must be within [0, 86400] (a day) and start < end"
         win_start_row = win_start // sampling_interval
         win_end_row   = win_end   // sampling_interval
     else:
         win_start_row, win_end_row = 0, rows_per_day
 
-    rows_per_trace = win_end_row - win_start_row
-    n_days         = len(times) // rows_per_day
+    # Group rows by calendar day index
+    n_days      = len(times) // rows_per_day
+    day_indices = np.arange(n_days)
 
-    for day in range(n_days):
-        day_start_row = day * rows_per_day
-        segment_times = times[day_start_row + win_start_row : day_start_row + win_end_row]
-        segment_temps = temps[day_start_row + win_start_row : day_start_row + win_end_row]
+    # Compute the absolute day number from t=0 for each day to detect gaps
+    day_offsets = np.array([int(times[d * rows_per_day]) // 86400 for d in day_indices])
 
-        rebased_times = segment_times - segment_times[0]
-        filtered      = np.column_stack((rebased_times, segment_temps))
+    # Group consecutive calendar days into traces, discarding incomplete groups
+    trace_idx = 1
+    d = 0
+    while d <= n_days - trace_days:
+        group = day_indices[d : d + trace_days]
 
-        out_file = os.path.join(output_folder, f"{output_prefix}_trace{day + 1}.csv")
+        # Check all days in group are consecutive calendar days
+        expected_offsets = np.arange(day_offsets[d], day_offsets[d] + trace_days)
+        if not np.array_equal(day_offsets[d : d + trace_days], expected_offsets):
+            # Gap detected — skip forward to the next day after the break
+            gap_pos = np.where(np.diff(day_offsets[d : d + trace_days]) != 1)[0][0]
+            print(f"Gap detected at day {d + gap_pos + 1} (calendar offset {day_offsets[d + gap_pos]}→{day_offsets[d + gap_pos + 1]}), discarding incomplete trace {trace_idx}")
+            d += gap_pos + 1
+            continue
+
+        # Collect window rows from each day in the group
+        segments = []
+        for day in group:
+            day_start_row = day * rows_per_day
+            segments.append((
+                times[day_start_row + win_start_row : day_start_row + win_end_row],
+                temps[day_start_row + win_start_row : day_start_row + win_end_row]
+            ))
+
+        trace_times = np.concatenate([s[0] for s in segments])
+        trace_temps = np.concatenate([s[1] for s in segments])
+        rebased     = trace_times - trace_times[0]
+
+        filtered = np.column_stack((rebased, trace_temps))
+        out_file = os.path.join(output_folder, f"{output_prefix}_trace{trace_idx}.csv")
         np.savetxt(
             out_file,
             filtered,
@@ -107,14 +139,19 @@ def extract_time_intervals(input_file, output_folder, output_prefix, window=None
             header="time_seconds;temperature",
             comments=''
         )
-        print(f"Trace {day + 1}: {segment_times[0]}s–{segment_times[-1]}s - {len(filtered)} rows - {out_file}")
+        print(f"Trace {trace_idx}: {trace_times[0]}s–{trace_times[-1]}s ({trace_days} day(s)) - {len(filtered)} rows - {out_file}")
+        trace_idx += 1
+        d += trace_days
 
-#Tests
-# Full 24-hour traces, all days
+# Full 24-hour traces, one per day
 extract_time_intervals("formated_raw_data.csv", "experiment_1_full_days", "trace")
 
-# First 5 hours of each day
-extract_time_intervals("formated_raw_data.csv", "experiment_2_5-hour_days", "trace", window=(0, 18000))
+# Full 1-hour traces, one per day
+extract_time_intervals("formated_raw_data.csv", "experiment_2_daily_windowed", "trace", trace_days=1, window=(0, 3600) )
 
-# Custom window within each day
-extract_time_intervals("formated_raw_data.csv", "experiment_3_custom_window", "trace", window=(3600, 21600))
+
+# 7-day traces
+extract_time_intervals("formated_raw_data.csv", "experiment_3_weekly", "trace", trace_days=7)
+
+# First 5 hours of each day, grouped into weekly traces
+extract_time_intervals("formated_raw_data.csv", "experiment_4_weekly_windowed", "trace", trace_days=7, window=(0, 18000))
