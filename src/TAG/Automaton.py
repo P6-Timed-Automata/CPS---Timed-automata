@@ -261,7 +261,9 @@ class Automaton:
 
         if savePng:
             s = graphviz.Source(tmp)
-            file_path = s.render(filename=output_path, format="png", view=False)
+            os.makedirs(output_path, exist_ok=True)
+            file_path_full = os.path.join(output_path, title)
+            file_path = s.render(filename=file_path_full, format="png", view=False)
             print("Saved automaton to:", file_path)
 
     def export_ta(self, path: str, symbol_map: dict = None) -> None:

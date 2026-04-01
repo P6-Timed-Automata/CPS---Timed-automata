@@ -29,10 +29,10 @@ class TALearner:
         self.mode = order
         self.operations = {"merges": 0, "splits": 0}
         self.__phase_i()
-        self.ta.show(title='After phase i')
+        #self.ta.show(title='After phase i')
         if splits:
             self.__phase_ii()
-            self.ta.show(title='After phase ii')
+            #self.ta.show(title='After phase ii')
         if self.ta.inconsistency_nb(self.tss, True) > 0:
             print("Automaton not consistent.")
         else:

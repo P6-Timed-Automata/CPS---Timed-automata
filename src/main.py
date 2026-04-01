@@ -66,22 +66,17 @@ format_output(symbolic_trace, tss_path)
 # with open('Discretization/symbol_map.json') as f:
 #     symbol_map = json.load(f)
 
-learner = TALearner(tss_path=tss_path, display=True)
+learner = TALearner(tss_path=tss_path, display=False)
 
-title = "Final Automaton.txt"
-TA_output_path = os.path.join("Data", "TaResults", title)
-os.makedirs(TA_output_path, exist_ok=True)
+title = "Final Automaton Test.txt"
 
+TA_output_path = os.path.join("../Data", "6-TaResults")
 learner.ta.show(title = title, savePng = True, output_path = TA_output_path)
 
-# os.makedirs('output', exist_ok=True)
 
-# XML_output_path = os.path.join("Data", "XMLOutput", "model.xml")
-# os.makedirs(XML_output_path, exist_ok=True)
+os.path.join("../Data", "7-XMLOutput", "model.xml")
 
-
-XML_output_path = "Data/XMLOutput/model.xml"
-os.makedirs(os.path.dirname(XML_output_path), exist_ok=True)
+XML_output_path = os.path.join("../Data", "7-XMLOutput", "model.xml")
 learner.ta.export_ta(path=XML_output_path, symbol_map=symbol_map)
 print(f"UPPAAL model written to {XML_output_path}")
 
