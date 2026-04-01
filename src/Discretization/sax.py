@@ -118,10 +118,10 @@ def sax_discretization(trace1, trace2, w, k):
 
     return trace1_discretized, trace2_discretized, breakpoints
 
-input1_file = '../dataProcessing/formated_data.csv'
+input1_file = '../../Data/FormattedData/experiment_5h/formated_data.csv'
 data1 = csv_to_temp_time_list(input1_file)
 
-input2_file = '../dataProcessing/formated_data2.csv'
+input2_file = '../../Data/FormattedData/experiment_5h/formated_data2.csv'
 data2 = csv_to_temp_time_list(input2_file)
 
 w = 10

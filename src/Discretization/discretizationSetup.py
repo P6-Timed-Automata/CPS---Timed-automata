@@ -30,7 +30,7 @@ def csv_to_temp_time_list(input_files):
     return all_results
 
 
-def format_output(symbolic_res_list):
+def format_output(symbolic_res_list,output_path):
     lines = []
 
     for symbolic_res in symbolic_res_list:
@@ -39,10 +39,13 @@ def format_output(symbolic_res_list):
 
     output = "\n".join(lines)
 
-    with open("output.txt", "w") as f:
+    # Ensure the directory exists
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    with open(output_path, "w") as f:
         f.write(output)
 
-    print("File saved")
+    print(f"File saved to {output_path}")
 
 def map_bins_to_symbols(result, k, bins):
     # Create symbols: a, b, c, ...
