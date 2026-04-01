@@ -13,3 +13,6 @@ learner.ta.show()
 os.makedirs('output', exist_ok=True)
 learner.ta.export_ta(xml_path, symbol_map=symbol_map)
 print(f"UPPAAL model written to {xml_path}")
+
+
+
