@@ -142,16 +142,16 @@ def extract_time_intervals(input_file, output_folder, output_prefix, trace_days=
         print(f"Trace {trace_idx}: {trace_times[0]}s–{trace_times[-1]}s ({trace_days} day(s)) - {len(filtered)} rows - {out_file}")
         trace_idx += 1
         d += trace_days
-
-# Full 24-hour traces, one per day
-extract_time_intervals("formated_raw_data.csv", "experiment_1_full_days", "trace")
-
-# Full 1-hour traces, one per day
-extract_time_intervals("formated_raw_data.csv", "experiment_2_daily_windowed", "trace", trace_days=1, window=(0, 3600) )
-
-
-# 7-day traces
-extract_time_intervals("formated_raw_data.csv", "experiment_3_weekly", "trace", trace_days=7)
-
-# First 5 hours of each day, grouped into weekly traces
-extract_time_intervals("formated_raw_data.csv", "experiment_4_weekly_windowed", "trace", trace_days=7, window=(0, 18000))
+#
+# # Full 24-hour traces, one per day
+# extract_time_intervals("../../Data/FormattedData/experiment_5h/formated_raw_data.csv", "experiment_1_full_days", "trace")
+#
+# # Full 1-hour traces, one per day
+# extract_time_intervals("../../Data/FormattedData/experiment_5h/formated_raw_data.csv", "experiment_2_daily_windowed", "trace", trace_days=1, window=(0, 3600))
+#
+#
+# # 7-day traces
+# extract_time_intervals("../../Data/FormattedData/experiment_5h/formated_raw_data.csv", "experiment_3_weekly", "trace", trace_days=7)
+#
+# # First 5 hours of each day, grouped into weekly traces
+# extract_time_intervals("../../Data/FormattedData/experiment_5h/formated_raw_data.csv", "experiment_4_weekly_windowed", "trace", trace_days=7, window=(0, 18000))
