@@ -8,8 +8,9 @@ try:
 except ImportError:
     has_graphviz = False
 
-from src.TAG.Edge import Edge
-from src.TAG.State import State
+from TAG.Edge import Edge
+from TAG.State import State
+import os
 
 
 class Automaton:
@@ -54,11 +55,11 @@ class Automaton:
         tmp += 'edge [fontname = "helvetica"]\n'
         for state in self.states:
             if bstate is not None and state in bstate:
-                tmp += state.name + ' [penwidth=3, fontname="helvetica bold", color=' + color + ', fontcolor=' + color + ']\n'#
+                tmp += state.name + ' [penwidth=3, fontname="helvetica bold", color=' + color + ', fontcolor=' + color + ']\n'
             if state.accepting:
                 tmp += state.name + ' [shape="doublecircle"]\n'
         tmp += 'START -> S0\n'
-        for edge in [e for e in self.edges if e.source is not None and e.destination is not None ]:
+        for edge in [e for e in self.edges if e.source is not None and e.destination is not None]:
             tmp += edge.source.name + ' -> ' + edge.destination.name + ' [label="' + edge.symbol + ' ' + str(edge.reduced_guard())
             tmp += '\\nt[' + str(edge.reduce_gtime()[0]) + ', ' + str(edge.reduce_gtime()[1]) + ']\\np=' + str(round(edge.proba, 2)) + '"'
             if bedge is not None and edge in bedge:
@@ -224,7 +225,7 @@ class Automaton:
                     return (mem, states)
         return (mem, states)
 
-    def show(self, p_min: float=0, title: str=None) -> None:
+    def show(self, p_min: float=0, title: str=None, savePng: bool=False) -> None:
         """
         Create a temporary file of the automaton graph \n
         Args:
@@ -257,24 +258,126 @@ class Automaton:
         s = graphviz.Source(tmp, filename=tempfile.mktemp('.gv'), format="png")
         display(Image(s.view()))
 
-    def export_ta(self, path: str) -> None:
+        if savePng:
+            output_path = os.path.join("src", "Results", title)
+            os.makedirs(os.path.join("src", "Results"), exist_ok=True)
+            s = graphviz.Source(tmp)
+            file_path = s.render(filename=output_path, format="png", view=False)
+            print("Saved automaton to:", file_path)
+
+    def export_ta(self, path: str, symbol_map: dict = None) -> None:
         """
-        Export the automaton in a dot file
+        Export the automaton as a UPPAAL XML file with Graphviz layout coordinates.
         Args:
-            path (str): Path for the automaton dot file
+            path (str): Path for the output .xml file
+            symbol_map (dict, optional): Mapping of symbol names to integer values for plotting,
+                                         e.g. {'a': 2090, 'b': 2120, 'c': 2148}.
+                                         If None, symbols are mapped to indices 0, 1, 2, ...
         """
-        file = open(path, 'w+')
+        import subprocess
+
+        self.update_probas()
+
+        state_ids = {s.name: f"id{i}" for i, s in enumerate(self.states)}
+        initial = next((s for s in self.states if s.initial), self.states[0])
+
+        # Use provided symbol map or fall back to integer indices
+        if symbol_map is None:
+            symbol_values = {sym: i for i, sym in enumerate(self.symbols)}
+        else:
+            symbol_values = symbol_map
+      # Build DOT string to feed into Graphviz for layout
+        dot = 'digraph G {\n'
+        dot += 'START [style=invisible]\n'
+        dot += 'node [shape="circle"]\n'
+        for state in self.states:
+            if state.accepting:
+                dot += f'{state.name} [shape="doublecircle"]\n'
+        dot += 'START -> S0\n'
         for state in self.states:
             for e in state.edges_out:
-                tmp = e.source.name + ' -> ' + e.destination.name
-                tmp += ' [label="' + e.symbol + ' '
-                tmp += str(e.reduced_guard()) + ' '
-                if len(e.tss) > 0:
-                    gtime = e.reduce_gtime()
-                    tmp += "t[" + str(gtime[0]) + ", " + str(gtime[1]) + "]" + ' '
-                tmp += 'p=' + str(round(e.proba, 2)) + '"]'
-                file.write(tmp+'\n')
-        file.close()
+                dot += f'{e.source.name} -> {e.destination.name} [label="{e.symbol}"]\n'
+        dot += '}'
+
+        # Run dot -Tplain to extract positions
+        positions = {}
+        try:
+            result = subprocess.run(
+                ['dot', '-Tplain'],
+                input=dot, capture_output=True, text=True
+            )
+            scale = 400
+            for line in result.stdout.splitlines():
+                parts = line.split()
+                if parts[0] == 'node' and parts[1] != 'START':
+                    name = parts[1]
+                    x = round(float(parts[2]) * scale)
+                    y = round(float(parts[3]) * scale)
+                    positions[name] = (x, -y)
+        except FileNotFoundError:
+            print("Warning: 'dot' command not found. Falling back to grid layout.")
+
+        # Compute invariant upper bounds
+        upper_bounds = {}
+        for state in self.states:
+            bounds = [e.reduced_guard()[1] for e in state.edges_out]
+            upper_bounds[state.name] = max(bounds) if bounds else None
+
+        # Build const int declarations for each symbol
+        const_decls = ' '.join(
+            f'const int {sym} = {val};' for sym, val in symbol_values.items()
+        )
+
+
+
+        lines = [
+            '<?xml version="1.0" encoding="utf-8"?>',
+            "<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'",
+            "  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>",
+            '<nta>',
+            f'  <declaration>clock t; int temp; {const_decls}</declaration>',
+            '  <template>',
+            '    <name>TagModel</name>',
+            '    <declaration></declaration>',
+        ]
+
+        for i, state in enumerate(self.states):
+            sid = state_ids[state.name]
+            x, y = positions.get(state.name, ((i % 10) * 200, (i // 10) * 200))
+            lines.append(f'    <location id="{sid}" x="{x}" y="{y}">')
+            lines.append(f'      <name x="{x}" y="{y - 20}">{state.name}</name>')
+            ub = upper_bounds.get(state.name)
+            if ub is not None:
+                lines.append(f'      <label kind="invariant" t="{x}" y="{y + 20}">t &lt;= {ub}</label>')
+            lines.append('    </location>')
+
+        lines.append(f'    <init ref="{state_ids[initial.name]}"/>')
+
+        for state in self.states:
+            for e in state.edges_out:
+                lo, hi = e.reduced_guard()
+                val = symbol_values.get(e.symbol, 0)
+                lines.append('    <transition>')
+                lines.append(f'      <source ref="{state_ids[e.source.name]}"/>')
+                lines.append(f'      <target ref="{state_ids[e.destination.name]}"/>')
+                lines.append(f'      <label kind="guard">t &gt;= {lo} &amp;&amp; t &lt;= {hi}</label>')
+                lines.append(f'      <label kind="assignment">temp = {val}, t = 0</label>')
+                lines.append('    </transition>')
+
+        lines += [
+            '  </template>',
+            '  <system>Process = TagModel(); system Process;</system>',
+            '  <queries>',
+            '    <query>',
+            '      <formula>simulate [&lt;=18000] { temp }</formula>',
+            '      <comment/>',
+            '    </query>',
+            '  </queries>',
+            '</nta>',
+        ]
+
+        with open(path, 'w+') as f:
+            f.write('\n'.join(lines))
 
     def import_from_dot(self, dot_path: str) -> None:
         """
