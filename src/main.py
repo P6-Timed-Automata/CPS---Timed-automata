@@ -8,13 +8,13 @@ from Discretization.discretizationSetup import (
 )
 from Discretization.naive import equal_width_discretization
 
-from DataProcessing.processData import (
+from dataProcessing.processData import (
     format_temperature_data,
     extract_time_intervals
 )
 
-# input_formated_raw_data = '../Data/FormatedRawData/formated_raw_data.csv'
-# output_path_interval_data = '../Data/ExtractInterval'
+# input_formated_raw_data = '../Data/3-FormatedRawData/formated_raw_data.csv'
+# output_path_interval_data = '../Data/4-ExtractInterval'
 # # Process Data
 # # Full 24-hour traces, one per day
 # extract_time_intervals(input_formated_raw_data, os.path.join(output_path_interval_data, "experiment_1_full_days"), "trace")
@@ -35,7 +35,7 @@ k = 3
 input_files = [
     #'DataProcessing/formated_data.csv',
     #'DataProcessing/formated_data2.csv'
-    '../Data/ExtractInterval/experiment_1_full_days/trace_trace1.csv'
+    '../Data/4-ExtractInterval/experiment_1_full_days/trace_trace1.csv'
 ]
 
 data_lists = csv_to_temp_time_list(input_files)
@@ -55,13 +55,13 @@ symbolic_trace, symbol_map, mapping = map_bins_to_symbols(traces, k, bins)
 # print(symbolic_trace)
 # print(symbol_map)
 
-tss_path = '../Data/DiscretizationData/trace1/output.txt'
+tss_path = '../Data/5-DiscretizationData/trace1/output.txt'
 format_output(symbolic_trace, tss_path)
 
 
 # Call TAG
 #tss_path = 'Discretization/output.txt'
-#xml_path = '../Data/XMLOutput/model.xml'
+#xml_path = '../Data/7-XMLOutput/model.xml'
 
 # with open('Discretization/symbol_map.json') as f:
 #     symbol_map = json.load(f)
