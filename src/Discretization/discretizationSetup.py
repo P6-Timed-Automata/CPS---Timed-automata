@@ -5,20 +5,26 @@ import json
 
 
 def csv_to_temp_time_list(input_file):
-    # Load data
-    data = np.genfromtxt(
-        input_file,
-        delimiter=';',
-        dtype=str,
-        skip_header=1
-    )
 
-    # Extract columns
-    times = data[:, 0].astype(int)
-    temps = data[:, 1].astype(float)
+    all_results = []
+    for input_file in input_files:
+         # Load data
+        data = np.genfromtxt(
+            input_file,
+            delimiter=';',
+            dtype=str,
+            skip_header=1
+        )
 
-    # Build list of (temperature, time)
-    result = [(temp, time) for temp, time in zip(temps, times)]
+        # Extract columns
+        times = data[:, 0].astype(int)
+        temps = data[:, 1].astype(float)
+
+        # Build list of (temperature, time)
+        result = [(temp, time) for temp, time in zip(temps, times)]
+
+        all_results.append(results)
+
 
     print("tranformed data to a list")
 
@@ -55,9 +61,6 @@ def map_bins_to_symbols(result, k):
     return symbolic_result, mapping
 
 
-
-
-
 # Compute midpoints: symbol -> rounded midpoint value
 symbol_map = {
     mapping[i]: round((bins[i] + bins[i + 1]) / 2*100)
@@ -66,3 +69,15 @@ symbol_map = {
 
 with open('symbol_map.json', 'w') as f:
     json.dump(symbol_map, f)
+
+
+# Check
+
+input_files = [
+    '../dataProcessing/formated_data.csv',
+    '../dataProcessing/formated_data2.csv'
+]
+
+data_lists = csv_to_temp_time_list(input_files)
+
+print(data_lists)
