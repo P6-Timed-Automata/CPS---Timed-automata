@@ -3,7 +3,6 @@ import string
 import json
 
 
-
 def csv_to_temp_time_list(input_files):
 
     all_results = []
@@ -45,7 +44,7 @@ def format_output(symbolic_res_list):
 
     print("File saved")
 
-def map_bins_to_symbols(result, k):
+def map_bins_to_symbols(result, k, bins):
     # Create symbols: a, b, c, ...
     symbols = list(string.ascii_lowercase)
 
@@ -55,30 +54,22 @@ def map_bins_to_symbols(result, k):
     # Create mapping: 0->'a', 1->'b', ...
     mapping = {i: symbols[i] for i in range(k)}
 
-    # Apply mapping
-    symbolic_result = [(mapping[int(label)], int(time)) for label, time in result]
-
-    return symbolic_result, mapping
-
-
-# Compute midpoints: symbol -> rounded midpoint value
-# symbol_map = {
-#     mapping[i]: round((bins[i] + bins[i + 1]) / 2*100)
-#     for i in range(k)
-# }
-#
-# with open('symbol_map.json', 'w') as f:
-#     json.dump(symbol_map, f)
+    #Midpoint symbol map
+    symbol_map = None
+    if bins is not None:
+        symbol_map = {
+            symbols[i]: round(((bins[i] + bins[i + 1]) / 2) * 100)
+            for i in range(k)
+        }
 
 
-# Check
+    # Apply mapping to traces
+    symbolic_results = []
+    for trace in result:
+        symbolic_trace = [(mapping[int(label)], int(time)) for label, time in trace]
+        symbolic_results.append(symbolic_trace)
 
-input_files = [
-    '../dataProcessing/formated_data.csv',
-    '../dataProcessing/formated_data2.csv'
-]
-
-data_lists = csv_to_temp_time_list(input_files)
+    return symbolic_results, symbol_map, mapping
 
 
-print(data_lists)
+
