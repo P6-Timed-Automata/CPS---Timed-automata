@@ -31,7 +31,7 @@ from DataProcessing.processData import (
 
 
 #Prepare Data for TAG
-k = 12
+b = 12
 input_files = [
     #'DataProcessing/formated_data.csv',
     #'DataProcessing/formated_data2.csv'
@@ -45,12 +45,12 @@ data_lists = csv_to_temp_time_list(input_files)
 
 # Discretenize
 
-traces, bins = equal_width_discretization(data_lists, k)
+traces, bins = equal_width_discretization(data_lists, b)
 # print(len(traces))
 # print(traces)
 
 
-symbolic_trace, symbol_map, mapping = map_bins_to_symbols(traces, k, bins)
+symbolic_trace, symbol_map, mapping = map_bins_to_symbols(traces, b, bins)
 # print(len(symbolic_trace))
 # print(symbolic_trace)
 # print(symbol_map)
@@ -66,7 +66,7 @@ format_output(symbolic_trace, tss_path)
 # with open('Discretization/symbol_map.json') as f:
 #     symbol_map = json.load(f)
 
-learner = TALearner(tss_path=tss_path, display=True)
+learner = TALearner(tss_path=tss_path, display=True, k=4)
 
 title = "Final Automaton Test-j.txt"
 
