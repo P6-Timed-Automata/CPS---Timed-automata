@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'
+  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+  <declaration>clock t; int temp; const int a = 2090; const int b = 2120; const int c = 2148;</declaration>
+  <template>
+    <name>TagModel</name>
+    <declaration></declaration>
+    <location id="id0" x="939" y="-2441">
+      <name x="939" y="-2461">S0</name>
+      <label kind="invariant" t="939" y="-2421">t &lt;= 0</label>
+    </location>
+    <location id="id1" x="678" y="-1920">
+      <name x="678" y="-1940">S1</name>
+      <label kind="invariant" t="678" y="-1900">t &lt;= 3000</label>
+    </location>
+    <location id="id2" x="1200" y="-1351">
+      <name x="1200" y="-1371">S11</name>
+      <label kind="invariant" t="1200" y="-1331">t &lt;= 18000</label>
+    </location>
+    <location id="id3" x="255" y="-1351">
+      <name x="255" y="-1371">S2</name>
+      <label kind="invariant" t="255" y="-1331">t &lt;= 600</label>
+    </location>
+    <location id="id4" x="822" y="-1351">
+      <name x="822" y="-1371">S5</name>
+      <label kind="invariant" t="822" y="-1331">t &lt;= 2400</label>
+    </location>
+    <location id="id5" x="633" y="-757">
+      <name x="633" y="-777">S3</name>
+      <label kind="invariant" t="633" y="-737">t &lt;= 2700</label>
+    </location>
+    <location id="id6" x="189" y="-757">
+      <name x="189" y="-777">S4</name>
+      <label kind="invariant" t="189" y="-737">t &lt;= 900</label>
+    </location>
+    <location id="id7" x="1200" y="-757">
+      <name x="1200" y="-777">S14</name>
+      <label kind="invariant" t="1200" y="-737">t &lt;= 5100</label>
+    </location>
+    <location id="id8" x="1200" y="-162">
+      <name x="1200" y="-182">S18</name>
+      <label kind="invariant" t="1200" y="-142">t &lt;= 18000</label>
+    </location>
+    <init ref="id0"/>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id1"/>
+      <label kind="guard">t &gt;= 0 &amp;&amp; t &lt;= 0</label>
+      <label kind="assignment">temp = 2120, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id2"/>
+      <label kind="guard">t &gt;= 0 &amp;&amp; t &lt;= 0</label>
+      <label kind="assignment">temp = 2148, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 300 &amp;&amp; t &lt;= 300</label>
+      <label kind="assignment">temp = 2090, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id2"/>
+      <label kind="guard">t &gt;= 3000 &amp;&amp; t &lt;= 3000</label>
+      <label kind="assignment">temp = 2120, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id4"/>
+      <label kind="guard">t &gt;= 1200 &amp;&amp; t &lt;= 2100</label>
+      <label kind="assignment">temp = 2090, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id2"/>
+      <target ref="id2"/>
+      <label kind="guard">t &gt;= 300 &amp;&amp; t &lt;= 15600</label>
+      <label kind="assignment">temp = 2148, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id2"/>
+      <target ref="id7"/>
+      <label kind="guard">t &gt;= 3900 &amp;&amp; t &lt;= 3900</label>
+      <label kind="assignment">temp = 2090, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id2"/>
+      <target ref="id2"/>
+      <label kind="guard">t &gt;= 3300 &amp;&amp; t &lt;= 18000</label>
+      <label kind="assignment">temp = 2120, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id6"/>
+      <label kind="guard">t &gt;= 600 &amp;&amp; t &lt;= 600</label>
+      <label kind="assignment">temp = 2090, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id4"/>
+      <target ref="id5"/>
+      <label kind="guard">t &gt;= 1500 &amp;&amp; t &lt;= 2400</label>
+      <label kind="assignment">temp = 2090, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id5"/>
+      <target ref="id1"/>
+      <label kind="guard">t &gt;= 1800 &amp;&amp; t &lt;= 2700</label>
+      <label kind="assignment">temp = 2090, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id6"/>
+      <target ref="id1"/>
+      <label kind="guard">t &gt;= 900 &amp;&amp; t &lt;= 900</label>
+      <label kind="assignment">temp = 2120, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id7"/>
+      <target ref="id7"/>
+      <label kind="guard">t &gt;= 4200 &amp;&amp; t &lt;= 4800</label>
+      <label kind="assignment">temp = 2090, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id7"/>
+      <target ref="id8"/>
+      <label kind="guard">t &gt;= 5100 &amp;&amp; t &lt;= 5100</label>
+      <label kind="assignment">temp = 2120, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id8"/>
+      <target ref="id8"/>
+      <label kind="guard">t &gt;= 5400 &amp;&amp; t &lt;= 18000</label>
+      <label kind="assignment">temp = 2090, t = 0</label>
+    </transition>
+  </template>
+  <system>Process = TagModel(); system Process;</system>
+  <queries>
+    <query>
+      <formula>simulate [&lt;=18000] { temp }</formula>
+      <comment/>
+    </query>
+  </queries>
+</nta>

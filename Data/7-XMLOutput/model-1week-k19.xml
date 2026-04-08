@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'
+  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+  <declaration>clock t; int temp; const int a = 2013; const int b = 2033; const int c = 2054; const int d = 2074; const int e = 2094; const int f = 2114; const int g = 2134; const int h = 2155; const int i = 2175; const int j = 2195; const int k = 2215; const int l = 2235; const int m = 2256; const int n = 2276; const int o = 2296; const int p = 2316; const int q = 2336; const int r = 2357; const int s = 2377;</declaration>
+  <template>
+    <name>TagModel</name>
+    <declaration></declaration>
+    <location id="id0" x="3269" y="-5249">
+      <name x="3269" y="-5269">S0</name>
+      <label kind="invariant" t="3269" y="-5229">t &lt;= 2700</label>
+    </location>
+    <location id="id1" x="3114" y="-4728">
+      <name x="3114" y="-4748">S1</name>
+      <label kind="invariant" t="3114" y="-4708">t &lt;= 3000</label>
+    </location>
+    <location id="id2" x="3430" y="-4159">
+      <name x="3430" y="-4179">S2</name>
+      <label kind="invariant" t="3430" y="-4139">t &lt;= 2400</label>
+    </location>
+    <location id="id3" x="914" y="-4159">
+      <name x="914" y="-4179">S11</name>
+      <label kind="invariant" t="914" y="-4139">t &lt;= 604500</label>
+    </location>
+    <location id="id4" x="536" y="-3539">
+      <name x="536" y="-3559">S479</name>
+      <label kind="invariant" t="536" y="-3519">t &lt;= 371100</label>
+    </location>
+    <location id="id5" x="914" y="-3539">
+      <name x="914" y="-3559">S3</name>
+      <label kind="invariant" t="914" y="-3519">t &lt;= 143700</label>
+    </location>
+    <location id="id6" x="536" y="-2890">
+      <name x="536" y="-2910">S1238</name>
+      <label kind="invariant" t="536" y="-2870">t &lt;= 379500</label>
+    </location>
+    <location id="id7" x="191" y="-2215">
+      <name x="191" y="-2235">S1240</name>
+      <label kind="invariant" t="191" y="-2195">t &lt;= 381300</label>
+    </location>
+    <location id="id8" x="797" y="-2215">
+      <name x="797" y="-2235">S1243</name>
+      <label kind="invariant" t="797" y="-2195">t &lt;= 374100</label>
+    </location>
+    <location id="id9" x="575" y="-1541">
+      <name x="575" y="-1561">S1272</name>
+      <label kind="invariant" t="575" y="-1521">t &lt;= 383100</label>
+    </location>
+    <location id="id10" x="808" y="-866">
+      <name x="808" y="-886">S1278</name>
+      <label kind="invariant" t="808" y="-846">t &lt;= 383400</label>
+    </location>
+    <location id="id11" x="1014" y="-191">
+      <name x="1014" y="-211">S1279</name>
+      <label kind="invariant" t="1014" y="-171">t &lt;= 383700</label>
+    </location>
+    <init ref="id0"/>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id1"/>
+      <label kind="guard">t &gt;= 0 &amp;&amp; t &lt;= 900</label>
+      <label kind="assignment">temp = 2114, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id1"/>
+      <label kind="guard">t &gt;= 1800 &amp;&amp; t &lt;= 2700</label>
+      <label kind="assignment">temp = 2094, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id2"/>
+      <label kind="guard">t &gt;= 300 &amp;&amp; t &lt;= 2100</label>
+      <label kind="assignment">temp = 2094, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 3000 &amp;&amp; t &lt;= 3000</label>
+      <label kind="assignment">temp = 2114, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id2"/>
+      <target ref="id0"/>
+      <label kind="guard">t &gt;= 600 &amp;&amp; t &lt;= 2400</label>
+      <label kind="assignment">temp = 2094, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 25500 &amp;&amp; t &lt;= 604500</label>
+      <label kind="assignment">temp = 2134, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 32100 &amp;&amp; t &lt;= 587700</label>
+      <label kind="assignment">temp = 2215, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 39300 &amp;&amp; t &lt;= 582000</label>
+      <label kind="assignment">temp = 2256, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 30900 &amp;&amp; t &lt;= 591000</label>
+      <label kind="assignment">temp = 2195, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 30300 &amp;&amp; t &lt;= 599400</label>
+      <label kind="assignment">temp = 2175, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 29700 &amp;&amp; t &lt;= 603300</label>
+      <label kind="assignment">temp = 2155, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 3900 &amp;&amp; t &lt;= 394800</label>
+      <label kind="assignment">temp = 2094, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 3300 &amp;&amp; t &lt;= 567300</label>
+      <label kind="assignment">temp = 2114, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 6900 &amp;&amp; t &lt;= 24300</label>
+      <label kind="assignment">temp = 2074, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 26100 &amp;&amp; t &lt;= 26100</label>
+      <label kind="assignment">temp = 2013, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 39900 &amp;&amp; t &lt;= 583200</label>
+      <label kind="assignment">temp = 2235, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 53100 &amp;&amp; t &lt;= 579000</label>
+      <label kind="assignment">temp = 2296, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 50100 &amp;&amp; t &lt;= 580500</label>
+      <label kind="assignment">temp = 2276, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 54300 &amp;&amp; t &lt;= 578700</label>
+      <label kind="assignment">temp = 2316, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 57600 &amp;&amp; t &lt;= 526200</label>
+      <label kind="assignment">temp = 2336, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id4"/>
+      <label kind="guard">t &gt;= 370800 &amp;&amp; t &lt;= 370800</label>
+      <label kind="assignment">temp = 2377, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 144000 &amp;&amp; t &lt;= 231000</label>
+      <label kind="assignment">temp = 2357, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id5"/>
+      <label kind="guard">t &gt;= 143400 &amp;&amp; t &lt;= 143400</label>
+      <label kind="assignment">temp = 2377, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id4"/>
+      <target ref="id6"/>
+      <label kind="guard">t &gt;= 371100 &amp;&amp; t &lt;= 371100</label>
+      <label kind="assignment">temp = 2195, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id5"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 143700 &amp;&amp; t &lt;= 143700</label>
+      <label kind="assignment">temp = 2357, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id6"/>
+      <target ref="id6"/>
+      <label kind="guard">t &gt;= 371400 &amp;&amp; t &lt;= 378600</label>
+      <label kind="assignment">temp = 2195, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id6"/>
+      <target ref="id7"/>
+      <label kind="guard">t &gt;= 371700 &amp;&amp; t &lt;= 379500</label>
+      <label kind="assignment">temp = 2175, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id6"/>
+      <target ref="id8"/>
+      <label kind="guard">t &gt;= 372600 &amp;&amp; t &lt;= 373800</label>
+      <label kind="assignment">temp = 2215, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id7"/>
+      <target ref="id6"/>
+      <label kind="guard">t &gt;= 372000 &amp;&amp; t &lt;= 379200</label>
+      <label kind="assignment">temp = 2195, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id7"/>
+      <target ref="id7"/>
+      <label kind="guard">t &gt;= 377400 &amp;&amp; t &lt;= 381000</label>
+      <label kind="assignment">temp = 2175, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id7"/>
+      <target ref="id9"/>
+      <label kind="guard">t &gt;= 381300 &amp;&amp; t &lt;= 381300</label>
+      <label kind="assignment">temp = 2155, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id8"/>
+      <target ref="id6"/>
+      <label kind="guard">t &gt;= 372900 &amp;&amp; t &lt;= 374100</label>
+      <label kind="assignment">temp = 2195, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id9"/>
+      <target ref="id9"/>
+      <label kind="guard">t &gt;= 381600 &amp;&amp; t &lt;= 382800</label>
+      <label kind="assignment">temp = 2155, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id9"/>
+      <target ref="id10"/>
+      <label kind="guard">t &gt;= 383100 &amp;&amp; t &lt;= 383100</label>
+      <label kind="assignment">temp = 2134, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id10"/>
+      <target ref="id11"/>
+      <label kind="guard">t &gt;= 383400 &amp;&amp; t &lt;= 383400</label>
+      <label kind="assignment">temp = 2134, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id11"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 383700 &amp;&amp; t &lt;= 383700</label>
+      <label kind="assignment">temp = 2114, t = 0</label>
+    </transition>
+  </template>
+  <system>Process = TagModel(); system Process;</system>
+  <queries>
+    <query>
+      <formula>simulate [&lt;=18000] { temp }</formula>
+      <comment/>
+    </query>
+  </queries>
+</nta>
