@@ -130,7 +130,7 @@ def extract_time_intervals(input_file, output_folder, output_prefix, trace_days=
         rebased     = trace_times - trace_times[0]
 
         filtered = np.column_stack((rebased, trace_temps))
-        out_file = os.path.join(output_folder, f"{output_prefix}_trace{trace_idx}.csv")
+        out_file = os.path.join(output_folder, f"{output_prefix}-tid{trace_idx}.csv")
         np.savetxt(
             out_file,
             filtered,

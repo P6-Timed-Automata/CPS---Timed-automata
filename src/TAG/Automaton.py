@@ -381,6 +381,8 @@ class Automaton:
         with open(path, 'w+') as f:
             f.write('\n'.join(lines))
 
+        print(f"UPPAAL model written to {path}")
+
     def import_from_dot(self, dot_path: str) -> None:
         """
         Create an Automaton instance from a DOT file

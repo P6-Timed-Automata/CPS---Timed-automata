@@ -13,70 +13,63 @@ from DataProcessing.processData import (
     extract_time_intervals
 )
 
-# input_formated_raw_data = '../Data/3-FormatedRawData/formated_raw_data.csv'
-# output_path_interval_data = '../Data/4-ExtractInterval'
-# # Process Data
-# # Full 24-hour traces, one per day
-# extract_time_intervals(input_formated_raw_data, os.path.join(output_path_interval_data, "experiment_1_full_days"), "trace")
-#
-# # Full 1-hour traces, one per day
-# extract_time_intervals(input_formated_raw_data, os.path.join(output_path_interval_data, "experiment_2_daily_windowed"), "trace", trace_days=1, window=(0, 3600) )
-#
-#
-# # 7-day traces
-# extract_time_intervals(input_formated_raw_data, os.path.join(output_path_interval_data, "experiment_3_weekly"), "trace", trace_days=7)
-#
-# # First 5 hours of each day, grouped into weekly traces
-# extract_time_intervals(input_formated_raw_data, os.path.join(output_path_interval_data, "experiment_4_weekly_windowed"), "trace", trace_days=7, window=(0, 18000))
+rawData= "../Data/1-Raw/dataset-2023-02-27__2023-12-31.csv"
+formatedRawData = "../Data/2-FormatedRawData/dataset-2023-02-27-formatedRaw.csv"
+
+# format_temperature_data(input_file = rawData,output_file=formatedRawData)
 
 
-#Prepare Data for TAG
+
+# Process Data
+
+# Full 24-hour traces, one per day
+extractIntervalPath1day = "../Data/3-ExtractInterval/2023-02-27/1day"
+#os.path.join(output_path_interval_data, "experiment_1_full_days")
+extract_time_intervals(input_file=formatedRawData, output_folder=extractIntervalPath1day, output_prefix= "2023-02-27-1day")
+
+# Full 1-hour traces, one per day"experiment_1_full_days"),
+extractIntervalPath1day1hour = "../Data/3-ExtractInterval/2023-02-27/1day-window-1hour"
+#os.path.join(output_path_interval_data, "experiment_2_daily_windowed")
+extract_time_intervals(input_file=formatedRawData, output_folder = extractIntervalPath1day1hour , output_prefix= "2023-02-27-1day-window-1hour", trace_days=1, window=(0, 3600) )
+
+# 7-day traces
+extractIntervalPath7day = "../Data/3-ExtractInterval/2023-02-27/7day"
+#os.path.join(output_path_interval_data, "experiment_3_weekly")
+extract_time_intervals(input_file=formatedRawData, output_folder = extractIntervalPath7day,output_prefix= "2023-02-27-7day", trace_days=7)
+
+# First 5 hours of each day, grouped into weekly traces
+extractIntervalPath7day = "../Data/3-ExtractInterval/2023-02-27/7day-window-5hour"
+#os.path.join(output_path_interval_data, "experiment_4_weekly_windowed")
+extract_time_intervals(input_file=formatedRawData, output_folder=extractIntervalPath7day, output_prefix= "2023-02-27-7day-window-5hour", trace_days=7, window=(0, 18000))
+
+
+# #Prepare Data for TAG
 b = 12
-input_files = [
-    #'DataProcessing/formated_data.csv',
-    #'DataProcessing/formated_data2.csv'
-    '../Data/4-ExtractInterval/experiment_3_weekly/trace_trace1.csv'
+rawTraces = [
+    '../Data/3-ExtractInterval/2023-02-27/1day/2023-02-27-1day-tid1.csv'
 ]
 
-data_lists = csv_to_temp_time_list(input_files)
-# print(len(data_lists))
-# print(data_lists)
-
+data_lists = csv_to_temp_time_list(input_files=rawTraces)
 
 # Discretenize
 
 traces, bins = equal_width_discretization(data_lists, b)
-# print(len(traces))
-# print(traces)
-
-
 symbolic_trace, symbol_map, mapping = map_bins_to_symbols(traces, b, bins)
-# print(len(symbolic_trace))
-# print(symbolic_trace)
-# print(symbol_map)
 
-tss_path = '../Data/5-DiscretizationData/trace1/output.txt'
-format_output(symbolic_trace, tss_path)
+discretinize_data_path = "../Data/4-DiscretizationData/naiv/1day/2023-02-27-tid1-1trace-1day-naiv-b12-trace.txt"
+format_output(symbolic_res_list=symbolic_trace, output_path=discretinize_data_path)
 
 
 # Call TAG
-#tss_path = 'Discretization/output.txt'
-#xml_path = '../Data/7-XMLOutput/model-5h.xml'
 
-# with open('Discretization/symbol_map.json') as f:
-#     symbol_map = json.load(f)
+k = 4
+learner = TALearner(tss_path=discretinize_data_path, display=False, k=k)
 
-learner = TALearner(tss_path=tss_path, display=True, k=4)
-
-title = "Final Automaton Test-j.txt"
-
-TA_output_path = os.path.join("../Data", "6-TaResults")
+title = "2023-02-27-tid1-1trace-1day-naiv-b12-k4-ta"
+TA_output_path = "../Data/5-TaResults/naiv/1day"
 learner.ta.show(title = title, savePng = True, output_path = TA_output_path)
 
-
-XML_output_path = os.path.join("../Data", "7-XMLOutput", "model-1week-k12-j.xml")
-learner.ta.export_ta(path=XML_output_path, symbol_map=symbol_map)
-print(f"UPPAAL model written to {XML_output_path}")
-
+xml_path = '../Data/6-XMLOutput/naiv/1day/2023-02-27-tid1-1trace-1day-naiv-b12-k4-ta.xml'
+learner.ta.export_ta(path=xml_path, symbol_map=symbol_map)
 
 
