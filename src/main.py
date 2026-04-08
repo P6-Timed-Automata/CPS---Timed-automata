@@ -68,7 +68,7 @@ format_output(symbolic_trace, tss_path)
 
 learner = TALearner(tss_path=tss_path, display=False)
 
-title = "Final Automaton Test.txt"
+title = "Final Automaton Test-test-test-twst"
 
 TA_output_path = os.path.join("../Data", "6-TaResults")
 learner.ta.show(title = title, savePng = True, output_path = TA_output_path)
