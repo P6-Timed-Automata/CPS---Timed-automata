@@ -8,15 +8,16 @@ from Discretization.discretizationSetup import (
 )
 from Discretization.naive import equal_width_discretization
 
-from DataProcessing.processData import (
+from dataProcessing.processData import (
     format_temperature_data,
-    extract_time_intervals
+    extract_time_intervals,
+    get_trace_files
 )
 
 rawData= "../Data/1-Raw/dataset-2023-02-27_2023-12-31.csv"
 formatedRawData = "../Data/2-FormatedRawData/dataset-2023-02-27-formatedRaw.csv"
 
-# format_temperature_data(input_file = rawData,output_file=formatedRawData)
+format_temperature_data(input_file = rawData,output_file=formatedRawData, col=2)
 
 # Process Data
 

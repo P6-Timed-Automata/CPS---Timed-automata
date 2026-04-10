@@ -336,7 +336,7 @@ class Automaton:
             "<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'",
             "  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>",
             '<nta>',
-            f'  <declaration>clock t; int temp; {const_decls}</declaration>',
+            f'  <declaration>clock cl; int temp; {const_decls}</declaration>',
             '  <template>',
             '    <name>TagModel</name>',
             '    <declaration></declaration>',
