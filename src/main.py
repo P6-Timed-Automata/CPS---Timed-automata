@@ -13,12 +13,10 @@ from DataProcessing.processData import (
     extract_time_intervals
 )
 
-rawData= "../Data/1-Raw/dataset-2023-02-27__2023-12-31.csv"
+rawData= "../Data/1-Raw/dataset-2023-02-27_2023-12-31.csv"
 formatedRawData = "../Data/2-FormatedRawData/dataset-2023-02-27-formatedRaw.csv"
 
 # format_temperature_data(input_file = rawData,output_file=formatedRawData)
-
-
 
 # Process Data
 
@@ -28,9 +26,9 @@ extractIntervalPath1day = "../Data/3-ExtractInterval/2023-02-27/1day"
 extract_time_intervals(input_file=formatedRawData, output_folder=extractIntervalPath1day, output_prefix= "2023-02-27-1day")
 
 # Full 1-hour traces, one per day"experiment_1_full_days"),
-extractIntervalPath1day1hour = "../Data/3-ExtractInterval/2023-02-27/1day-window-1hour"
+extractIntervalPath1day1hour = "../Data/3-ExtractInterval/2023-02-27/1day-wd-1h-inter-0-3600"
 #os.path.join(output_path_interval_data, "experiment_2_daily_windowed")
-extract_time_intervals(input_file=formatedRawData, output_folder = extractIntervalPath1day1hour , output_prefix= "2023-02-27-1day-window-1hour", trace_days=1, window=(0, 3600) )
+extract_time_intervals(input_file=formatedRawData, output_folder = extractIntervalPath1day1hour , output_prefix= "2023-02-27-1day-wd-1h-inter-0-3600", trace_days=1, window=(0, 3600) )
 
 # 7-day traces
 extractIntervalPath7day = "../Data/3-ExtractInterval/2023-02-27/7day"
@@ -38,9 +36,9 @@ extractIntervalPath7day = "../Data/3-ExtractInterval/2023-02-27/7day"
 extract_time_intervals(input_file=formatedRawData, output_folder = extractIntervalPath7day,output_prefix= "2023-02-27-7day", trace_days=7)
 
 # First 5 hours of each day, grouped into weekly traces
-extractIntervalPath7day = "../Data/3-ExtractInterval/2023-02-27/7day-window-5hour"
+extractIntervalPath7day = "../Data/3-ExtractInterval/2023-02-27/7day-wd-5h-inter-0-18000"
 #os.path.join(output_path_interval_data, "experiment_4_weekly_windowed")
-extract_time_intervals(input_file=formatedRawData, output_folder=extractIntervalPath7day, output_prefix= "2023-02-27-7day-window-5hour", trace_days=7, window=(0, 18000))
+extract_time_intervals(input_file=formatedRawData, output_folder=extractIntervalPath7day, output_prefix= "2023-02-27-7day-wd-5h-inter-0-18000", trace_days=7, window=(0, 18000))
 
 
 # #Prepare Data for TAG
@@ -69,7 +67,7 @@ title = "2023-02-27-tid1-1trace-1day-naiv-b12-k4-ta"
 TA_output_path = "../Data/5-TaResults/naiv/1day"
 learner.ta.show(title = title, savePng = True, output_path = TA_output_path)
 
-xml_path = '../Data/6-XMLOutput/naiv/1day/2023-02-27-tid1-1trace-1day-naiv-b12-k4-ta.xml'
+xml_path = '../Data/6-XMLOutput/naiv/1day/2023-02-27-tid1-1trace-1day-naiv-b12-k4.xml'
 learner.ta.export_ta(path=xml_path, symbol_map=symbol_map)
 
 
