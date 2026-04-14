@@ -50,6 +50,10 @@ def format_temperature_data(input_file, output_file, col):
     result = np.column_stack((ids, delays, temperatures))
     result = result[~np.isnan(result.astype(float)).any(axis=1)]
 
+    dirpath = os.path.dirname(output_file)
+    if dirpath:
+        os.makedirs(dirpath, exist_ok=True)
+        
     np.savetxt(
         output_file,
         result,
