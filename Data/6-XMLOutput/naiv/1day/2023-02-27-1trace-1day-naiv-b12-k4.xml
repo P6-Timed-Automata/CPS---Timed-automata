@@ -1,0 +1,853 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'
+  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+  <declaration>clock t; int temp; const int a = 5345; const int b = 5410; const int c = 5476; const int d = 5541; const int e = 5607; const int f = 5672; const int g = 5737; const int h = 5803; const int i = 5868; const int j = 5934; const int k = 5999; const int l = 6065;</declaration>
+  <template>
+    <name>TagModel</name>
+    <declaration></declaration>
+    <location id="id0" x="2415" y="-22135">
+      <name x="2415" y="-22155">S0</name>
+      <label kind="invariant" t="2415" y="-22115">t &lt;= 84600</label>
+    </location>
+    <location id="id1" x="1020" y="-21588">
+      <name x="1020" y="-21608">S3</name>
+      <label kind="invariant" t="1020" y="-21568">t &lt;= 900</label>
+    </location>
+    <location id="id2" x="2792" y="-21588">
+      <name x="2792" y="-21608">S7</name>
+      <label kind="invariant" t="2792" y="-21568">t &lt;= 84900</label>
+    </location>
+    <location id="id3" x="1976" y="-21588">
+      <name x="1976" y="-21608">S11</name>
+      <label kind="invariant" t="1976" y="-21568">t &lt;= 77400</label>
+    </location>
+    <location id="id4" x="3148" y="-21588">
+      <name x="3148" y="-21608">S13</name>
+      <label kind="invariant" t="3148" y="-21568">t &lt;= 69900</label>
+    </location>
+    <location id="id5" x="1526" y="-21588">
+      <name x="1526" y="-21608">S15</name>
+      <label kind="invariant" t="1526" y="-21568">t &lt;= 5700</label>
+    </location>
+    <location id="id6" x="1398" y="-21016">
+      <name x="1398" y="-21036">S4</name>
+      <label kind="invariant" t="1398" y="-20996">t &lt;= 6000</label>
+    </location>
+    <location id="id7" x="131" y="-21016">
+      <name x="131" y="-21036">S2</name>
+      <label kind="invariant" t="131" y="-20996">t &lt;= 1200</label>
+    </location>
+    <location id="id8" x="2826" y="-21016">
+      <name x="2826" y="-21036">S9</name>
+      <label kind="invariant" t="2826" y="-20996">t &lt;= 85200</label>
+    </location>
+    <location id="id9" x="1837" y="-21016">
+      <name x="1837" y="-21036">S12</name>
+      <label kind="invariant" t="1837" y="-20996">t &lt;= 77700</label>
+    </location>
+    <location id="id10" x="3376" y="-21016">
+      <name x="3376" y="-21036">S14</name>
+      <label kind="invariant" t="3376" y="-20996">t &lt;= 70200</label>
+    </location>
+    <location id="id11" x="2837" y="-20444">
+      <name x="2837" y="-20464">S5</name>
+      <label kind="invariant" t="2837" y="-20424">t &lt;= 85500</label>
+    </location>
+    <location id="id12" x="115" y="-20089">
+      <name x="115" y="-20109">S1</name>
+      <label kind="invariant" t="115" y="-20069">t &lt;= 1500</label>
+    </location>
+    <location id="id13" x="348" y="-19328">
+      <name x="348" y="-19348">S8</name>
+      <label kind="invariant" t="348" y="-19308">t &lt;= 6300</label>
+    </location>
+    <location id="id14" x="1792" y="-10661">
+      <name x="1792" y="-10681">S6</name>
+      <label kind="invariant" t="1792" y="-10641">t &lt;= 83100</label>
+    </location>
+    <location id="id15" x="2059" y="-10114">
+      <name x="2059" y="-10134">S10</name>
+      <label kind="invariant" t="2059" y="-10094">t &lt;= 83400</label>
+    </location>
+    <location id="id16" x="559" y="-16461">
+      <name x="559" y="-16481">S22</name>
+      <label kind="invariant" t="559" y="-16441">t &lt;= 11400</label>
+    </location>
+    <location id="id17" x="476" y="-15837">
+      <name x="476" y="-15857">S23</name>
+      <label kind="invariant" t="476" y="-15817">t &lt;= 11700</label>
+    </location>
+    <location id="id18" x="854" y="-15837">
+      <name x="854" y="-15857">S16</name>
+      <label kind="invariant" t="854" y="-15817">t &lt;= 9300</label>
+    </location>
+    <location id="id19" x="1265" y="-20444">
+      <name x="1265" y="-20464">S24</name>
+      <label kind="invariant" t="1265" y="-20424">t &lt;= 78000</label>
+    </location>
+    <location id="id20" x="1442" y="-19708">
+      <name x="1442" y="-19728">S25</name>
+      <label kind="invariant" t="1442" y="-19688">t &lt;= 15000</label>
+    </location>
+    <location id="id21" x="1820" y="-19708">
+      <name x="1820" y="-19728">S20</name>
+      <label kind="invariant" t="1820" y="-19688">t &lt;= 78300</label>
+    </location>
+    <location id="id22" x="642" y="-19708">
+      <name x="642" y="-19728">S33</name>
+      <label kind="invariant" t="642" y="-19688">t &lt;= 9900</label>
+    </location>
+    <location id="id23" x="1820" y="-18948">
+      <name x="1820" y="-18968">S26</name>
+      <label kind="invariant" t="1820" y="-18928">t &lt;= 78600</label>
+    </location>
+    <location id="id24" x="642" y="-18948">
+      <name x="642" y="-18968">S19</name>
+      <label kind="invariant" t="642" y="-18928">t &lt;= 10200</label>
+    </location>
+    <location id="id25" x="1442" y="-18948">
+      <name x="1442" y="-18968">S32</name>
+      <label kind="invariant" t="1442" y="-18928">t &lt;= 15300</label>
+    </location>
+    <location id="id26" x="1442" y="-18302">
+      <name x="1442" y="-18322">S27</name>
+      <label kind="invariant" t="1442" y="-18282">t &lt;= 15600</label>
+    </location>
+    <location id="id27" x="1820" y="-18302">
+      <name x="1820" y="-18322">S18</name>
+      <label kind="invariant" t="1820" y="-18282">t &lt;= 78900</label>
+    </location>
+    <location id="id28" x="642" y="-18302">
+      <name x="642" y="-18322">S31</name>
+      <label kind="invariant" t="642" y="-18282">t &lt;= 10500</label>
+    </location>
+    <location id="id29" x="1926" y="-17682">
+      <name x="1926" y="-17702">S28</name>
+      <label kind="invariant" t="1926" y="-17662">t &lt;= 79200</label>
+    </location>
+    <location id="id30" x="642" y="-17682">
+      <name x="642" y="-17702">S17</name>
+      <label kind="invariant" t="642" y="-17662">t &lt;= 10800</label>
+    </location>
+    <location id="id31" x="1442" y="-17682">
+      <name x="1442" y="-17702">S30</name>
+      <label kind="invariant" t="1442" y="-17662">t &lt;= 15900</label>
+    </location>
+    <location id="id32" x="1442" y="-17084">
+      <name x="1442" y="-17104">S29</name>
+      <label kind="invariant" t="1442" y="-17064">t &lt;= 16200</label>
+    </location>
+    <location id="id33" x="642" y="-17084">
+      <name x="642" y="-17104">S21</name>
+      <label kind="invariant" t="642" y="-17064">t &lt;= 11100</label>
+    </location>
+    <location id="id34" x="654" y="-15214">
+      <name x="654" y="-15234">S40</name>
+      <label kind="invariant" t="654" y="-15194">t &lt;= 13500</label>
+    </location>
+    <location id="id35" x="792" y="-14590">
+      <name x="792" y="-14610">S46</name>
+      <label kind="invariant" t="792" y="-14570">t &lt;= 13800</label>
+    </location>
+    <location id="id36" x="842" y="-13727">
+      <name x="842" y="-13747">S47</name>
+      <label kind="invariant" t="842" y="-13707">t &lt;= 14100</label>
+    </location>
+    <location id="id37" x="1031" y="-13104">
+      <name x="1031" y="-13124">S48</name>
+      <label kind="invariant" t="1031" y="-13084">t &lt;= 14400</label>
+    </location>
+    <location id="id38" x="1442" y="-16461">
+      <name x="1442" y="-16481">S55</name>
+      <label kind="invariant" t="1442" y="-16441">t &lt;= 18300</label>
+    </location>
+    <location id="id39" x="1442" y="-15837">
+      <name x="1442" y="-15857">S62</name>
+      <label kind="invariant" t="1442" y="-15817">t &lt;= 27000</label>
+    </location>
+    <location id="id40" x="1442" y="-15214">
+      <name x="1442" y="-15234">S91</name>
+      <label kind="invariant" t="1442" y="-15194">t &lt;= 38400</label>
+    </location>
+    <location id="id41" x="1487" y="-14590">
+      <name x="1487" y="-14610">S129</name>
+      <label kind="invariant" t="1487" y="-14570">t &lt;= 42300</label>
+    </location>
+    <location id="id42" x="1504" y="-13727">
+      <name x="1504" y="-13747">S142</name>
+      <label kind="invariant" t="1504" y="-13707">t &lt;= 44700</label>
+    </location>
+    <location id="id43" x="1576" y="-13104">
+      <name x="1576" y="-13124">S150</name>
+      <label kind="invariant" t="1576" y="-13084">t &lt;= 45000</label>
+    </location>
+    <location id="id44" x="1792" y="-12480">
+      <name x="1792" y="-12500">S151</name>
+      <label kind="invariant" t="1792" y="-12460">t &lt;= 81000</label>
+    </location>
+    <location id="id45" x="1792" y="-11857">
+      <name x="1792" y="-11877">S152</name>
+      <label kind="invariant" t="1792" y="-11837">t &lt;= 81300</label>
+    </location>
+    <location id="id46" x="1792" y="-11234">
+      <name x="1792" y="-11254">S153</name>
+      <label kind="invariant" t="1792" y="-11214">t &lt;= 81600</label>
+    </location>
+    <location id="id47" x="2059" y="-9517">
+      <name x="2059" y="-9537">S159</name>
+      <label kind="invariant" t="2059" y="-9497">t &lt;= 47700</label>
+    </location>
+    <location id="id48" x="2059" y="-8893">
+      <name x="2059" y="-8913">S160</name>
+      <label kind="invariant" t="2059" y="-8873">t &lt;= 49500</label>
+    </location>
+    <location id="id49" x="2059" y="-8270">
+      <name x="2059" y="-8290">S166</name>
+      <label kind="invariant" t="2059" y="-8250">t &lt;= 51300</label>
+    </location>
+    <location id="id50" x="2059" y="-7646">
+      <name x="2059" y="-7666">S172</name>
+      <label kind="invariant" t="2059" y="-7626">t &lt;= 53700</label>
+    </location>
+    <location id="id51" x="2059" y="-7023">
+      <name x="2059" y="-7043">S180</name>
+      <label kind="invariant" t="2059" y="-7003">t &lt;= 55500</label>
+    </location>
+    <location id="id52" x="2065" y="-6400">
+      <name x="2065" y="-6420">S186</name>
+      <label kind="invariant" t="2065" y="-6380">t &lt;= 63900</label>
+    </location>
+    <location id="id53" x="2165" y="-5776">
+      <name x="2165" y="-5796">S214</name>
+      <label kind="invariant" t="2165" y="-5756">t &lt;= 64200</label>
+    </location>
+    <location id="id54" x="2187" y="-5153">
+      <name x="2187" y="-5173">S215</name>
+      <label kind="invariant" t="2187" y="-5133">t &lt;= 64500</label>
+    </location>
+    <location id="id55" x="2192" y="-4530">
+      <name x="2192" y="-4550">S216</name>
+      <label kind="invariant" t="2192" y="-4510">t &lt;= 64800</label>
+    </location>
+    <location id="id56" x="2192" y="-3906">
+      <name x="2192" y="-3926">S217</name>
+      <label kind="invariant" t="2192" y="-3886">t &lt;= 65100</label>
+    </location>
+    <location id="id57" x="2192" y="-3283">
+      <name x="2192" y="-3303">S218</name>
+      <label kind="invariant" t="2192" y="-3263">t &lt;= 65400</label>
+    </location>
+    <location id="id58" x="2192" y="-2659">
+      <name x="2192" y="-2679">S219</name>
+      <label kind="invariant" t="2192" y="-2639">t &lt;= 65700</label>
+    </location>
+    <location id="id59" x="2192" y="-2036">
+      <name x="2192" y="-2056">S220</name>
+      <label kind="invariant" t="2192" y="-2016">t &lt;= 66000</label>
+    </location>
+    <location id="id60" x="2198" y="-1413">
+      <name x="2198" y="-1433">S221</name>
+      <label kind="invariant" t="2198" y="-1393">t &lt;= 66300</label>
+    </location>
+    <location id="id61" x="2198" y="-789">
+      <name x="2198" y="-809">S222</name>
+      <label kind="invariant" t="2198" y="-769">t &lt;= 66600</label>
+    </location>
+    <location id="id62" x="2359" y="-166">
+      <name x="2359" y="-186">S223</name>
+      <label kind="invariant" t="2359" y="-146">t &lt;= 66900</label>
+    </location>
+    <location id="id63" x="1948" y="-17084">
+      <name x="1948" y="-17104">S265</name>
+      <label kind="invariant" t="1948" y="-17064">t &lt;= 79500</label>
+    </location>
+    <location id="id64" x="1987" y="-16461">
+      <name x="1987" y="-16481">S266</name>
+      <label kind="invariant" t="1987" y="-16441">t &lt;= 79800</label>
+    </location>
+    <location id="id65" x="1987" y="-15837">
+      <name x="1987" y="-15857">S267</name>
+      <label kind="invariant" t="1987" y="-15817">t &lt;= 80100</label>
+    </location>
+    <location id="id66" x="1987" y="-15214">
+      <name x="1987" y="-15234">S268</name>
+      <label kind="invariant" t="1987" y="-15194">t &lt;= 80400</label>
+    </location>
+    <location id="id67" x="1959" y="-14159">
+      <name x="1959" y="-14179">S269</name>
+      <label kind="invariant" t="1959" y="-14139">t &lt;= 80700</label>
+    </location>
+    <location id="id68" x="2854" y="-19708">
+      <name x="2854" y="-19728">S286</name>
+      <label kind="invariant" t="2854" y="-19688">t &lt;= 85800</label>
+    </location>
+    <location id="id69" x="2859" y="-18948">
+      <name x="2859" y="-18968">S287</name>
+      <label kind="invariant" t="2859" y="-18928">t &lt;= 86100</label>
+    </location>
+    <location id="id70" x="2865" y="-18302">
+      <name x="2865" y="-18322">S288</name>
+    </location>
+    <init ref="id0"/>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">t &gt;= 0 &amp;&amp; t &lt;= 84300</label>
+      <label kind="assignment">temp = 5737, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">t &gt;= 67200 &amp;&amp; t &lt;= 73200</label>
+      <label kind="assignment">temp = 5672, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id1"/>
+      <label kind="guard">t &gt;= 600 &amp;&amp; t &lt;= 600</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id2"/>
+      <label kind="guard">t &gt;= 84600 &amp;&amp; t &lt;= 84600</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id3"/>
+      <label kind="guard">t &gt;= 77100 &amp;&amp; t &lt;= 77100</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id4"/>
+      <label kind="guard">t &gt;= 69600 &amp;&amp; t &lt;= 69600</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id5"/>
+      <label kind="guard">t &gt;= 5400 &amp;&amp; t &lt;= 5400</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id7"/>
+      <label kind="guard">t &gt;= 900 &amp;&amp; t &lt;= 900</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id2"/>
+      <target ref="id8"/>
+      <label kind="guard">t &gt;= 84900 &amp;&amp; t &lt;= 84900</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id9"/>
+      <label kind="guard">t &gt;= 77400 &amp;&amp; t &lt;= 77400</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id4"/>
+      <target ref="id10"/>
+      <label kind="guard">t &gt;= 69900 &amp;&amp; t &lt;= 69900</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id5"/>
+      <target ref="id6"/>
+      <label kind="guard">t &gt;= 5700 &amp;&amp; t &lt;= 5700</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id6"/>
+      <target ref="id13"/>
+      <label kind="guard">t &gt;= 6000 &amp;&amp; t &lt;= 6000</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id7"/>
+      <target ref="id12"/>
+      <label kind="guard">t &gt;= 1200 &amp;&amp; t &lt;= 1200</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id8"/>
+      <target ref="id11"/>
+      <label kind="guard">t &gt;= 85200 &amp;&amp; t &lt;= 85200</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id9"/>
+      <target ref="id19"/>
+      <label kind="guard">t &gt;= 77700 &amp;&amp; t &lt;= 77700</label>
+      <label kind="assignment">temp = 5868, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id10"/>
+      <target ref="id0"/>
+      <label kind="guard">t &gt;= 70200 &amp;&amp; t &lt;= 70200</label>
+      <label kind="assignment">temp = 5737, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id11"/>
+      <target ref="id68"/>
+      <label kind="guard">t &gt;= 85500 &amp;&amp; t &lt;= 85500</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id12"/>
+      <target ref="id14"/>
+      <label kind="guard">t &gt;= 1500 &amp;&amp; t &lt;= 1500</label>
+      <label kind="assignment">temp = 5737, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id13"/>
+      <target ref="id16"/>
+      <label kind="guard">t &gt;= 6300 &amp;&amp; t &lt;= 6300</label>
+      <label kind="assignment">temp = 5868, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id14"/>
+      <target ref="id14"/>
+      <label kind="guard">t &gt;= 1800 &amp;&amp; t &lt;= 82800</label>
+      <label kind="assignment">temp = 5737, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id14"/>
+      <target ref="id15"/>
+      <label kind="guard">t &gt;= 2700 &amp;&amp; t &lt;= 83100</label>
+      <label kind="assignment">temp = 5672, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id15"/>
+      <target ref="id0"/>
+      <label kind="guard">t &gt;= 3000 &amp;&amp; t &lt;= 83400</label>
+      <label kind="assignment">temp = 5737, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id15"/>
+      <target ref="id47"/>
+      <label kind="guard">t &gt;= 47400 &amp;&amp; t &lt;= 47400</label>
+      <label kind="assignment">temp = 5672, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id16"/>
+      <target ref="id17"/>
+      <label kind="guard">t &gt;= 11400 &amp;&amp; t &lt;= 11400</label>
+      <label kind="assignment">temp = 5868, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id16"/>
+      <target ref="id18"/>
+      <label kind="guard">t &gt;= 6600 &amp;&amp; t &lt;= 9000</label>
+      <label kind="assignment">temp = 5868, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id17"/>
+      <target ref="id34"/>
+      <label kind="guard">t &gt;= 11700 &amp;&amp; t &lt;= 11700</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id18"/>
+      <target ref="id19"/>
+      <label kind="guard">t &gt;= 6900 &amp;&amp; t &lt;= 9300</label>
+      <label kind="assignment">temp = 5868, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id19"/>
+      <target ref="id20"/>
+      <label kind="guard">t &gt;= 14700 &amp;&amp; t &lt;= 14700</label>
+      <label kind="assignment">temp = 5868, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id19"/>
+      <target ref="id21"/>
+      <label kind="guard">t &gt;= 78000 &amp;&amp; t &lt;= 78000</label>
+      <label kind="assignment">temp = 5868, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id19"/>
+      <target ref="id22"/>
+      <label kind="guard">t &gt;= 7200 &amp;&amp; t &lt;= 9600</label>
+      <label kind="assignment">temp = 5868, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id20"/>
+      <target ref="id25"/>
+      <label kind="guard">t &gt;= 15000 &amp;&amp; t &lt;= 15000</label>
+      <label kind="assignment">temp = 5934, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id21"/>
+      <target ref="id23"/>
+      <label kind="guard">t &gt;= 78300 &amp;&amp; t &lt;= 78300</label>
+      <label kind="assignment">temp = 5934, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id22"/>
+      <target ref="id24"/>
+      <label kind="guard">t &gt;= 7500 &amp;&amp; t &lt;= 9900</label>
+      <label kind="assignment">temp = 5934, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id23"/>
+      <target ref="id27"/>
+      <label kind="guard">t &gt;= 78600 &amp;&amp; t &lt;= 78600</label>
+      <label kind="assignment">temp = 5934, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id24"/>
+      <target ref="id28"/>
+      <label kind="guard">t &gt;= 7800 &amp;&amp; t &lt;= 10200</label>
+      <label kind="assignment">temp = 5934, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id25"/>
+      <target ref="id26"/>
+      <label kind="guard">t &gt;= 15300 &amp;&amp; t &lt;= 15300</label>
+      <label kind="assignment">temp = 5934, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id26"/>
+      <target ref="id31"/>
+      <label kind="guard">t &gt;= 15600 &amp;&amp; t &lt;= 15600</label>
+      <label kind="assignment">temp = 5934, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id27"/>
+      <target ref="id29"/>
+      <label kind="guard">t &gt;= 78900 &amp;&amp; t &lt;= 78900</label>
+      <label kind="assignment">temp = 5934, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id28"/>
+      <target ref="id30"/>
+      <label kind="guard">t &gt;= 8100 &amp;&amp; t &lt;= 10500</label>
+      <label kind="assignment">temp = 5934, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id29"/>
+      <target ref="id63"/>
+      <label kind="guard">t &gt;= 79200 &amp;&amp; t &lt;= 79200</label>
+      <label kind="assignment">temp = 5868, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id30"/>
+      <target ref="id33"/>
+      <label kind="guard">t &gt;= 8400 &amp;&amp; t &lt;= 10800</label>
+      <label kind="assignment">temp = 5934, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id31"/>
+      <target ref="id32"/>
+      <label kind="guard">t &gt;= 15900 &amp;&amp; t &lt;= 15900</label>
+      <label kind="assignment">temp = 5934, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id32"/>
+      <target ref="id38"/>
+      <label kind="guard">t &gt;= 16200 &amp;&amp; t &lt;= 16200</label>
+      <label kind="assignment">temp = 5999, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id33"/>
+      <target ref="id16"/>
+      <label kind="guard">t &gt;= 8700 &amp;&amp; t &lt;= 11100</label>
+      <label kind="assignment">temp = 5868, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id34"/>
+      <target ref="id34"/>
+      <label kind="guard">t &gt;= 12000 &amp;&amp; t &lt;= 13200</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id34"/>
+      <target ref="id35"/>
+      <label kind="guard">t &gt;= 13500 &amp;&amp; t &lt;= 13500</label>
+      <label kind="assignment">temp = 5737, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id35"/>
+      <target ref="id36"/>
+      <label kind="guard">t &gt;= 13800 &amp;&amp; t &lt;= 13800</label>
+      <label kind="assignment">temp = 5737, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id36"/>
+      <target ref="id37"/>
+      <label kind="guard">t &gt;= 14100 &amp;&amp; t &lt;= 14100</label>
+      <label kind="assignment">temp = 5737, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id37"/>
+      <target ref="id19"/>
+      <label kind="guard">t &gt;= 14400 &amp;&amp; t &lt;= 14400</label>
+      <label kind="assignment">temp = 5868, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id38"/>
+      <target ref="id38"/>
+      <label kind="guard">t &gt;= 16500 &amp;&amp; t &lt;= 18000</label>
+      <label kind="assignment">temp = 5999, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id38"/>
+      <target ref="id39"/>
+      <label kind="guard">t &gt;= 18300 &amp;&amp; t &lt;= 18300</label>
+      <label kind="assignment">temp = 6065, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id39"/>
+      <target ref="id39"/>
+      <label kind="guard">t &gt;= 18600 &amp;&amp; t &lt;= 26700</label>
+      <label kind="assignment">temp = 6065, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id39"/>
+      <target ref="id40"/>
+      <label kind="guard">t &gt;= 27000 &amp;&amp; t &lt;= 27000</label>
+      <label kind="assignment">temp = 5999, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id40"/>
+      <target ref="id40"/>
+      <label kind="guard">t &gt;= 27300 &amp;&amp; t &lt;= 38100</label>
+      <label kind="assignment">temp = 5999, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id40"/>
+      <target ref="id41"/>
+      <label kind="guard">t &gt;= 38400 &amp;&amp; t &lt;= 38400</label>
+      <label kind="assignment">temp = 5934, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id41"/>
+      <target ref="id41"/>
+      <label kind="guard">t &gt;= 38700 &amp;&amp; t &lt;= 42000</label>
+      <label kind="assignment">temp = 5934, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id41"/>
+      <target ref="id42"/>
+      <label kind="guard">t &gt;= 42300 &amp;&amp; t &lt;= 42300</label>
+      <label kind="assignment">temp = 5868, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id42"/>
+      <target ref="id42"/>
+      <label kind="guard">t &gt;= 42600 &amp;&amp; t &lt;= 44400</label>
+      <label kind="assignment">temp = 5868, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id42"/>
+      <target ref="id43"/>
+      <label kind="guard">t &gt;= 44700 &amp;&amp; t &lt;= 44700</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id43"/>
+      <target ref="id44"/>
+      <label kind="guard">t &gt;= 45000 &amp;&amp; t &lt;= 45000</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id44"/>
+      <target ref="id45"/>
+      <label kind="guard">t &gt;= 45300 &amp;&amp; t &lt;= 81000</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id45"/>
+      <target ref="id46"/>
+      <label kind="guard">t &gt;= 45600 &amp;&amp; t &lt;= 81300</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id46"/>
+      <target ref="id14"/>
+      <label kind="guard">t &gt;= 45900 &amp;&amp; t &lt;= 81600</label>
+      <label kind="assignment">temp = 5737, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id47"/>
+      <target ref="id48"/>
+      <label kind="guard">t &gt;= 47700 &amp;&amp; t &lt;= 47700</label>
+      <label kind="assignment">temp = 5672, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id48"/>
+      <target ref="id48"/>
+      <label kind="guard">t &gt;= 48000 &amp;&amp; t &lt;= 49200</label>
+      <label kind="assignment">temp = 5607, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id48"/>
+      <target ref="id49"/>
+      <label kind="guard">t &gt;= 49500 &amp;&amp; t &lt;= 49500</label>
+      <label kind="assignment">temp = 5541, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id49"/>
+      <target ref="id49"/>
+      <label kind="guard">t &gt;= 49800 &amp;&amp; t &lt;= 51000</label>
+      <label kind="assignment">temp = 5541, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id49"/>
+      <target ref="id50"/>
+      <label kind="guard">t &gt;= 51300 &amp;&amp; t &lt;= 51300</label>
+      <label kind="assignment">temp = 5476, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id50"/>
+      <target ref="id50"/>
+      <label kind="guard">t &gt;= 51600 &amp;&amp; t &lt;= 53400</label>
+      <label kind="assignment">temp = 5476, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id50"/>
+      <target ref="id51"/>
+      <label kind="guard">t &gt;= 53700 &amp;&amp; t &lt;= 53700</label>
+      <label kind="assignment">temp = 5410, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id51"/>
+      <target ref="id51"/>
+      <label kind="guard">t &gt;= 54000 &amp;&amp; t &lt;= 55200</label>
+      <label kind="assignment">temp = 5410, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id51"/>
+      <target ref="id52"/>
+      <label kind="guard">t &gt;= 55500 &amp;&amp; t &lt;= 55500</label>
+      <label kind="assignment">temp = 5345, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id52"/>
+      <target ref="id52"/>
+      <label kind="guard">t &gt;= 55800 &amp;&amp; t &lt;= 63600</label>
+      <label kind="assignment">temp = 5345, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id52"/>
+      <target ref="id53"/>
+      <label kind="guard">t &gt;= 63900 &amp;&amp; t &lt;= 63900</label>
+      <label kind="assignment">temp = 5410, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id53"/>
+      <target ref="id54"/>
+      <label kind="guard">t &gt;= 64200 &amp;&amp; t &lt;= 64200</label>
+      <label kind="assignment">temp = 5410, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id54"/>
+      <target ref="id55"/>
+      <label kind="guard">t &gt;= 64500 &amp;&amp; t &lt;= 64500</label>
+      <label kind="assignment">temp = 5410, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id55"/>
+      <target ref="id56"/>
+      <label kind="guard">t &gt;= 64800 &amp;&amp; t &lt;= 64800</label>
+      <label kind="assignment">temp = 5410, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id56"/>
+      <target ref="id57"/>
+      <label kind="guard">t &gt;= 65100 &amp;&amp; t &lt;= 65100</label>
+      <label kind="assignment">temp = 5410, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id57"/>
+      <target ref="id58"/>
+      <label kind="guard">t &gt;= 65400 &amp;&amp; t &lt;= 65400</label>
+      <label kind="assignment">temp = 5476, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id58"/>
+      <target ref="id59"/>
+      <label kind="guard">t &gt;= 65700 &amp;&amp; t &lt;= 65700</label>
+      <label kind="assignment">temp = 5476, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id59"/>
+      <target ref="id60"/>
+      <label kind="guard">t &gt;= 66000 &amp;&amp; t &lt;= 66000</label>
+      <label kind="assignment">temp = 5476, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id60"/>
+      <target ref="id61"/>
+      <label kind="guard">t &gt;= 66300 &amp;&amp; t &lt;= 66300</label>
+      <label kind="assignment">temp = 5541, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id61"/>
+      <target ref="id62"/>
+      <label kind="guard">t &gt;= 66600 &amp;&amp; t &lt;= 66600</label>
+      <label kind="assignment">temp = 5607, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id62"/>
+      <target ref="id0"/>
+      <label kind="guard">t &gt;= 66900 &amp;&amp; t &lt;= 66900</label>
+      <label kind="assignment">temp = 5607, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id63"/>
+      <target ref="id64"/>
+      <label kind="guard">t &gt;= 79500 &amp;&amp; t &lt;= 79500</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id64"/>
+      <target ref="id65"/>
+      <label kind="guard">t &gt;= 79800 &amp;&amp; t &lt;= 79800</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id65"/>
+      <target ref="id66"/>
+      <label kind="guard">t &gt;= 80100 &amp;&amp; t &lt;= 80100</label>
+      <label kind="assignment">temp = 5803, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id66"/>
+      <target ref="id67"/>
+      <label kind="guard">t &gt;= 80400 &amp;&amp; t &lt;= 80400</label>
+      <label kind="assignment">temp = 5868, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id67"/>
+      <target ref="id44"/>
+      <label kind="guard">t &gt;= 80700 &amp;&amp; t &lt;= 80700</label>
+      <label kind="assignment">temp = 5868, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id68"/>
+      <target ref="id69"/>
+      <label kind="guard">t &gt;= 85800 &amp;&amp; t &lt;= 85800</label>
+      <label kind="assignment">temp = 5868, t = 0</label>
+    </transition>
+    <transition>
+      <source ref="id69"/>
+      <target ref="id70"/>
+      <label kind="guard">t &gt;= 86100 &amp;&amp; t &lt;= 86100</label>
+      <label kind="assignment">temp = 5868, t = 0</label>
+    </transition>
+  </template>
+  <system>Process = TagModel(); system Process;</system>
+  <queries>
+    <query>
+      <formula>simulate [&lt;=18000] { temp }</formula>
+      <comment/>
+    </query>
+  </queries>
+</nta>

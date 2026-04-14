@@ -3,13 +3,13 @@ from datetime import datetime
 from collections import Counter
 import os
 
-def format_temperature_data(input_file, output_file):
+def format_temperature_data(input_file, output_file, col):
     # Load data
     data = np.genfromtxt(
         input_file,
-        delimiter=';',
+        delimiter=',',
         dtype=str,
-        usecols=(0, 1, 2),
+        usecols=(0, 1, col),
         encoding="utf-8-sig",
         skip_header=1
     )
@@ -142,6 +142,16 @@ def extract_time_intervals(input_file, output_folder, output_prefix, trace_days=
         print(f"Trace {trace_idx}: {trace_times[0]}s–{trace_times[-1]}s ({trace_days} day(s)) - {len(filtered)} rows - {out_file}")
         trace_idx += 1
         d += trace_days
+
+def get_trace_files(folder_path, extension=".csv"):
+    files = []
+
+    for f in os.listdir(folder_path):
+        if f.endswith(extension):
+            full_path = os.path.join(folder_path, f)
+            files.append(full_path)
+
+    return sorted(files)
 #
 # # Full 24-hour traces, one per day
 # extract_time_intervals("../../Data/FormattedData/experiment_5h/formated_raw_data.csv", "experiment_1_full_days", "trace")
