@@ -349,7 +349,7 @@ class Automaton:
             lines.append(f'      <name x="{x}" y="{y - 20}">{state.name}</name>')
             ub = upper_bounds.get(state.name)
             if ub is not None:
-                lines.append(f'      <label kind="invariant" t="{x}" y="{y + 20}">t &lt;= {ub}</label>')
+                lines.append(f'      <label kind="invariant" cl="{x}" y="{y + 20}">t &lt;= {ub}</label>')
             lines.append('    </location>')
 
         lines.append(f'    <init ref="{state_ids[initial.name]}"/>')
@@ -361,8 +361,8 @@ class Automaton:
                 lines.append('    <transition>')
                 lines.append(f'      <source ref="{state_ids[e.source.name]}"/>')
                 lines.append(f'      <target ref="{state_ids[e.destination.name]}"/>')
-                lines.append(f'      <label kind="guard">t &gt;= {lo} &amp;&amp; t &lt;= {hi}</label>')
-                lines.append(f'      <label kind="assignment">temp = {val}, t = 0</label>')
+                lines.append(f'      <label kind="guard">t &gt;= {lo} &amp;&amp; cl &lt;= {hi}</label>')
+                lines.append(f'      <label kind="assignment">temp = {val}, cl = 0</label>')
                 lines.append('    </transition>')
 
         lines += [

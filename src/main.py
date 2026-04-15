@@ -103,7 +103,7 @@ for trace_nr in range(1, 11):  # 1 → 10 traces
     format_output(symbolic_res_list=symbolic_trace, output_path=discretinize_data_path)
 
     # Now vary k
-    for k in range(4, 11, 2):  # 6, 8, 10
+    for k in range(4, 11, 2):  # 4, 6, 8, 10
 
         learner = TALearner(
             tss_path=discretinize_data_path,
