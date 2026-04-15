@@ -63,7 +63,9 @@ extract_30day = f"../Data/3-ExtractInterval/{room}/30day"
 # #os.path.join(output_path_interval_data, "experiment_4_weekly_windowed")
 # extract_time_intervals(input_file=formatedRawData, output_folder=extractIntervalPath7day, output_prefix= "2023-02-27-7day-wd-5h-inter-0-18000", trace_days=7, window=(0, 18000))
 
-
+from pathlib import Path
+# Project root = CPS---Timed-automata/
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # #Prepare Data for TAG
 b = 15
@@ -72,7 +74,8 @@ discretization_method = "naiv"
 period = "30day"
 trace_nr = 1
 
-experiment_folder = f"../Data/3-ExtractInterval/{period}-experiment"
+experiment_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"
+#experiment_folder = f"../Data/3-ExtractInterval/{period}-experiment"
 for trace_nr in range(1, 11):  # 1 → 10 traces
     rawTraces = get_trace_files(folder_path=experiment_folder, max_files=trace_nr)
 
@@ -83,7 +86,19 @@ for trace_nr in range(1, 11):  # 1 → 10 traces
     symbolic_trace, symbol_map, mapping = map_bins_to_symbols(traces, b, bins)
 
     # Save discretized data ONCE per trace_nr
-    discretinize_data_path = f"../Data/4-DiscretizationData/{discretization_method}/{period}/{room}-{trace_nr}trace-{period}-{discretization_method}-b{b}-trace.txt"
+    discretinize_data_path = (
+            BASE_DIR
+            / "Data"
+            / "4-DiscretizationData"
+            / discretization_method
+            / period
+            / f"{room}-{trace_nr}trace-{period}-{discretization_method}-b{b}-trace.txt"
+    )
+
+    #discretinize_data_path = f"../Data/4-DiscretizationData/{discretization_method}/{period}/{room}-{trace_nr}trace-{period}-{discretization_method}-b{b}-trace.txt"
+
+    # make sure parent folders exist
+    discretinize_data_path.parent.mkdir(parents=True, exist_ok=True)
 
     format_output(symbolic_res_list=symbolic_trace, output_path=discretinize_data_path)
 
@@ -97,7 +112,16 @@ for trace_nr in range(1, 11):  # 1 → 10 traces
         )
 
         title = f"{room}-{trace_nr}trace-{period}-{discretization_method}-b{b}-k{k}-ta"
-        TA_output_path = f"../Data/5-TaResults/{discretization_method}/{period}"
+        TA_output_path = (
+                BASE_DIR
+                / "Data"
+                / "5-TaResults"
+                / discretization_method
+                / period
+        )
+        TA_output_path.mkdir(parents=True, exist_ok=True)
+        #TA_output_path = f"../Data/5-TaResults/{discretization_method}/{period}"
+
 
         learner.ta.show(
             title=title,
@@ -105,7 +129,17 @@ for trace_nr in range(1, 11):  # 1 → 10 traces
             output_path=TA_output_path
         )
 
-        xml_path = f'../Data/6-XMLOutput/{discretization_method}/{period}/{room}-{trace_nr}trace-{period}-{discretization_method}-b{b}-k{k}.xml'
+        xml_path = (
+                BASE_DIR
+                / "Data"
+                / "6-XMLOutput"
+                / discretization_method
+                / period
+                / f"{room}-{trace_nr}trace-{period}-{discretization_method}-b{b}-k{k}.xml"
+        )
+        xml_path.parent.mkdir(parents=True, exist_ok=True)
+
+        #xml_path = f'../Data/6-XMLOutput/{discretization_method}/{period}/{room}-{trace_nr}trace-{period}-{discretization_method}-b{b}-k{k}.xml'
 
         learner.ta.export_ta(path=xml_path, symbol_map=symbol_map)
 
