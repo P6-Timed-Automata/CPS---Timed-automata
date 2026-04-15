@@ -169,4 +169,4 @@ for trace_nr in range(1, 11):  # 1 → 10 traces
 # xml_path = f'../Data/6-XMLOutput/{discretization_method}/{period}/{room}-{trace_nr}trace-{period}-{discretization_method}-b{b}-k{k}.xml'
 # learner.ta.export_ta(path=xml_path, symbol_map=symbol_map)
 #
-#
+
