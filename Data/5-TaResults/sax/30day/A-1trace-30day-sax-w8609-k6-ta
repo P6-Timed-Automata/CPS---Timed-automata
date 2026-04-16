@@ -1,0 +1,23 @@
+digraph G {
+START [style=invisible]
+graph [fontname = "helvetica"]
+node [fontname = "helvetica"]
+edge [fontname = "helvetica"]
+labelloc="t"
+label="A-1trace-30day-sax-w8609-k6-ta"
+S0 [shape="circle"]
+S2 [shape="circle"]
+S10 [shape="doublecircle"]
+S1 [shape="circle"]
+START -> S0
+S0 -> S1 [label="c [0, 1800] t[0, 6300] p=0.75"]
+S0 -> S10 [label="b [2700, 2700] t[13500, 13500] p=0.25"]
+S1 -> S2 [label="b [300, 2100] t[300, 8400] p=1.0"]
+S2 -> S0 [label="b [600, 2400] t[900, 10800] p=1.0"]
+S10 -> S10 [label="e [29700, 2574000] t[1485000, 11027768100] p=0.11"]
+S10 -> S10 [label="d [26700, 2582400] t[1201500, 11099961900] p=0.16"]
+S10 -> S10 [label="f [31500, 2567400] t[1669500, 10971209400] p=0.16"]
+S10 -> S10 [label="b [3900, 2549100] t[27300, 10815147000] p=0.26"]
+S10 -> S10 [label="c [3000, 2584500] t[16500, 11118047100] p=0.18"]
+S10 -> S10 [label="a [18600, 2462700] t[585900, 10093404600] p=0.13"]
+}
