@@ -66,6 +66,6 @@ def plot_traces(trace_folder, output_folder):
 
 # --- Usage ---
 plot_traces(
-    trace_folder  = "../DataProcessing/experiment_3_weekly",
-    output_folder = "experiment_3_weekly_plots"
+    trace_folder  = ".../../Data/3-ExtractInterval/A/30day",
+    output_folder = "experiment_30_day_trace_plots"
 )

@@ -85,46 +85,45 @@ def check_normality(data_lists, w, trace_nr, output_dir):
         plt.close()
         print(f"  Normality check saved: {save_path} | {result_label}")
 
-
-# --- Config ---room = "A"
+# --- Config ---
 room = "A"
-w = 100 # 30 days - 8609 points
+w_values = [50, 100, 500, 1000, 2000, 4000, 8609]  # PAA segment counts to test
 discretization_method = "sax"
 period = "30day"
 
 experiment_folder = f"../Data/3-ExtractInterval/{period}-experiment"
-normality_output = f"../Data/5-TaResults/{discretization_method}/{period}/normality-checks"
 
 for trace_nr in range(1, 2):
     raw_traces = get_trace_files(folder_path=experiment_folder, max_files=trace_nr)
     data_lists = [csv_to_temp_time_list(f) for f in raw_traces]
 
-    # check normal distribution of data - Run once per trace_nr — independent of k
-    check_normality(data_lists, w=w, trace_nr=trace_nr, output_dir=normality_output)
+    for w in w_values:
+        normality_output = f"../Data/5-TaResults/{discretization_method}/{period}/normality-checks/w{w}"
+        check_normality(data_lists, w=w, trace_nr=trace_nr, output_dir=normality_output)
 
-    for k in range(2, 13, 2):
-        traces, breakpoints = sax_discretization_multi(data_lists, w=w, k=k)
-        symbolic_trace, symbol_map, mapping = map_bins_to_symbols_multi(traces, k)
+        for k in range(2, 13, 2):
+            traces, breakpoints = sax_discretization_multi(data_lists, w=w, k=k)
+            symbolic_trace, symbol_map, mapping = map_bins_to_symbols_multi(traces, k)
 
-        discretized_path = (
-            f"../Data/4-DiscretizationData/{discretization_method}/{period}/"
-            f"{room}-{trace_nr}trace-{period}-{discretization_method}-w{w}-k{k}-trace.txt"
-        )
-        format_output(symbolic_res_list=symbolic_trace, output_path=discretized_path)
+            discretized_path = (
+                f"../Data/4-DiscretizationData/{discretization_method}/{period}/"
+                f"{room}-{trace_nr}trace-{period}-{discretization_method}-w{w}-k{k}-trace.txt"
+            )
+            format_output(symbolic_res_list=symbolic_trace, output_path=discretized_path)
 
-        learner = TALearner(tss_path=discretized_path, display=False, k=k)
+            learner = TALearner(tss_path=discretized_path, display=False, k=k)
 
-        title = f"{room}-{trace_nr}trace-{period}-{discretization_method}-w{w}-k{k}-ta"
-        learner.ta.show(
-            title=title,
-            savePng=True,
-            output_path=f"../Data/5-TaResults/{discretization_method}/{period}"
-        )
+            title = f"{room}-{trace_nr}trace-{period}-{discretization_method}-w{w}-k{k}-ta"
+            learner.ta.show(
+                title=title,
+                savePng=True,
+                output_path=f"../Data/5-TaResults/{discretization_method}/{period}"
+            )
 
-        learner.ta.export_ta(
-            path=f"../Data/6-XMLOutput/{discretization_method}/{period}/"
-                 f"{room}-{trace_nr}trace-{period}-{discretization_method}-w{w}-k{k}.xml",
-            symbol_map=symbol_map
-        )
+            learner.ta.export_ta(
+                path=f"../Data/6-XMLOutput/{discretization_method}/{period}/"
+                     f"{room}-{trace_nr}trace-{period}-{discretization_method}-w{w}-k{k}.xml",
+                symbol_map=symbol_map
+            )
 
-        print(f"Done: trace={trace_nr}, k={k}")
+            print(f"Done: trace={trace_nr}, w={w}, k={k}")
