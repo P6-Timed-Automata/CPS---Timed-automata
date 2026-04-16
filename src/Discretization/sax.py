@@ -57,45 +57,6 @@ def map_bins_to_symbols(result, k):
 
     return symbolic_result, mapping
 
-def sax_discretization(trace1, trace2, w, k):
-    """
-    w: number of PAA segments (output length per trace)
-    k: alphabet size (number of symbols)
-    """
-    v1 = np.array([v for v, t in trace1])
-    t1 = np.array([t for v, t in trace1])
-    v2 = np.array([v for v, t in trace2])
-    t2 = np.array([t for v, t in trace2])
-
-    #Z-normalize
-    def znorm(v):
-        sigma = v.std()
-        return (v - v.mean()) / sigma
-
-    v1_norm = znorm(v1)
-    v2_norm = znorm(v2)
-
-    #PAA
-    #Reduces n points to w segment means
-    def paa(v, t, w):
-        v_segs = np.array_split(v, w)
-        t_segs = np.array_split(t, w)
-        means = np.array([seg.mean() for seg in v_segs])
-        midpoints = np.array([int(seg.mean()) for seg in t_segs])
-        return means, midpoints
-
-    paa_v1, paa_t1 = paa(v1_norm, t1, w)
-    paa_v2, paa_t2 = paa(v2_norm, t2, w)
-
-    #Gaussian breakpoints
-    breakpoints = norm.ppf(np.linspace(0, 1, k + 1)[1:-1])
-
-    labels1 = np.digitize(paa_v1, breakpoints)
-    labels2 = np.digitize(paa_v2, breakpoints)
-
-    trace1_discretized = [(int(l), int(t)) for l, t in zip(labels1, paa_t1)]
-    trace2_discretized = [(int(l), int(t)) for l, t in zip(labels2, paa_t2)]
-
     # After znorm and PAA
     combined_paa = np.concatenate([paa_v1, paa_v2])
 
@@ -116,32 +77,31 @@ def sax_discretization(trace1, trace2, w, k):
     # plt.tight_layout()
     # plt.show()
 
-    return trace1_discretized, trace2_discretized, breakpoints
-
-input1_file = '../../Data/FormattedData/experiment_5h/formated_data.csv'
-data1 = csv_to_temp_time_list(input1_file)
-
-input2_file = '../../Data/FormattedData/experiment_5h/formated_data2.csv'
-data2 = csv_to_temp_time_list(input2_file)
-
-w = 10
-k = 3
-
-trace1_discretized, trace2_discretized, bins = sax_discretization(data1, data2, w, k)
-
-print("Bins:", bins)
-print("Result1:", trace1_discretized)
-print("Result2:", trace2_discretized)
-
-symbolic_res1, mapping = map_bins_to_symbols(trace1_discretized, k)
-symbolic_res2, __ = map_bins_to_symbols(trace2_discretized, k)
-
-print("Mapping:", mapping)
-
-print("Symbolic result:", symbolic_res1)
-print("Symbolic result:", symbolic_res2)
-
-symbolic_res_list = [symbolic_res1, symbolic_res2]
-
-format_output(symbolic_res_list)
+#
+# input1_file = '../../Data/FormattedData/experiment_5h/formated_data.csv'
+# data1 = csv_to_temp_time_list(input1_file)
+#
+# input2_file = '../../Data/FormattedData/experiment_5h/formated_data2.csv'
+# data2 = csv_to_temp_time_list(input2_file)
+#
+# w = 10
+# k = 3
+#
+# trace1_discretized, trace2_discretized, bins = sax_discretization(data1, data2, w, k)
+#
+# print("Bins:", bins)
+# print("Result1:", trace1_discretized)
+# print("Result2:", trace2_discretized)
+#
+# symbolic_res1, mapping = map_bins_to_symbols(trace1_discretized, k)
+# symbolic_res2, __ = map_bins_to_symbols(trace2_discretized, k)
+#
+# print("Mapping:", mapping)
+#
+# print("Symbolic result:", symbolic_res1)
+# print("Symbolic result:", symbolic_res2)
+#
+# symbolic_res_list = [symbolic_res1, symbolic_res2]
+#
+# format_output(symbolic_res_list)
 

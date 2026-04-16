@@ -336,7 +336,7 @@ class Automaton:
             "<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'",
             "  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>",
             '<nta>',
-            f'  <declaration>clock t; int temp; {const_decls}</declaration>',
+            f'  <declaration>clock cl; int temp; {const_decls}</declaration>',
             '  <template>',
             '    <name>TagModel</name>',
             '    <declaration></declaration>',
@@ -349,7 +349,7 @@ class Automaton:
             lines.append(f'      <name x="{x}" y="{y - 20}">{state.name}</name>')
             ub = upper_bounds.get(state.name)
             if ub is not None:
-                lines.append(f'      <label kind="invariant" t="{x}" y="{y + 20}">t &lt;= {ub}</label>')
+                lines.append(f'      <label kind="invariant" cl="{x}" y="{y + 20}">cl &lt;= {ub}</label>')
             lines.append('    </location>')
 
         lines.append(f'    <init ref="{state_ids[initial.name]}"/>')
@@ -361,8 +361,8 @@ class Automaton:
                 lines.append('    <transition>')
                 lines.append(f'      <source ref="{state_ids[e.source.name]}"/>')
                 lines.append(f'      <target ref="{state_ids[e.destination.name]}"/>')
-                lines.append(f'      <label kind="guard">t &gt;= {lo} &amp;&amp; t &lt;= {hi}</label>')
-                lines.append(f'      <label kind="assignment">temp = {val}, t = 0</label>')
+                lines.append(f'      <label kind="guard">cl &gt;= {lo} &amp;&amp; cl &lt;= {hi}</label>')
+                lines.append(f'      <label kind="assignment">temp = {val}, cl = 0</label>')
                 lines.append('    </transition>')
 
         lines += [
@@ -380,6 +380,8 @@ class Automaton:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w+') as f:
             f.write('\n'.join(lines))
+
+        print(f"UPPAAL model written to {path}")
 
     def import_from_dot(self, dot_path: str) -> None:
         """
