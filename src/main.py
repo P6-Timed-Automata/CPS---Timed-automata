@@ -69,11 +69,11 @@ extract_30day = f"../Data/3-ExtractInterval/{room}/30day"
 b = 15
 #k = 6
 discretization_method = "naiv"
-period = "30day"
+period = "1day"
 trace_nr = 1
 
 experiment_folder = f"../Data/3-ExtractInterval/{period}-experiment"
-for trace_nr in range(1, 11):  # 1 → 10 traces
+for trace_nr in range(1, 21):  # 1 → 20 traces
     rawTraces = get_trace_files(folder_path=experiment_folder, max_files=trace_nr)
 
     data_lists = csv_to_temp_time_list(input_files=rawTraces)
