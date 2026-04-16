@@ -1,21 +1,17 @@
 import os
 import string
 import numpy as np
+import matplotlib.pyplot as plt
+import scipy.stats as stats
 from scipy.stats import norm
 
 from TAG.TALearner import TALearner
 from Discretization.discretizationSetup import format_output
-from Discretization.sax import csv_to_temp_time_list  # single-file version
+from Discretization.sax import csv_to_temp_time_list
 from DataProcessing.processData import get_trace_files
 
 
 def sax_discretization_multi(data_lists, w, k):
-    """
-    Generalized SAX for N traces.
-    w: PAA segment count (controls compression, not alphabet size)
-    k: alphabet size (Gaussian breakpoints)
-    Returns: list of [(label, time), ...] per trace, and breakpoints array
-    """
     breakpoints = norm.ppf(np.linspace(0, 1, k + 1)[1:-1])
 
     def znorm(v):
@@ -42,28 +38,71 @@ def sax_discretization_multi(data_lists, w, k):
 
 
 def map_bins_to_symbols_multi(traces, k):
-    """Multi-trace wrapper matching the return signature expected by main."""
     if k > 26:
         raise ValueError("k > 26 not supported with single-letter symbols")
     mapping = {i: string.ascii_lowercase[i] for i in range(k)}
     symbolic = [[(mapping[label], time) for label, time in trace] for trace in traces]
-    return symbolic, mapping, mapping  # symbol_map and mapping are equivalent in SAX
+    return symbolic, mapping, mapping
 
 
-# --- Config ---
+def check_normality(data_lists, w, trace_nr, output_dir):
+    """
+    For each trace in data_lists: z-normalize, apply PAA, then plot histogram
+    vs N(0,1) and a Q-Q plot. Also runs D'Agostino-Pearson normality test.
+    Saves one figure per trace to output_dir.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+
+    def znorm(v):
+        sigma = v.std()
+        return (v - v.mean()) / sigma if sigma != 0 else np.zeros_like(v)
+
+    for i, trace in enumerate(data_lists):
+        v = znorm(np.array([val for val, _ in trace]))
+        paa_segs = np.array_split(v, w)
+        paa_v = np.array([seg.mean() for seg in paa_segs])
+
+        stat, p = stats.normaltest(paa_v)
+        result_label = f"D'Agostino-Pearson: stat={stat:.3f}, p={p:.4f} ({'normal' if p > 0.05 else 'NOT normal'} at α=0.05)"
+
+        fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+        fig.suptitle(f"Trace {trace_nr}, file {i+1} — {result_label}", fontsize=10)
+
+        # Histogram vs N(0,1)
+        axes[0].hist(paa_v, bins=20, density=True, alpha=0.6, label="PAA means")
+        x = np.linspace(paa_v.min() - 1, paa_v.max() + 1, 200)
+        axes[0].plot(x, stats.norm.pdf(x), 'r-', label='N(0,1)')
+        axes[0].set_title("Histogram of z-normed PAA means")
+        axes[0].legend()
+
+        # Q-Q plot
+        stats.probplot(paa_v, dist="norm", plot=axes[1])
+        axes[1].set_title("Q-Q Plot")
+
+        plt.tight_layout()
+        save_path = os.path.join(output_dir, f"normality-trace{trace_nr}-file{i+1}.png")
+        plt.savefig(save_path)
+        plt.close()
+        print(f"  Normality check saved: {save_path} | {result_label}")
+
+
+# --- Config ---room = "A"
 room = "A"
-w = 50                        # PAA segments — tune to trace length
+w = 100 # 30 days - 8609 points
 discretization_method = "sax"
 period = "30day"
 
 experiment_folder = f"../Data/3-ExtractInterval/{period}-experiment"
+normality_output = f"../Data/5-TaResults/{discretization_method}/{period}/normality-checks"
 
-for trace_nr in range(1, 11):
+for trace_nr in range(1, 2):
     raw_traces = get_trace_files(folder_path=experiment_folder, max_files=trace_nr)
     data_lists = [csv_to_temp_time_list(f) for f in raw_traces]
 
-    # SAX: k affects discretization, so both loops must be nested
-    for k in range(4, 11, 2):
+    # check normal distribution of data - Run once per trace_nr — independent of k
+    check_normality(data_lists, w=w, trace_nr=trace_nr, output_dir=normality_output)
+
+    for k in range(2, 13, 2):
         traces, breakpoints = sax_discretization_multi(data_lists, w=w, k=k)
         symbolic_trace, symbol_map, mapping = map_bins_to_symbols_multi(traces, k)
 
