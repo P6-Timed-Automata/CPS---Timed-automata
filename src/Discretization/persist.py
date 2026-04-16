@@ -1,4 +1,6 @@
 import pandas as pd
+import os
+import matplotlib.pyplot as plt
 
 """
 Persist Python implementation with choice between Kullback-Leibler divergence and Wasserstein distance and EF or EW initialization.
@@ -23,33 +25,17 @@ import math
 import numpy as np
 
 class Persist():
-    def __init__(self, x, kmin=2, kmax=10, divergence="w", skip=np.array([4, 4]), candidates="EW"):
+    def __init__(self, x, break_min=2, break_max=10, divergence="w", skip=np.array([4, 4]), candidates="EW"):
         self.x = x
-        self.kmin = kmin
-        self.kmax = kmax
+        self.break_min = break_min
+        self.break_max = break_max
         self.divergence = divergence # kl: Kullback-Leibler divergence / w: Wasserstein distance
         self.skip = skip
         self.candidates = candidates # EW: equal width / EF: equal frequency
         self.bins = None
         self.pscores = None
 
-
-        # If x is a CSV filename/path, load it
-        if isinstance(x, str):
-            df = pd.read_csv(x)
-
-            # Keep only numeric columns
-            numeric_df = df.select_dtypes(include=[np.number])
-
-            if numeric_df.shape[1] == 0:
-                raise ValueError("CSV file does not contain any numeric columns.")
-
-            # Use the first numeric column by default
-            self.x = numeric_df.iloc[:, 0].to_numpy().reshape(-1, 1)
-
-
         self.persistbins()
-
 
 
 
@@ -65,11 +51,11 @@ class Persist():
         free_candidates[
             np.ix_(list(range(self.skip[0])) + list(range(len(candidate_cuts) - self.skip[1], len(candidate_cuts))))] = 0
         # store bins and score for each k
-        best_bins = np.full(shape=(self.kmax - self.kmin + 1, self.kmax - 1), fill_value=np.nan)
-        best_pscores = np.zeros((self.kmax - self.kmin + 1, 1))
+        best_bins = np.full(shape=(self.break_max - self.break_min + 1, self.break_max - 1), fill_value=np.nan)
+        best_pscores = np.zeros((self.break_max - self.break_min + 1, 1))
         # start searching cuts
         bins = list()
-        for j in range(1, self.kmax):
+        for j in range(1, self.break_max):
             if len(np.nonzero(free_candidates)[0]) == 0: break
             # try all free candidate cuts
             current_cuts = np.nonzero(free_candidates)[0]
@@ -84,15 +70,15 @@ class Persist():
             bins = np.concatenate((bins, best_cut))
             free_candidates[range(current_cuts[best_ind][0] - 4, current_cuts[best_ind][0] + 4 + 1)] = 0
             # store result if in requested range of k
-            if j + 1 >= self.kmin:
-                best_pscores[j - (self.kmin - 1)] = best_score
-                if len(bins) < self.kmax:
-                    best_bins[j - (self.kmin - 1)] = np.concatenate(
-                        (bins, np.full(shape=(self.kmax - len(bins) - 1), fill_value=np.nan)))
+            if j + 1 >= self.break_min:
+                best_pscores[j - (self.break_min - 1)] = best_score
+                if len(bins) < self.break_max:
+                    best_bins[j - (self.break_min - 1)] = np.concatenate(
+                        (bins, np.full(shape=(self.break_max - len(bins) - 1), fill_value=np.nan)))
                 else:
-                    best_bins[j - (self.kmin - 1)] = bins
+                    best_bins[j - (self.break_min - 1)] = bins
         # pick best if several k were tried
-        if self.kmin != self.kmax:
+        if self.break_min != self.break_max:
             dummy, best = best_pscores.max(axis=0), best_pscores.argmax(axis=0)
             # bins = best_bins[best]
             bins = best_bins
@@ -142,8 +128,11 @@ class Persist():
         a = np.zeros(shape=(k, k))
         for i in range(t.shape[0]):
             a[int(t[i, 0]), int(t[i, 1])] = c[i]
-        a = a / np.tile(np.reshape(np.sum(a, 1), (k, 1)), (1, a.shape[1]))
+
+        with np.errstate(invalid='ignore'):
+            a = a / np.tile(np.reshape(np.sum(a, 1), (k, 1)), (1, a.shape[1]))
         a = np.where(np.isnan(a), 0, a)
+
         return (p, a, k)
 
     def kldiv(self, p, q, sym=True):
@@ -182,3 +171,86 @@ class Persist():
         for i in range(len(bins) - 1):
             y[np.nonzero(np.logical_and(self.x >= bins[i], self.x < bins[i + 1]))] = i
         return y
+
+def discretize_traces_with_bins(traces, bins):
+    discretized_traces = []
+
+    for trace in traces:
+        values = [v for v, t in trace]
+        times = [t for v, t in trace]
+
+        labels = np.digitize(values, bins, right=False)
+
+        # shift to 0-based
+        labels = labels - 1
+
+        # safety clamp
+        labels = np.clip(labels, 0, len(bins) - 2)
+
+        discretized_trace = [
+            (int(label), int(time))
+            for label, time in zip(labels, times)
+        ]
+
+        discretized_traces.append(discretized_trace)
+
+    return discretized_traces
+
+def get_best_bins(persist_obj, ts):
+    best_idx = np.argmax(persist_obj.pscores)
+
+    bins = persist_obj.bins[best_idx]
+    bins = bins[~np.isnan(bins)]
+    bins = np.sort(bins)
+
+    # use the real data range as outer bin edges
+    bins = np.concatenate(([np.min(ts)], bins, [np.max(ts)]))
+    return bins
+
+# def get_best_bins(persist_obj, ts):
+#
+#     print("\n--- PERSISTENCE DEBUG ---")
+#     print("pscores:", persist_obj.pscores)
+#     print("num candidates:", len(persist_obj.pscores))
+#
+#     for i, (bins, score) in enumerate(zip(persist_obj.bins, persist_obj.pscores)):
+#         if bins is None:
+#             continue
+#         clean_bins = bins[~np.isnan(bins)]
+#         print(f"i={i} | bins={len(clean_bins)} | score={score}")
+#
+#     best_idx = np.argmax(persist_obj.pscores)
+#     print("\nBEST idx:", best_idx)
+#     print("BEST score:", persist_obj.pscores[best_idx])
+#     print("------------------------\n")
+#
+#     bins = persist_obj.bins[best_idx]
+#     bins = bins[~np.isnan(bins)]
+#     bins = np.sort(bins)
+#
+#     bins = np.concatenate(([np.min(ts)], bins, [np.max(ts)]))
+#
+#     return bins
+
+def flatten_traces_to_ts(data_lists):
+    ts = np.concatenate([
+        np.array([v for v, t in trace])
+        for trace in data_lists
+    ])
+    return np.asarray(ts).reshape(-1, 1)
+
+
+def plot_and_save_breakpoints(ts, bins, save_path, show=True):
+    plt.figure()
+
+    plt.plot(ts.flatten())
+    for b in bins:
+        plt.axhline(b, color="red")
+
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
+
+    if show:
+        plt.show()
+    else:
+        plt.close()
