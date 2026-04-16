@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
 import os
-
+import re
 
 def plot_traces(trace_folder, output_folder):
     """
@@ -14,10 +14,13 @@ def plot_traces(trace_folder, output_folder):
     """
     os.makedirs(output_folder, exist_ok=True)
 
-    # Load all trace files, sorted by trace number
+    def extract_tid(filename):
+        match = re.search(r'tid(\d+)', filename)
+        return int(match.group(1)) if match else float('inf')
+
     trace_files = sorted(
         [f for f in os.listdir(trace_folder) if f.endswith('.csv')],
-        key=lambda f: int(f.split('_trace')[1].split('.')[0])
+        key=extract_tid
     )
 
     if not trace_files:
@@ -66,6 +69,6 @@ def plot_traces(trace_folder, output_folder):
 
 # --- Usage ---
 plot_traces(
-    trace_folder  = "../dataProcessing/experiment_3_weekly",
-    output_folder = "experiment_3_weekly_plots"
+    trace_folder  = "../../data/3-ExtractInterval/A/30day",
+    output_folder = "../../data/Graphs/Data_graphs"
 )
