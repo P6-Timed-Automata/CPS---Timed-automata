@@ -1,6 +1,6 @@
-from src.TAG.Automaton import Automaton
-from src.TAG.State import State
-from src.TAG.Edge import Edge
+from TAG.Automaton import Automaton
+from TAG.State import State
+from TAG.Edge import Edge
 from typing import Union
 import re
 from datetime import datetime
@@ -29,10 +29,10 @@ class TALearner:
         self.mode = order
         self.operations = {"merges": 0, "splits": 0}
         self.__phase_i()
-        self.ta.show(title='After phase i')
+        #self.ta.show(title='After phase i')
         if splits:
             self.__phase_ii()
-            self.ta.show(title='After phase ii')
+            #self.ta.show(title='After phase ii')
         if self.ta.inconsistency_nb(self.tss, True) > 0:
             print("Automaton not consistent.")
         else:
@@ -339,7 +339,6 @@ class TALearner:
         First phase of the learning process merges operations without considering time
         """
         self.__build_apta()
-        self.ta.show(title='Initial automaton')
         merging = True
         while merging:
             merging = self.__look_for_merges(timed=False)

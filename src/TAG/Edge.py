@@ -1,4 +1,4 @@
-from src.TAG.State import State
+from TAG.State import State
 
 
 class Edge:
