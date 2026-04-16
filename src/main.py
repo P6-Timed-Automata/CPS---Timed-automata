@@ -3,6 +3,8 @@ from TAG.TALearner import TALearner
 import graphviz
 from pathlib import Path
 
+from GraphGeneration.graphs import plot_discretized_traces
+
 from Discretization.discretizationSetup import (
     csv_to_temp_time_list,
     format_output,
@@ -17,6 +19,8 @@ from DataProcessing.processData import (
 )
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
 
 # PARAMETERS SETTINGS
 room = "A"
@@ -44,6 +48,10 @@ discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretizati
                           / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
                           )
 
+discrete_graph_path = (
+        BASE_DIR / "Data" / "Graphs" / "Discretized" / discretization_method / period
+)
+
 # Prepare input for Naiv
 rawTraces = all_traces[:trace_nr]
 data_lists = csv_to_temp_time_list(input_files=rawTraces)
@@ -53,6 +61,17 @@ traces, bins = equal_width_discretization(data_lists, symbols)
 
 # Prpare format for TAG
 symbolic_trace, symbol_map, mapping = map_bins_to_symbols(traces, symbols, bins)
+format_output(symbolic_res_list=symbolic_trace, output_path=discretinize_data_path)
+
+#plot discretized data
+plot_discretized_traces(
+    discretized_traces=traces,
+    output_folder=discrete_graph_path,
+    bins=bins,
+    mapping=mapping
+)
+
+# Save symbolic output
 format_output(symbolic_res_list=symbolic_trace, output_path=discretinize_data_path)
 
 # Now vary k
