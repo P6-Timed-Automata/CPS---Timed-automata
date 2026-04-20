@@ -15,7 +15,7 @@ def csv_to_temp_time_list(input_file):
         dtype=str,
         skip_header=1
     )
-
+½½
     # Extract columns
     times = data[:, 0].astype(int)
     temps = data[:, 1].astype(float)
