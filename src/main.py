@@ -63,13 +63,13 @@ traces, bins = equal_width_discretization(data_lists, symbols)
 symbolic_trace, symbol_map, mapping = map_bins_to_symbols(traces, symbols, bins)
 format_output(symbolic_res_list=symbolic_trace, output_path=discretinize_data_path)
 
-#plot discretized data
-plot_discretized_traces(
-    discretized_traces=traces,
-    output_folder=discrete_graph_path,
-    bins=bins,
-    mapping=mapping
-)
+# #plot discretized data
+# plot_discretized_traces(
+#     discretized_traces=traces,
+#     output_folder=discrete_graph_path,
+#     bins=bins,
+#     mapping=mapping
+# )
 
 # Save symbolic output
 format_output(symbolic_res_list=symbolic_trace, output_path=discretinize_data_path)
