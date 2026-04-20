@@ -28,7 +28,7 @@ discretization_method = "naiv"
 period = "1day"
 
 # Parameter for Naiv
-symbols = 15
+symbols = 25
 
 # Parameter for TAG
 k_min = 4
