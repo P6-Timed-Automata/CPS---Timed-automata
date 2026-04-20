@@ -160,7 +160,8 @@ def plot_discretized_traces(discretized_traces, output_folder, bins=None, mappin
 
 
 # --- Usage ---
-plot_traces(
-    trace_folder  = "../data/3-ExtractInterval/A/30day",
-    output_folder = "../data/Graphs/Data_graphs"
-)
+if __name__ == "__main__":
+    plot_traces(
+        trace_folder  = "../data/3-ExtractInterval/A/day",
+        output_folder = "../data/Graphs/Data_graphs"
+    )

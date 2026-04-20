@@ -118,30 +118,31 @@ def sax_discretization(trace1, trace2, w, k):
 
     return trace1_discretized, trace2_discretized, breakpoints
 
-input1_file = '../../Data/FormattedData/experiment_5h/formated_data.csv'
-data1 = csv_to_temp_time_list(input1_file)
+if __name__ == "__main__":
+    input1_file = '../../Data/FormattedData/experiment_5h/formated_data.csv'
+    data1 = csv_to_temp_time_list(input1_file)
 
-input2_file = '../../Data/FormattedData/experiment_5h/formated_data2.csv'
-data2 = csv_to_temp_time_list(input2_file)
+    input2_file = '../../Data/FormattedData/experiment_5h/formated_data2.csv'
+    data2 = csv_to_temp_time_list(input2_file)
 
-w = 10
-k = 3
+    w = 10
+    k = 3
 
-trace1_discretized, trace2_discretized, bins = sax_discretization(data1, data2, w, k)
+    trace1_discretized, trace2_discretized, bins = sax_discretization(data1, data2, w, k)
 
-print("Bins:", bins)
-print("Result1:", trace1_discretized)
-print("Result2:", trace2_discretized)
+    print("Bins:", bins)
+    print("Result1:", trace1_discretized)
+    print("Result2:", trace2_discretized)
 
-symbolic_res1, mapping = map_bins_to_symbols(trace1_discretized, k)
-symbolic_res2, __ = map_bins_to_symbols(trace2_discretized, k)
+    symbolic_res1, mapping = map_bins_to_symbols(trace1_discretized, k)
+    symbolic_res2, __ = map_bins_to_symbols(trace2_discretized, k)
 
-print("Mapping:", mapping)
+    print("Mapping:", mapping)
 
-print("Symbolic result:", symbolic_res1)
-print("Symbolic result:", symbolic_res2)
+    print("Symbolic result:", symbolic_res1)
+    print("Symbolic result:", symbolic_res2)
 
-symbolic_res_list = [symbolic_res1, symbolic_res2]
+    symbolic_res_list = [symbolic_res1, symbolic_res2]
 
-format_output(symbolic_res_list)
+    format_output(symbolic_res_list)
 

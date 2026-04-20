@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'
+  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+  <declaration>clock cl; int temp; const int a = 2088; const int b = 2165; const int c = 2204; const int d = 2280;</declaration>
+  <template>
+    <name>TagModel</name>
+    <declaration></declaration>
+    <location id="id0" x="217" y="-731">
+      <name x="217" y="-751">S0</name>
+      <label kind="invariant" x="217" y="-711">cl &lt;= 29550</label>
+    </location>
+    <location id="id1" x="217" y="-162">
+      <name x="217" y="-182">S50</name>
+      <label kind="invariant" x="217" y="-142">cl &lt;= 600900</label>
+    </location>
+    <init ref="id0"/>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 150 &amp;&amp; cl &lt;= 28950</label>
+      <label kind="assignment">temp = 2088, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 29550 &amp;&amp; cl &lt;= 29550</label>
+      <label kind="assignment">temp = 2165, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 30150 &amp;&amp; cl &lt;= 600900</label>
+      <label kind="assignment">temp = 2165, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 90900 &amp;&amp; cl &lt;= 598500</label>
+      <label kind="assignment">temp = 2088, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 31350 &amp;&amp; cl &lt;= 591000</label>
+      <label kind="assignment">temp = 2204, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 39150 &amp;&amp; cl &lt;= 583200</label>
+      <label kind="assignment">temp = 2280, cl = 0</label>
+    </transition>
+  </template>
+  <system>Process = TagModel(); system Process;</system>
+  <queries>
+    <query>
+      <formula>simulate [&lt;=86400] { temp }</formula>
+      <comment/>
+    </query>
+  </queries>
+</nta>
