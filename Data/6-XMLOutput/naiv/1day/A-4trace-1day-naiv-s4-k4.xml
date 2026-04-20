@@ -1,0 +1,847 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'
+  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+  <declaration>clock cl; int temp; const int a = 2049; const int b = 2140; const int c = 2231; const int d = 2322;</declaration>
+  <template>
+    <name>TagModel</name>
+    <declaration></declaration>
+    <location id="id0" x="1449" y="-18552">
+      <name x="1449" y="-18572">S0</name>
+      <label kind="invariant" cl="1449" y="-18532">cl &lt;= 0</label>
+    </location>
+    <location id="id1" x="1260" y="-17980">
+      <name x="1260" y="-18000">S1</name>
+      <label kind="invariant" cl="1260" y="-17960">cl &lt;= 300</label>
+    </location>
+    <location id="id2" x="1638" y="-17980">
+      <name x="1638" y="-18000">S564</name>
+      <label kind="invariant" cl="1638" y="-17960">cl &lt;= 300</label>
+    </location>
+    <location id="id3" x="1260" y="-17356">
+      <name x="1260" y="-17376">S2</name>
+      <label kind="invariant" cl="1260" y="-17336">cl &lt;= 600</label>
+    </location>
+    <location id="id4" x="710" y="-17356">
+      <name x="710" y="-17376">S277</name>
+      <label kind="invariant" cl="710" y="-17336">cl &lt;= 39000</label>
+    </location>
+    <location id="id5" x="1666" y="-17356">
+      <name x="1666" y="-17376">S565</name>
+      <label kind="invariant" cl="1666" y="-17336">cl &lt;= 600</label>
+    </location>
+    <location id="id6" x="1260" y="-16733">
+      <name x="1260" y="-16753">S3</name>
+      <label kind="invariant" cl="1260" y="-16713">cl &lt;= 7200</label>
+    </location>
+    <location id="id7" x="1899" y="-16733">
+      <name x="1899" y="-16753">S566</name>
+      <label kind="invariant" cl="1899" y="-16713">cl &lt;= 900</label>
+    </location>
+    <location id="id8" x="1394" y="-16110">
+      <name x="1394" y="-16130">S4</name>
+      <label kind="invariant" cl="1394" y="-16090">cl &lt;= 25200</label>
+    </location>
+    <location id="id9" x="2933" y="-15678">
+      <name x="2933" y="-15698">S567</name>
+      <label kind="invariant" cl="2933" y="-15658">cl &lt;= 58200</label>
+    </location>
+    <location id="id10" x="2271" y="-14866">
+      <name x="2271" y="-14886">S7</name>
+      <label kind="invariant" cl="2271" y="-14846">cl &lt;= 25500</label>
+    </location>
+    <location id="id11" x="1971" y="-15246">
+      <name x="1971" y="-15266">S5</name>
+      <label kind="invariant" cl="1971" y="-15226">cl &lt;= 11700</label>
+    </location>
+    <location id="id12" x="1394" y="-15246">
+      <name x="1394" y="-15266">S14</name>
+      <label kind="invariant" cl="1394" y="-15226">cl &lt;= 23700</label>
+    </location>
+    <location id="id13" x="783" y="-15246">
+      <name x="783" y="-15266">S17</name>
+      <label kind="invariant" cl="783" y="-15226">cl &lt;= 2100</label>
+    </location>
+    <location id="id14" x="1166" y="-14485">
+      <name x="1166" y="-14505">S8</name>
+      <label kind="invariant" cl="1166" y="-14465">cl &lt;= 24000</label>
+    </location>
+    <location id="id15" x="833" y="-14485">
+      <name x="833" y="-14505">S6</name>
+      <label kind="invariant" cl="833" y="-14465">cl &lt;= 2400</label>
+    </location>
+    <location id="id16" x="1983" y="-14485">
+      <name x="1983" y="-14505">S16</name>
+      <label kind="invariant" cl="1983" y="-14465">cl &lt;= 12000</label>
+    </location>
+    <location id="id17" x="1810" y="-13862">
+      <name x="1810" y="-13882">S9</name>
+      <label kind="invariant" cl="1810" y="-13842">cl &lt;= 12300</label>
+    </location>
+    <location id="id18" x="921" y="-13862">
+      <name x="921" y="-13882">S15</name>
+      <label kind="invariant" cl="921" y="-13842">cl &lt;= 2700</label>
+    </location>
+    <location id="id19" x="949" y="-13264">
+      <name x="949" y="-13284">S10</name>
+      <label kind="invariant" cl="949" y="-13244">cl &lt;= 3000</label>
+    </location>
+    <location id="id20" x="1121" y="-12452">
+      <name x="1121" y="-12472">S11</name>
+      <label kind="invariant" cl="1121" y="-12432">cl &lt;= 5100</label>
+    </location>
+    <location id="id21" x="1394" y="-11879">
+      <name x="1394" y="-11899">S12</name>
+      <label kind="invariant" cl="1394" y="-11859">cl &lt;= 5400</label>
+    </location>
+    <location id="id22" x="783" y="-11879">
+      <name x="783" y="-11899">S18</name>
+      <label kind="invariant" cl="783" y="-11859">cl &lt;= 4500</label>
+    </location>
+    <location id="id23" x="949" y="-11307">
+      <name x="949" y="-11327">S13</name>
+      <label kind="invariant" cl="949" y="-11287">cl &lt;= 4800</label>
+    </location>
+    <location id="id24" x="1383" y="-11307">
+      <name x="1383" y="-11327">S19</name>
+      <label kind="invariant" cl="1383" y="-11287">cl &lt;= 25800</label>
+    </location>
+    <location id="id25" x="1377" y="-10735">
+      <name x="1377" y="-10755">S20</name>
+      <label kind="invariant" cl="1377" y="-10715">cl &lt;= 6000</label>
+    </location>
+    <location id="id26" x="999" y="-10735">
+      <name x="999" y="-10755">S27</name>
+      <label kind="invariant" cl="999" y="-10715">cl &lt;= 26100</label>
+    </location>
+    <location id="id27" x="999" y="-10162">
+      <name x="999" y="-10182">S21</name>
+      <label kind="invariant" cl="999" y="-10142">cl &lt;= 26400</label>
+    </location>
+    <location id="id28" x="1377" y="-10162">
+      <name x="1377" y="-10182">S26</name>
+      <label kind="invariant" cl="1377" y="-10142">cl &lt;= 6300</label>
+    </location>
+    <location id="id29" x="1377" y="-9590">
+      <name x="1377" y="-9610">S22</name>
+      <label kind="invariant" cl="1377" y="-9570">cl &lt;= 6600</label>
+    </location>
+    <location id="id30" x="999" y="-9590">
+      <name x="999" y="-9610">S25</name>
+      <label kind="invariant" cl="999" y="-9570">cl &lt;= 26700</label>
+    </location>
+    <location id="id31" x="999" y="-9018">
+      <name x="999" y="-9038">S23</name>
+      <label kind="invariant" cl="999" y="-8998">cl &lt;= 27000</label>
+    </location>
+    <location id="id32" x="555" y="-9018">
+      <name x="555" y="-9038">S24</name>
+      <label kind="invariant" cl="555" y="-8998">cl &lt;= 6900</label>
+    </location>
+    <location id="id33" x="999" y="-8446">
+      <name x="999" y="-8466">S91</name>
+      <label kind="invariant" cl="999" y="-8426">cl &lt;= 31200</label>
+    </location>
+    <location id="id34" x="999" y="-7848">
+      <name x="999" y="-7868">S105</name>
+      <label kind="invariant" cl="999" y="-7828">cl &lt;= 34800</label>
+    </location>
+    <location id="id35" x="999" y="-7225">
+      <name x="999" y="-7245">S117</name>
+      <label kind="invariant" cl="999" y="-7205">cl &lt;= 86100</label>
+    </location>
+    <location id="id36" x="999" y="-6579">
+      <name x="999" y="-6599">S121</name>
+      <label kind="invariant" cl="999" y="-6559">cl &lt;= 83700</label>
+    </location>
+    <location id="id37" x="999" y="-5934">
+      <name x="999" y="-5954">S122</name>
+      <label kind="invariant" cl="999" y="-5914">cl &lt;= 84000</label>
+    </location>
+    <location id="id38" x="2171" y="-5310">
+      <name x="2171" y="-5330">S123</name>
+      <label kind="invariant" cl="2171" y="-5290">cl &lt;= 85500</label>
+    </location>
+    <location id="id39" x="521" y="-16733">
+      <name x="521" y="-16753">S406</name>
+      <label kind="invariant" cl="521" y="-16713">cl &lt;= 39300</label>
+    </location>
+    <location id="id40" x="166" y="-16110">
+      <name x="166" y="-16130">S407</name>
+      <label kind="invariant" cl="166" y="-16090">cl &lt;= 39600</label>
+    </location>
+    <location id="id41" x="166" y="-15246">
+      <name x="166" y="-15266">S408</name>
+      <label kind="invariant" cl="166" y="-15226">cl &lt;= 39900</label>
+    </location>
+    <location id="id42" x="166" y="-14485">
+      <name x="166" y="-14505">S409</name>
+      <label kind="invariant" cl="166" y="-14465">cl &lt;= 40200</label>
+    </location>
+    <location id="id43" x="166" y="-13862">
+      <name x="166" y="-13882">S410</name>
+      <label kind="invariant" cl="166" y="-13842">cl &lt;= 40500</label>
+    </location>
+    <location id="id44" x="166" y="-12858">
+      <name x="166" y="-12878">S411</name>
+      <label kind="invariant" cl="166" y="-12838">cl &lt;= 40800</label>
+    </location>
+    <location id="id45" x="955" y="-166">
+      <name x="955" y="-186">S412</name>
+      <label kind="invariant" cl="955" y="-146">cl &lt;= 71700</label>
+    </location>
+    <location id="id46" x="2433" y="-4661">
+      <name x="2433" y="-4681">S170</name>
+      <label kind="invariant" cl="2433" y="-4641">cl &lt;= 60900</label>
+    </location>
+    <location id="id47" x="1544" y="-4661">
+      <name x="1544" y="-4681">S30</name>
+      <label kind="invariant" cl="1544" y="-4641">cl &lt;= 51000</label>
+    </location>
+    <location id="id48" x="2838" y="-4661">
+      <name x="2838" y="-4681">S31</name>
+      <label kind="invariant" cl="2838" y="-4641">cl &lt;= 54300</label>
+    </location>
+    <location id="id49" x="1544" y="-3987">
+      <name x="1544" y="-4007">S171</name>
+      <label kind="invariant" cl="1544" y="-3967">cl &lt;= 51300</label>
+    </location>
+    <location id="id50" x="2449" y="-3987">
+      <name x="2449" y="-4007">S29</name>
+      <label kind="invariant" cl="2449" y="-3967">cl &lt;= 61200</label>
+    </location>
+    <location id="id51" x="2477" y="-3050">
+      <name x="2477" y="-3070">S172</name>
+      <label kind="invariant" cl="2477" y="-3030">cl &lt;= 61500</label>
+    </location>
+    <location id="id52" x="1544" y="-3050">
+      <name x="1544" y="-3070">S28</name>
+      <label kind="invariant" cl="1544" y="-3030">cl &lt;= 51600</label>
+    </location>
+    <location id="id53" x="944" y="-2353">
+      <name x="944" y="-2373">S173</name>
+      <label kind="invariant" cl="944" y="-2333">cl &lt;= 63000</label>
+    </location>
+    <location id="id54" x="2744" y="-3529">
+      <name x="2744" y="-3549">S745</name>
+      <label kind="invariant" cl="2744" y="-3509">cl &lt;= 66900</label>
+    </location>
+    <location id="id55" x="3133" y="-2353">
+      <name x="3133" y="-2373">S465</name>
+      <label kind="invariant" cl="3133" y="-2333">cl &lt;= 69600</label>
+    </location>
+    <location id="id56" x="2271" y="-2353">
+      <name x="2271" y="-2373">S1053</name>
+      <label kind="invariant" cl="2271" y="-2333">cl &lt;= 66600</label>
+    </location>
+    <location id="id57" x="2366" y="-1678">
+      <name x="2366" y="-1698">S1070</name>
+      <label kind="invariant" cl="2366" y="-1658">cl &lt;= 66900</label>
+    </location>
+    <location id="id58" x="2588" y="-789">
+      <name x="2588" y="-809">S506</name>
+      <label kind="invariant" cl="2588" y="-769">cl &lt;= 69300</label>
+    </location>
+    <location id="id59" x="3327" y="-1221">
+      <name x="3327" y="-1241">S505</name>
+      <label kind="invariant" cl="3327" y="-1201">cl &lt;= 69900</label>
+    </location>
+    <location id="id60" x="3094" y="-1678">
+      <name x="3094" y="-1698">S32</name>
+      <label kind="invariant" cl="3094" y="-1658">cl &lt;= 69000</label>
+    </location>
+    <location id="id61" x="983" y="-5310">
+      <name x="983" y="-5330">S261</name>
+      <label kind="invariant" cl="983" y="-5290">cl &lt;= 78300</label>
+    </location>
+    <location id="id62" x="977" y="-4661">
+      <name x="977" y="-4681">S262</name>
+      <label kind="invariant" cl="977" y="-4641">cl &lt;= 78600</label>
+    </location>
+    <location id="id63" x="977" y="-3987">
+      <name x="977" y="-4007">S263</name>
+      <label kind="invariant" cl="977" y="-3967">cl &lt;= 78900</label>
+    </location>
+    <location id="id64" x="977" y="-3050">
+      <name x="977" y="-3070">S264</name>
+      <label kind="invariant" cl="977" y="-3030">cl &lt;= 82500</label>
+    </location>
+    <location id="id65" x="1977" y="-4661">
+      <name x="1977" y="-4681">S1133</name>
+      <label kind="invariant" cl="1977" y="-4641">cl &lt;= 85800</label>
+    </location>
+    <location id="id66" x="1999" y="-3987">
+      <name x="1999" y="-4007">S1134</name>
+      <label kind="invariant" cl="1999" y="-3967">cl &lt;= 86100</label>
+    </location>
+    <location id="id67" x="1999" y="-3050">
+      <name x="1999" y="-3070">S1135</name>
+    </location>
+    <init ref="id0"/>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 0 &amp;&amp; cl &lt;= 0</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id2"/>
+      <label kind="guard">cl &gt;= 0 &amp;&amp; cl &lt;= 0</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id3"/>
+      <label kind="guard">cl &gt;= 300 &amp;&amp; cl &lt;= 300</label>
+      <label kind="assignment">temp = 2049, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id4"/>
+      <label kind="guard">cl &gt;= 300 &amp;&amp; cl &lt;= 300</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id2"/>
+      <target ref="id5"/>
+      <label kind="guard">cl &gt;= 300 &amp;&amp; cl &lt;= 300</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id6"/>
+      <label kind="guard">cl &gt;= 600 &amp;&amp; cl &lt;= 600</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id4"/>
+      <target ref="id4"/>
+      <label kind="guard">cl &gt;= 600 &amp;&amp; cl &lt;= 38700</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id4"/>
+      <target ref="id39"/>
+      <label kind="guard">cl &gt;= 39000 &amp;&amp; cl &lt;= 39000</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id5"/>
+      <target ref="id7"/>
+      <label kind="guard">cl &gt;= 600 &amp;&amp; cl &lt;= 600</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id6"/>
+      <target ref="id8"/>
+      <label kind="guard">cl &gt;= 900 &amp;&amp; cl &lt;= 7200</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id7"/>
+      <target ref="id9"/>
+      <label kind="guard">cl &gt;= 900 &amp;&amp; cl &lt;= 900</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id8"/>
+      <target ref="id8"/>
+      <label kind="guard">cl &gt;= 1200 &amp;&amp; cl &lt;= 24900</label>
+      <label kind="assignment">temp = 2049, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id8"/>
+      <target ref="id10"/>
+      <label kind="guard">cl &gt;= 25200 &amp;&amp; cl &lt;= 25200</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id8"/>
+      <target ref="id11"/>
+      <label kind="guard">cl &gt;= 11400 &amp;&amp; cl &lt;= 11400</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id8"/>
+      <target ref="id12"/>
+      <label kind="guard">cl &gt;= 15600 &amp;&amp; cl &lt;= 23400</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id8"/>
+      <target ref="id13"/>
+      <label kind="guard">cl &gt;= 1800 &amp;&amp; cl &lt;= 1800</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id9"/>
+      <target ref="id9"/>
+      <label kind="guard">cl &gt;= 1200 &amp;&amp; cl &lt;= 57900</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id9"/>
+      <target ref="id9"/>
+      <label kind="guard">cl &gt;= 1200 &amp;&amp; cl &lt;= 54300</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id9"/>
+      <target ref="id38"/>
+      <label kind="guard">cl &gt;= 49200 &amp;&amp; cl &lt;= 58200</label>
+      <label kind="assignment">temp = 2322, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id10"/>
+      <target ref="id24"/>
+      <label kind="guard">cl &gt;= 25500 &amp;&amp; cl &lt;= 25500</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id11"/>
+      <target ref="id16"/>
+      <label kind="guard">cl &gt;= 11700 &amp;&amp; cl &lt;= 11700</label>
+      <label kind="assignment">temp = 2049, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id12"/>
+      <target ref="id14"/>
+      <label kind="guard">cl &gt;= 15900 &amp;&amp; cl &lt;= 23700</label>
+      <label kind="assignment">temp = 2049, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id13"/>
+      <target ref="id15"/>
+      <label kind="guard">cl &gt;= 2100 &amp;&amp; cl &lt;= 2100</label>
+      <label kind="assignment">temp = 2049, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id14"/>
+      <target ref="id8"/>
+      <label kind="guard">cl &gt;= 16200 &amp;&amp; cl &lt;= 24000</label>
+      <label kind="assignment">temp = 2049, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id15"/>
+      <target ref="id18"/>
+      <label kind="guard">cl &gt;= 2400 &amp;&amp; cl &lt;= 2400</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id16"/>
+      <target ref="id17"/>
+      <label kind="guard">cl &gt;= 12000 &amp;&amp; cl &lt;= 12000</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id17"/>
+      <target ref="id8"/>
+      <label kind="guard">cl &gt;= 12300 &amp;&amp; cl &lt;= 12300</label>
+      <label kind="assignment">temp = 2049, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id18"/>
+      <target ref="id19"/>
+      <label kind="guard">cl &gt;= 2700 &amp;&amp; cl &lt;= 2700</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id19"/>
+      <target ref="id20"/>
+      <label kind="guard">cl &gt;= 3000 &amp;&amp; cl &lt;= 3000</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id20"/>
+      <target ref="id21"/>
+      <label kind="guard">cl &gt;= 5100 &amp;&amp; cl &lt;= 5100</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id20"/>
+      <target ref="id22"/>
+      <label kind="guard">cl &gt;= 3300 &amp;&amp; cl &lt;= 4200</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id21"/>
+      <target ref="id24"/>
+      <label kind="guard">cl &gt;= 5400 &amp;&amp; cl &lt;= 5400</label>
+      <label kind="assignment">temp = 2049, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id22"/>
+      <target ref="id23"/>
+      <label kind="guard">cl &gt;= 3600 &amp;&amp; cl &lt;= 4500</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id23"/>
+      <target ref="id20"/>
+      <label kind="guard">cl &gt;= 3900 &amp;&amp; cl &lt;= 4800</label>
+      <label kind="assignment">temp = 2049, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id24"/>
+      <target ref="id25"/>
+      <label kind="guard">cl &gt;= 5700 &amp;&amp; cl &lt;= 5700</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id24"/>
+      <target ref="id26"/>
+      <label kind="guard">cl &gt;= 25800 &amp;&amp; cl &lt;= 25800</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id25"/>
+      <target ref="id28"/>
+      <label kind="guard">cl &gt;= 6000 &amp;&amp; cl &lt;= 6000</label>
+      <label kind="assignment">temp = 2049, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id26"/>
+      <target ref="id27"/>
+      <label kind="guard">cl &gt;= 26100 &amp;&amp; cl &lt;= 26100</label>
+      <label kind="assignment">temp = 2049, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id27"/>
+      <target ref="id30"/>
+      <label kind="guard">cl &gt;= 26400 &amp;&amp; cl &lt;= 26400</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id28"/>
+      <target ref="id29"/>
+      <label kind="guard">cl &gt;= 6300 &amp;&amp; cl &lt;= 6300</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id29"/>
+      <target ref="id32"/>
+      <label kind="guard">cl &gt;= 6600 &amp;&amp; cl &lt;= 6600</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id30"/>
+      <target ref="id31"/>
+      <label kind="guard">cl &gt;= 26700 &amp;&amp; cl &lt;= 26700</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id31"/>
+      <target ref="id33"/>
+      <label kind="guard">cl &gt;= 27000 &amp;&amp; cl &lt;= 27000</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id32"/>
+      <target ref="id6"/>
+      <label kind="guard">cl &gt;= 6900 &amp;&amp; cl &lt;= 6900</label>
+      <label kind="assignment">temp = 2049, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id33"/>
+      <target ref="id33"/>
+      <label kind="guard">cl &gt;= 27300 &amp;&amp; cl &lt;= 30900</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id33"/>
+      <target ref="id34"/>
+      <label kind="guard">cl &gt;= 31200 &amp;&amp; cl &lt;= 31200</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id34"/>
+      <target ref="id34"/>
+      <label kind="guard">cl &gt;= 31500 &amp;&amp; cl &lt;= 34500</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id34"/>
+      <target ref="id35"/>
+      <label kind="guard">cl &gt;= 34800 &amp;&amp; cl &lt;= 34800</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id35"/>
+      <target ref="id55"/>
+      <label kind="guard">cl &gt;= 56700 &amp;&amp; cl &lt;= 69300</label>
+      <label kind="assignment">temp = 2322, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id35"/>
+      <target ref="id35"/>
+      <label kind="guard">cl &gt;= 35100 &amp;&amp; cl &lt;= 85800</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id35"/>
+      <target ref="id36"/>
+      <label kind="guard">cl &gt;= 36000 &amp;&amp; cl &lt;= 86100</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id36"/>
+      <target ref="id37"/>
+      <label kind="guard">cl &gt;= 36300 &amp;&amp; cl &lt;= 83700</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id37"/>
+      <target ref="id38"/>
+      <label kind="guard">cl &gt;= 36600 &amp;&amp; cl &lt;= 84000</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id37"/>
+      <target ref="id61"/>
+      <label kind="guard">cl &gt;= 78000 &amp;&amp; cl &lt;= 78000</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id38"/>
+      <target ref="id46"/>
+      <label kind="guard">cl &gt;= 60600 &amp;&amp; cl &lt;= 60600</label>
+      <label kind="assignment">temp = 2322, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id38"/>
+      <target ref="id38"/>
+      <label kind="guard">cl &gt;= 36900 &amp;&amp; cl &lt;= 85200</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id38"/>
+      <target ref="id65"/>
+      <label kind="guard">cl &gt;= 85500 &amp;&amp; cl &lt;= 85500</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id38"/>
+      <target ref="id47"/>
+      <label kind="guard">cl &gt;= 50700 &amp;&amp; cl &lt;= 50700</label>
+      <label kind="assignment">temp = 2322, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id38"/>
+      <target ref="id48"/>
+      <label kind="guard">cl &gt;= 54000 &amp;&amp; cl &lt;= 54000</label>
+      <label kind="assignment">temp = 2322, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id39"/>
+      <target ref="id40"/>
+      <label kind="guard">cl &gt;= 39300 &amp;&amp; cl &lt;= 39300</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id40"/>
+      <target ref="id41"/>
+      <label kind="guard">cl &gt;= 39600 &amp;&amp; cl &lt;= 39600</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id41"/>
+      <target ref="id42"/>
+      <label kind="guard">cl &gt;= 39900 &amp;&amp; cl &lt;= 39900</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id42"/>
+      <target ref="id43"/>
+      <label kind="guard">cl &gt;= 40200 &amp;&amp; cl &lt;= 40200</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id43"/>
+      <target ref="id44"/>
+      <label kind="guard">cl &gt;= 40500 &amp;&amp; cl &lt;= 40500</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id44"/>
+      <target ref="id45"/>
+      <label kind="guard">cl &gt;= 40800 &amp;&amp; cl &lt;= 40800</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id45"/>
+      <target ref="id45"/>
+      <label kind="guard">cl &gt;= 41100 &amp;&amp; cl &lt;= 71400</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id45"/>
+      <target ref="id35"/>
+      <label kind="guard">cl &gt;= 55200 &amp;&amp; cl &lt;= 71700</label>
+      <label kind="assignment">temp = 2322, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id46"/>
+      <target ref="id50"/>
+      <label kind="guard">cl &gt;= 60900 &amp;&amp; cl &lt;= 60900</label>
+      <label kind="assignment">temp = 2322, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id47"/>
+      <target ref="id49"/>
+      <label kind="guard">cl &gt;= 51000 &amp;&amp; cl &lt;= 51000</label>
+      <label kind="assignment">temp = 2322, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id48"/>
+      <target ref="id54"/>
+      <label kind="guard">cl &gt;= 54300 &amp;&amp; cl &lt;= 54300</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id49"/>
+      <target ref="id52"/>
+      <label kind="guard">cl &gt;= 51300 &amp;&amp; cl &lt;= 51300</label>
+      <label kind="assignment">temp = 2322, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id50"/>
+      <target ref="id51"/>
+      <label kind="guard">cl &gt;= 61200 &amp;&amp; cl &lt;= 61200</label>
+      <label kind="assignment">temp = 2322, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id51"/>
+      <target ref="id56"/>
+      <label kind="guard">cl &gt;= 61500 &amp;&amp; cl &lt;= 61500</label>
+      <label kind="assignment">temp = 2322, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id52"/>
+      <target ref="id53"/>
+      <label kind="guard">cl &gt;= 51600 &amp;&amp; cl &lt;= 51600</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id53"/>
+      <target ref="id53"/>
+      <label kind="guard">cl &gt;= 51900 &amp;&amp; cl &lt;= 62700</label>
+      <label kind="assignment">temp = 2322, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id53"/>
+      <target ref="id35"/>
+      <label kind="guard">cl &gt;= 63000 &amp;&amp; cl &lt;= 63000</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id54"/>
+      <target ref="id54"/>
+      <label kind="guard">cl &gt;= 54600 &amp;&amp; cl &lt;= 66600</label>
+      <label kind="assignment">temp = 2322, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id54"/>
+      <target ref="id58"/>
+      <label kind="guard">cl &gt;= 66900 &amp;&amp; cl &lt;= 66900</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id55"/>
+      <target ref="id55"/>
+      <label kind="guard">cl &gt;= 57000 &amp;&amp; cl &lt;= 68400</label>
+      <label kind="assignment">temp = 2322, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id55"/>
+      <target ref="id59"/>
+      <label kind="guard">cl &gt;= 69600 &amp;&amp; cl &lt;= 69600</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id55"/>
+      <target ref="id60"/>
+      <label kind="guard">cl &gt;= 68700 &amp;&amp; cl &lt;= 68700</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id56"/>
+      <target ref="id56"/>
+      <label kind="guard">cl &gt;= 61800 &amp;&amp; cl &lt;= 66300</label>
+      <label kind="assignment">temp = 2322, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id56"/>
+      <target ref="id57"/>
+      <label kind="guard">cl &gt;= 66600 &amp;&amp; cl &lt;= 66600</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id57"/>
+      <target ref="id58"/>
+      <label kind="guard">cl &gt;= 66900 &amp;&amp; cl &lt;= 66900</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id58"/>
+      <target ref="id45"/>
+      <label kind="guard">cl &gt;= 67200 &amp;&amp; cl &lt;= 69300</label>
+      <label kind="assignment">temp = 2322, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id59"/>
+      <target ref="id45"/>
+      <label kind="guard">cl &gt;= 69900 &amp;&amp; cl &lt;= 69900</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id60"/>
+      <target ref="id58"/>
+      <label kind="guard">cl &gt;= 69000 &amp;&amp; cl &lt;= 69000</label>
+      <label kind="assignment">temp = 2322, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id61"/>
+      <target ref="id62"/>
+      <label kind="guard">cl &gt;= 78300 &amp;&amp; cl &lt;= 78300</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id62"/>
+      <target ref="id63"/>
+      <label kind="guard">cl &gt;= 78600 &amp;&amp; cl &lt;= 78600</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id63"/>
+      <target ref="id64"/>
+      <label kind="guard">cl &gt;= 78900 &amp;&amp; cl &lt;= 78900</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id64"/>
+      <target ref="id64"/>
+      <label kind="guard">cl &gt;= 79200 &amp;&amp; cl &lt;= 82500</label>
+      <label kind="assignment">temp = 2140, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id65"/>
+      <target ref="id66"/>
+      <label kind="guard">cl &gt;= 85800 &amp;&amp; cl &lt;= 85800</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id66"/>
+      <target ref="id67"/>
+      <label kind="guard">cl &gt;= 86100 &amp;&amp; cl &lt;= 86100</label>
+      <label kind="assignment">temp = 2231, cl = 0</label>
+    </transition>
+  </template>
+  <system>Process = TagModel(); system Process;</system>
+  <queries>
+    <query>
+      <formula>simulate [&lt;=18000] { temp }</formula>
+      <comment/>
+    </query>
+  </queries>
+</nta>
