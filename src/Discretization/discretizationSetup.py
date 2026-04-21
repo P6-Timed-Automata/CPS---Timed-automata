@@ -48,30 +48,30 @@ def format_output(symbolic_res_list,output_path):
 
     print(f"File saved to {output_path}")
 
-def map_bins_to_symbols(result, k, bins):
+def map_bins_to_symbols(result, s, bins):
     # Create symbols: a, b, c, ...
     symbols = list(string.ascii_lowercase)
 
-    if k > len(symbols):
-        raise ValueError("k too large (max 26 supported with simple letters)")
+    if s > len(symbols):
+        raise ValueError("s too large (max 26 supported with simple letters)")
 
     # Create mapping: 0->'a', 1->'b', ...
-    mapping = {i: symbols[i] for i in range(k)}
+    mapping = {i: symbols[i] for i in range(s)}
 
     #Midpoint symbol map
     symbol_map = None
     if bins is not None:
         symbol_map = {
             symbols[i]: round(((bins[i] + bins[i + 1]) / 2) * 100)
-            for i in range(k)
+            for i in range(s)
         }
-
 
     # Apply mapping to traces
     symbolic_results = []
     for trace in result:
         symbolic_trace = [(mapping[int(label)], int(time)) for label, time in trace]
         symbolic_results.append(symbolic_trace)
+
 
     return symbolic_results, symbol_map, mapping
 

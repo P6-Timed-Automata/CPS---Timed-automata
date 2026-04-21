@@ -1,0 +1,26 @@
+digraph G {
+START [style=invisible]
+graph [fontname = "helvetica"]
+node [fontname = "helvetica"]
+edge [fontname = "helvetica"]
+labelloc="t"
+label="A-2trace-7day-sax-w1932-a4-kf4-ta"
+S51 [shape="circle"]
+S0 [shape="circle"]
+S66 [shape="doublecircle"]
+S52 [shape="circle"]
+S50 [shape="circle"]
+START -> S0
+S0 -> S0 [label="a [150, 28950] t[150, 712950] p=0.98"]
+S0 -> S50 [label="b [29550, 29550] t[742500, 742500] p=0.02"]
+S50 -> S51 [label="b [30150, 30150] t[772650, 772650] p=1.0"]
+S51 -> S52 [label="b [30750, 30750] t[803400, 803400] p=0.5"]
+S51 -> S52 [label="c [30750, 30750] t[803400, 803400] p=0.5"]
+S52 -> S52 [label="c [31350, 38550] t[834750, 1257750] p=0.9"]
+S52 -> S66 [label="a [34950, 34950] t[1035450, 1035450] p=0.05"]
+S52 -> S66 [label="d [39150, 39150] t[1296900, 1296900] p=0.05"]
+S66 -> S66 [label="b [35550, 600900] t[1071000, 600557400] p=0.25"]
+S66 -> S66 [label="c [36150, 604500] t[1107150, 607231800] p=0.18"]
+S66 -> S66 [label="d [40350, 603000] t[1377000, 604212300] p=0.29"]
+S66 -> S66 [label="a [70200, 598500] t[6144300, 595758600] p=0.28"]
+}

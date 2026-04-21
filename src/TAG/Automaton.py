@@ -192,7 +192,7 @@ class Automaton:
                         tmp += "t[" + str(gtime[0]) + ", " + str(gtime[1]) + "]" + ' '
                 tmp += 'p=' + str(round(e.proba, 2)) + '"]'
                 mem.append(tmp)
-        print(*mem, sep='\n')
+        #print(*mem, sep='\n')
         return mem
 
     def print_p(self, p_min:float, mem:set=set(), state:str='S0', states:set={'S0'}, global_time=False) -> tuple:
@@ -257,7 +257,7 @@ class Automaton:
             tmp += line + '\n'
         tmp += '}'
         s = graphviz.Source(tmp, filename=tempfile.mktemp('.gv'), format="png")
-        display(Image(s.view()))
+        #display(Image(s.view()))
 
         if savePng:
             s = graphviz.Source(tmp)
@@ -349,7 +349,7 @@ class Automaton:
             lines.append(f'      <name x="{x}" y="{y - 20}">{state.name}</name>')
             ub = upper_bounds.get(state.name)
             if ub is not None:
-                lines.append(f'      <label kind="invariant" cl="{x}" y="{y + 20}">cl &lt;= {ub}</label>')
+                lines.append(f'      <label kind="invariant" x="{x}" y="{y + 20}">cl &lt;= {ub}</label>')
             lines.append('    </location>')
 
         lines.append(f'    <init ref="{state_ids[initial.name]}"/>')
@@ -370,7 +370,7 @@ class Automaton:
             '  <system>Process = TagModel(); system Process;</system>',
             '  <queries>',
             '    <query>',
-            '      <formula>simulate [&lt;=18000] { temp }</formula>',
+            '      <formula>simulate [&lt;=86400] { temp }</formula>',
             '      <comment/>',
             '    </query>',
             '  </queries>',

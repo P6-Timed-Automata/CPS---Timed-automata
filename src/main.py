@@ -1,5 +1,9 @@
 import json, os
 from TAG.TALearner import TALearner
+import graphviz
+from pathlib import Path
+
+from GraphGeneration.graphs import plot_discretized_traces
 
 from Discretization.discretizationSetup import (
     csv_to_temp_time_list,
@@ -8,77 +12,122 @@ from Discretization.discretizationSetup import (
 )
 from Discretization.naive import equal_width_discretization
 
-from dataProcessing.processData import (
+from DataProcessing.processData import (
     format_temperature_data,
-    extract_time_intervals
+    extract_time_intervals,
+    get_trace_files
 )
 
-# input_formated_raw_data = '../Data/3-FormatedRawData/formated_raw_data.csv'
-# output_path_interval_data = '../Data/4-ExtractInterval'
-# # Process Data
-# # Full 24-hour traces, one per day
-# extract_time_intervals(input_formated_raw_data, os.path.join(output_path_interval_data, "experiment_1_full_days"), "trace")
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+
+# PARAMETERS SETTINGS
+room = "A"
+discretization_method = "naiv"
+period = "1day"
+
+# Parameter for Naiv
+symbols = 25
+
+# Parameter for TAG
+k_min = 4
+k_max = 4
+k_increment = 1
+
+experiment_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"
+
+all_traces = get_trace_files(folder_path = experiment_folder)
+len_traces = len(all_traces)  + 1
+
+trace_nr = 4
+
+
+# Paths
+discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
+                          / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
+                          )
+
+discrete_graph_path = (
+        BASE_DIR / "Data" / "Graphs" / "Discretized" / discretization_method / period
+)
+
+# Prepare input for Naiv
+rawTraces = all_traces[:trace_nr]
+data_lists = csv_to_temp_time_list(input_files=rawTraces)
+
+# Discretize with naiv
+traces, bins = equal_width_discretization(data_lists, symbols)
+
+# Prpare format for TAG
+symbolic_trace, symbol_map, mapping = map_bins_to_symbols(traces, symbols, bins)
+format_output(symbolic_res_list=symbolic_trace, output_path=discretinize_data_path)
+
+# #plot discretized data
+# plot_discretized_traces(
+#     discretized_traces=traces,
+#     output_folder=discrete_graph_path,
+#     bins=bins,
+#     mapping=mapping
+# )
+
+# Save symbolic output
+format_output(symbolic_res_list=symbolic_trace, output_path=discretinize_data_path)
+
+# Now vary k
+for k in range(k_min, k_max + 1, k_increment):
+    #Paths
+    title = f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-k{k}-ta"
+    TA_output_path = (BASE_DIR / "Data" / "5-TaResults" / discretization_method / period)
+    xml_path = (BASE_DIR / "Data" / "6-XMLOutput" / discretization_method / period
+                / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-k{k}.xml")
+
+    # Tranform to TA
+    learner = TALearner(tss_path=discretinize_data_path,display=False,k=k)
+    learner.ta.show(title=title,savePng=True,output_path=TA_output_path)
+    learner.ta.export_ta(path=xml_path, symbol_map=symbol_map)
+
+    print(f"Done: trace={trace_nr}, k={k}, symbols={symbols}")
+    print("-------------------------------------------------------------------------------------")
+
+
+
+
+#FOR CLUSTER
+
+# for trace_nr in range(1, len_traces):
 #
-# # Full 1-hour traces, one per day
-# extract_time_intervals(input_formated_raw_data, os.path.join(output_path_interval_data, "experiment_2_daily_windowed"), "trace", trace_days=1, window=(0, 3600) )
+#     # Paths
+#     discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
+#                               / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
+#                               )
 #
+#     # Prepare input for Naiv
+#     rawTraces = all_traces[:trace_nr]
+#     data_lists = csv_to_temp_time_list(input_files=rawTraces)
 #
-# # 7-day traces
-# extract_time_intervals(input_formated_raw_data, os.path.join(output_path_interval_data, "experiment_3_weekly"), "trace", trace_days=7)
+#     # Discretize with naiv
+#     traces, bins = equal_width_discretization(data_lists, symbols)
 #
-# # First 5 hours of each day, grouped into weekly traces
-# extract_time_intervals(input_formated_raw_data, os.path.join(output_path_interval_data, "experiment_4_weekly_windowed"), "trace", trace_days=7, window=(0, 18000))
-
-
-#Prepare Data for TAG
-k = 3
-input_files = [
-    #'DataProcessing/formated_data.csv',
-    #'DataProcessing/formated_data2.csv'
-    '../Data/4-ExtractInterval/experiment_1_full_days/trace_trace1.csv'
-]
-
-data_lists = csv_to_temp_time_list(input_files)
-# print(len(data_lists))
-# print(data_lists)
-
-
-# Discretenize
-
-traces, bins = equal_width_discretization(data_lists, k)
-# print(len(traces))
-# print(traces)
-
-
-symbolic_trace, symbol_map, mapping = map_bins_to_symbols(traces, k, bins)
-# print(len(symbolic_trace))
-# print(symbolic_trace)
-# print(symbol_map)
-
-tss_path = '../Data/5-DiscretizationData/trace1/output.txt'
-format_output(symbolic_trace, tss_path)
-
-
-# Call TAG
-#tss_path = 'Discretization/output.txt'
-#xml_path = '../Data/7-XMLOutput/model.xml'
-
-# with open('Discretization/symbol_map.json') as f:
-#     symbol_map = json.load(f)
-
-learner = TALearner(tss_path=tss_path, display=False)
-
-title = "Final Automaton Test-test-test-twst"
-
-TA_output_path = os.path.join("../Data", "6-TaResults")
-learner.ta.show(title = title, savePng = True, output_path = TA_output_path)
-
-
-os.path.join("../Data", "7-XMLOutput", "model.xml")
-
-XML_output_path = os.path.join("../Data", "7-XMLOutput", "model.xml")
-learner.ta.export_ta(path=XML_output_path, symbol_map=symbol_map)
-print(f"UPPAAL model written to {XML_output_path}")
+#     # Prpare format for TAG
+#     symbolic_trace, symbol_map, mapping = map_bins_to_symbols(traces, symbols, bins)
+#     format_output(symbolic_res_list=symbolic_trace, output_path=discretinize_data_path)
+#
+#     # Now vary k
+#     for k in range(k_min, k_max + 1, k_increment):
+#         #Paths
+#         title = f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-k{k}-ta"
+#         TA_output_path = (BASE_DIR / "Data" / "5-TaResults" / discretization_method / period)
+#         xml_path = (BASE_DIR / "Data" / "6-XMLOutput" / discretization_method / period
+#                     / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-k{k}.xml")
+#
+#         # Tranform to TA
+#         learner = TALearner(tss_path=discretinize_data_path,display=False,k=k)
+#         learner.ta.show(title=title,savePng=True,output_path=TA_output_path)
+#         learner.ta.export_ta(path=xml_path, symbol_map=symbol_map)
+#
+#         print(f"Done: trace={trace_nr}, k={k}, symbols={symbols}")
+#         print("-------------------------------------------------------------------------------------")
 
 
 
