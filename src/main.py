@@ -25,23 +25,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # PARAMETERS SETTINGS
 room = "A"
 discretization_method = "naiv"
-period = "1day"
+period = "7day"
+period_number = 7 # adjust to match period
 
 # Parameter for Naiv
-symbols = 25
+symbols = 10
 
 # Parameter for TAG
 k_min = 4
 k_max = 4
 k_increment = 1
 
-experiment_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"
+experiment_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment" / f"room{room}"
+
+all_traces = get_trace_files(folder_path=experiment_folder)
 
 all_traces = get_trace_files(folder_path = experiment_folder)
 len_traces = len(all_traces)  + 1
 
-trace_nr = 4
-
+trace_nr = 1
 
 # Paths
 discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
@@ -63,15 +65,15 @@ traces, bins = equal_width_discretization(data_lists, symbols)
 symbolic_trace, symbol_map, mapping = map_bins_to_symbols(traces, symbols, bins)
 format_output(symbolic_res_list=symbolic_trace, output_path=discretinize_data_path)
 
-# #plot discretized data
-# plot_discretized_traces(
-#     discretized_traces=traces,
-#     output_folder=discrete_graph_path,
-#     bins=bins,
-#     mapping=mapping
-# )
+#plot discretized data
+plot_discretized_traces(
+    discretized_traces=traces,
+    output_folder=discrete_graph_path,
+    bins=bins,
+    mapping=mapping
+)
 
-# Save symbolic output
+#Save symbolic output
 format_output(symbolic_res_list=symbolic_trace, output_path=discretinize_data_path)
 
 # Now vary k
