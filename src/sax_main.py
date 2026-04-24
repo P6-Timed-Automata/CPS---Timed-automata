@@ -1,4 +1,3 @@
-import os
 import string
 import numpy as np
 from scipy.stats import norm
