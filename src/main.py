@@ -25,15 +25,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # PARAMETERS SETTINGS
 room = "A"
 discretization_method = "naiv"
-period = "7day"
-period_number = 7 # adjust to match period
+period = "1day"
+period_number = 1 # adjust to match period
 
 # Parameter for Naiv
 symbols = 10
 
 # Parameter for TAG
-k_min = 4
-k_max = 4
+k_min = 2
+k_max = 2
 k_increment = 1
 
 experiment_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment" / f"room{room}"
@@ -43,7 +43,7 @@ all_traces = get_trace_files(folder_path=experiment_folder)
 all_traces = get_trace_files(folder_path = experiment_folder)
 len_traces = len(all_traces)  + 1
 
-trace_nr = 1
+trace_nr = 284
 
 # Paths
 discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
