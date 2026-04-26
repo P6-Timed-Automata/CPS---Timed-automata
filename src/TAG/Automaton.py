@@ -485,7 +485,7 @@ class Automaton:
             lines.append(f'      <name x="{x}" y="{y - 20}">{state.name}</name>')
             ub = upper_bounds.get(state.name)
             if ub is not None:
-                lines.append(f'      <label kind="invariant" cl="{x}" y="{y + 20}">cl &lt;= {ub}</label>')
+                lines.append(f'      <label kind="invariant" x="{x}" y="{y + 20}">cl &lt;= {ub}</label>')
             lines.append('    </location>')
 
         lines.append(f'    <init ref="{state_ids[initial.name]}"/>')
@@ -506,7 +506,7 @@ class Automaton:
             '  <system>Process = TagModel(); system Process;</system>',
             '  <queries>',
             '    <query>',
-            '      <formula>simulate [&lt;=18000] { temp }</formula>',
+            '      <formula>simulate [&lt;=86400] { temp }</formula>',
             '      <comment/>',
             '    </query>',
             '  </queries>',

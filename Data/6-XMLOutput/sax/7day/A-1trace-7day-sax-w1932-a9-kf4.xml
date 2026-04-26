@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'
+  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+  <declaration>clock cl; int temp; const int a = 2057; const int b = 2127; const int c = 2150; const int d = 2168; const int e = 2184; const int f = 2201; const int g = 2219; const int h = 2241; const int i = 2312;</declaration>
+  <template>
+    <name>TagModel</name>
+    <declaration></declaration>
+    <location id="id0" x="217" y="-731">
+      <name x="217" y="-751">S0</name>
+      <label kind="invariant" x="217" y="-711">cl &lt;= 25350</label>
+    </location>
+    <location id="id1" x="217" y="-162">
+      <name x="217" y="-182">S43</name>
+      <label kind="invariant" x="217" y="-142">cl &lt;= 600900</label>
+    </location>
+    <init ref="id0"/>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 150 &amp;&amp; cl &lt;= 24750</label>
+      <label kind="assignment">temp = 2057, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 25350 &amp;&amp; cl &lt;= 25350</label>
+      <label kind="assignment">temp = 2127, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 30750 &amp;&amp; cl &lt;= 592500</label>
+      <label kind="assignment">temp = 2184, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 31950 &amp;&amp; cl &lt;= 590700</label>
+      <label kind="assignment">temp = 2201, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 30150 &amp;&amp; cl &lt;= 599400</label>
+      <label kind="assignment">temp = 2168, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 26550 &amp;&amp; cl &lt;= 568800</label>
+      <label kind="assignment">temp = 2127, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 25950 &amp;&amp; cl &lt;= 554100</label>
+      <label kind="assignment">temp = 2057, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 29550 &amp;&amp; cl &lt;= 600900</label>
+      <label kind="assignment">temp = 2150, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 39150 &amp;&amp; cl &lt;= 583200</label>
+      <label kind="assignment">temp = 2241, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 39750 &amp;&amp; cl &lt;= 585900</label>
+      <label kind="assignment">temp = 2219, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 49200 &amp;&amp; cl &lt;= 580800</label>
+      <label kind="assignment">temp = 2312, cl = 0</label>
+    </transition>
+  </template>
+  <system>Process = TagModel(); system Process;</system>
+  <queries>
+    <query>
+      <formula>simulate [&lt;=86400] { temp }</formula>
+      <comment/>
+    </query>
+  </queries>
+</nta>

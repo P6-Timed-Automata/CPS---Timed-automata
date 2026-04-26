@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'
+  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+  <declaration>clock cl; int temp; const int a = 2016; const int b = 2041; const int c = 2067; const int d = 2093; const int e = 2118; const int f = 2144; const int g = 2169; const int h = 2195; const int i = 2221; const int j = 2246; const int k = 2272; const int l = 2297; const int m = 2323; const int n = 2349; const int o = 2374;</declaration>
+  <template>
+    <name>TagModel</name>
+    <declaration></declaration>
+    <location id="id0" x="217" y="-137">
+      <name x="217" y="-157">S0</name>
+      <label kind="invariant" cl="217" y="-117">cl &lt;= 600900</label>
+    </location>
+    <init ref="id0"/>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 0 &amp;&amp; cl &lt;= 567300</label>
+      <label kind="assignment">temp = 2118, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 30600 &amp;&amp; cl &lt;= 592500</label>
+      <label kind="assignment">temp = 2195, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 83400 &amp;&amp; cl &lt;= 600600</label>
+      <label kind="assignment">temp = 2144, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 32700 &amp;&amp; cl &lt;= 587700</label>
+      <label kind="assignment">temp = 2221, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 39300 &amp;&amp; cl &lt;= 582600</label>
+      <label kind="assignment">temp = 2246, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 49200 &amp;&amp; cl &lt;= 580800</label>
+      <label kind="assignment">temp = 2272, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 54300 &amp;&amp; cl &lt;= 578700</label>
+      <label kind="assignment">temp = 2323, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 141900 &amp;&amp; cl &lt;= 526200</label>
+      <label kind="assignment">temp = 2349, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 52800 &amp;&amp; cl &lt;= 579000</label>
+      <label kind="assignment">temp = 2297, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 143400 &amp;&amp; cl &lt;= 370800</label>
+      <label kind="assignment">temp = 2374, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 300 &amp;&amp; cl &lt;= 394800</label>
+      <label kind="assignment">temp = 2093, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 26100 &amp;&amp; cl &lt;= 26100</label>
+      <label kind="assignment">temp = 2016, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 29700 &amp;&amp; cl &lt;= 600900</label>
+      <label kind="assignment">temp = 2169, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 9900 &amp;&amp; cl &lt;= 24300</label>
+      <label kind="assignment">temp = 2067, cl = 0</label>
+    </transition>
+  </template>
+  <system>Process = TagModel(); system Process;</system>
+  <queries>
+    <query>
+      <formula>simulate [&lt;=18000] { temp }</formula>
+      <comment/>
+    </query>
+  </queries>
+</nta>
