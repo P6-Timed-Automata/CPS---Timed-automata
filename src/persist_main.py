@@ -33,14 +33,14 @@ discretization_method = "persist"
 period = "1day"
 
 #Parameters for Persist
-break_max = 15
+break_max = 16
 break_min = 2
 skip_min = 4
 skip_max = 4
 
 # Parameters for TAG
-k_min = 4
-k_max = 4
+k_min = 2
+k_max = 6
 k_increment = 2
 
 experiment_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"
@@ -48,57 +48,59 @@ experiment_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experim
 all_traces = get_trace_files(folder_path = experiment_folder)
 len_traces = len(all_traces)  + 1
 
+len_traces = 2
 
-#for trace_nr in range(1, len_traces):
+start_traces = 1
 
-trace_nr = 4
-
-# Prepare input for Persist
-rawTraces = all_traces[:trace_nr]
-data_lists = csv_to_temp_time_list(input_files=rawTraces)
-ts = flatten_traces_to_ts(data_lists)
-
-# Discretenize with Persist
-p = Persist(x = ts, break_min=break_min, break_max=break_max, divergence="w", candidates="EW", skip=np.array([skip_min, skip_max]))
-
-# best breakpoints
-bins = get_best_bins(p, ts)
-symbols = len(bins) - 1
-
-print("bins", bins)
-print("symbols", symbols)
+for trace_nr in range(start_traces, len_traces):
 
 
-# Paths
-discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
-                        / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
-                        )
-save_path = (BASE_DIR / "Data"/ "Graphs" /"persistGraph"/ f"{room}-{trace_nr}trace-{period}-s{symbols}-breakpoints.png")
+    # Prepare input for Persist
+    rawTraces = all_traces[:trace_nr]
+    data_lists = csv_to_temp_time_list(input_files=rawTraces)
+    ts = flatten_traces_to_ts(data_lists)
 
-# Combine delays together with bins
-traces = discretize_traces_with_bins(data_lists, bins)
+    # Discretenize with Persist
+    p = Persist(x = ts, break_min=break_min, break_max=break_max, divergence="w", candidates="EW", skip=np.array([skip_min, skip_max]))
 
-# Vizualize breakpoints on an instance of time series
-plot_and_save_breakpoints(ts,bins,save_path,show=False)
+    # best breakpoints
+    bins = get_best_bins(p, ts)
+    symbols = len(bins) - 1
 
-symbolic_trace, symbol_map, mapping = map_bins_to_symbols(traces, symbols, bins)
+    print("bins", bins)
+    print("symbols", symbols)
 
-format_output(symbolic_res_list=symbolic_trace, output_path=discretinize_data_path)
 
-# Now vary k
-for k in range(k_min, k_max + 1, k_increment):
+    # Paths
+    discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
+                            / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
+                            )
+    save_path = (BASE_DIR / "Data"/ "Graphs" /"persistGraph"/ f"{room}-{trace_nr}trace-{period}-s{symbols}-skipmin{skip_min}-skipmax{skip_max}-breakpoints.png")
 
-    #Paths
-    title = f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-k{k}-ta"
-    TA_output_path = (BASE_DIR / "Data" / "5-TaResults" / discretization_method / period)
-    xml_path = (BASE_DIR / "Data" / "6-XMLOutput" / discretization_method / period
-                / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-k{k}.xml")
+    # Combine delays together with bins
+    traces = discretize_traces_with_bins(data_lists, bins)
 
-    # Transform to TA
-    learner = TALearner(tss_path=discretinize_data_path, display=False, k=k)
-    learner.ta.show(title = title, savePng = True, output_path = TA_output_path)
-    learner.ta.export_ta(path=xml_path, symbol_map=symbol_map)
+    # Vizualize breakpoints on an instance of time series
+    plot_and_save_breakpoints(ts,bins,save_path,show=False)
 
-    print(f"Done: trace={trace_nr}, k={k}, symbols={symbols}")
+    symbolic_trace, symbol_map, mapping = map_bins_to_symbols(traces, symbols, bins)
 
-    print("-------------------------------------------------------------------------------------")
+    format_output(symbolic_res_list=symbolic_trace, output_path=discretinize_data_path)
+
+    # Now vary k
+    for k in range(k_min, k_max + 1, k_increment):
+
+        #Paths
+        title = f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-skipmin{skip_min}-skipmax{skip_max}-k{k}-ta"
+        TA_output_path = (BASE_DIR / "Data" / "5-TaResults" / discretization_method / period)
+        xml_path = (BASE_DIR / "Data" / "6-XMLOutput" / discretization_method / period
+                    / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-skipmin{skip_min}-skipmax{skip_max}-k{k}.xml")
+
+        # Transform to TA
+        learner = TALearner(tss_path=discretinize_data_path, display=False, k=k)
+        learner.ta.show(title = title, savePng = True, output_path = TA_output_path)
+        learner.ta.export_ta(path=xml_path, symbol_map=symbol_map)
+
+        print(f"Done: trace={trace_nr}, k={k}, symbols={symbols},skipmin{skip_min},skipmax{skip_max}-")
+
+        print("-------------------------------------------------------------------------------------")

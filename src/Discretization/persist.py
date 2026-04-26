@@ -196,41 +196,41 @@ def discretize_traces_with_bins(traces, bins):
 
     return discretized_traces
 
-def get_best_bins(persist_obj, ts):
-    best_idx = np.argmax(persist_obj.pscores)
-
-    bins = persist_obj.bins[best_idx]
-    bins = bins[~np.isnan(bins)]
-    bins = np.sort(bins)
-
-    # use the real data range as outer bin edges
-    bins = np.concatenate(([np.min(ts)], bins, [np.max(ts)]))
-    return bins
-
 # def get_best_bins(persist_obj, ts):
-#
-#     print("\n--- PERSISTENCE DEBUG ---")
-#     print("pscores:", persist_obj.pscores)
-#     print("num candidates:", len(persist_obj.pscores))
-#
-#     for i, (bins, score) in enumerate(zip(persist_obj.bins, persist_obj.pscores)):
-#         if bins is None:
-#             continue
-#         clean_bins = bins[~np.isnan(bins)]
-#         print(f"i={i} | bins={len(clean_bins)} | score={score}")
-#
 #     best_idx = np.argmax(persist_obj.pscores)
-#     print("\nBEST idx:", best_idx)
-#     print("BEST score:", persist_obj.pscores[best_idx])
-#     print("------------------------\n")
 #
 #     bins = persist_obj.bins[best_idx]
 #     bins = bins[~np.isnan(bins)]
 #     bins = np.sort(bins)
 #
+#     # use the real data range as outer bin edges
 #     bins = np.concatenate(([np.min(ts)], bins, [np.max(ts)]))
-#
 #     return bins
+
+def get_best_bins(persist_obj, ts):
+
+    print("\n--- PERSISTENCE DEBUG ---")
+    print("pscores:", persist_obj.pscores)
+    print("num candidates:", len(persist_obj.pscores))
+
+    for i, (bins, score) in enumerate(zip(persist_obj.bins, persist_obj.pscores)):
+        if bins is None:
+            continue
+        clean_bins = bins[~np.isnan(bins)]
+        print(f"i={i} | bins={len(clean_bins)} | score={score}")
+
+    best_idx = np.argmax(persist_obj.pscores)
+    print("\nBEST idx:", best_idx)
+    print("BEST score:", persist_obj.pscores[best_idx])
+    print("------------------------\n")
+
+    bins = persist_obj.bins[best_idx]
+    bins = bins[~np.isnan(bins)]
+    bins = np.sort(bins)
+
+    bins = np.concatenate(([np.min(ts)], bins, [np.max(ts)]))
+
+    return bins
 
 def flatten_traces_to_ts(data_lists):
     ts = np.concatenate([
