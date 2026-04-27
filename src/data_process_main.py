@@ -21,7 +21,7 @@ room_file = f"../Data/2-FormatedRawData/dataset-{room}-formatedRaw.csv"
 
 # 1 day traces
 extract_1day = f"../Data/3-ExtractInterval/{room}/1day"
-# extract_time_intervals(input_file=room_file, output_folder=extract_1day, output_prefix= f"{room}-1day")
+extract_time_intervals(input_file=room_file, output_folder=extract_1day, output_prefix= f"{room}-1day")
 
 # 7 days traces
 extract_7day = f"../Data/3-ExtractInterval/{room}/7day"

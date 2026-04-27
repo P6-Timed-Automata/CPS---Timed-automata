@@ -30,17 +30,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # PARAMETERS SETTINGS
 room = "A"
 discretization_method = "persist"
-period = "1day"
+period = "7day"
 
 #Parameters for Persist
-break_max = 16
+break_max = 8
 break_min = 2
 skip_min = 4
 skip_max = 4
 
 # Parameters for TAG
-k_min = 2
-k_max = 6
+k_min = 4
+k_max = 4
 k_increment = 2
 
 experiment_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"
