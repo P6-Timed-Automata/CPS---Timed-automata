@@ -70,99 +70,62 @@ def format_temperature_data(input_file, output_file, col):
 
 
 def extract_time_intervals(input_file, output_folder, output_prefix, trace_days=1):
-    """
-        Extracts time traces from formatted temperature data.
-
-        Each trace contains a fixed number of consecutive calendar days.
-
-        Parameters:
-            input_file (str): Path to the formatted CSV file (output from format_temperature_data).
-            output_folder (str): Directory where extracted trace files will be saved.
-            output_prefix (str):Prefix used for naming output trace files.
-            trace_days (int): Number of consecutive days per trace.
-        """
     os.makedirs(output_folder, exist_ok=True)
 
-    #Load input file
-    data = np.genfromtxt(
-        input_file,
-        delimiter=';',
-        dtype=str,
-        skip_header=1
-    )
-    # parse timestamps
+    data = np.genfromtxt(input_file, delimiter=';', dtype=str, skip_header=1)
     timestamps = np.array([
         datetime.strptime(t, "%Y-%m-%d %H:%M:%S%z")
         for t in data[:, 1]
     ])
-
-    #Converts temperature strings → floats
     temps = data[:, 2].astype(float)
 
-    # Sort
     order = np.argsort(timestamps)
     timestamps = timestamps[order]
     temps = temps[order]
 
-    # Extract calendar days by remove timestamps
     days = np.array([t.date() for t in timestamps])
 
-    # Removes duplicates days and sort in chronical order
-    unique_days = np.sort(np.unique(days))
+    # Count rows per day and keep only days matching the modal count
+    unique_days, counts = np.unique(days, return_counts=True)
+    expected_count = Counter(counts).most_common(1)[0][0]
+    valid_days = unique_days[counts == expected_count]
 
-    trace_idx = 1  # file numbereing
-    i = 0  # unique_days numbering
+    print(f"Expected {expected_count} rows/day. "
+          f"Dropped {len(unique_days) - len(valid_days)} incomplete day(s).")
 
-    # Loop while enough days to form a trace
-    while i <= len(unique_days) - trace_days:
+    # Find runs of consecutive valid days
+    valid_days = np.sort(valid_days)
+    ordinals = np.array([d.toordinal() for d in valid_days])
+    gaps = np.diff(ordinals) != 1                          # True where a gap exists
+    run_boundaries = np.concatenate(([0], np.where(gaps)[0] + 1, [len(valid_days)]))
 
-        # Pick candidate trace window
-        selected_days = unique_days[i:i + trace_days]
+    trace_idx = 1
+    for b in range(len(run_boundaries) - 1):
+        run = valid_days[run_boundaries[b]:run_boundaries[b + 1]]
 
-        # Check if days are consecutive(NO missing days allowed)
-        expected = np.arange(
-            selected_days[0].toordinal(),
-            selected_days[0].toordinal() + trace_days
-        )
+        # Slide a window of trace_days across this run
+        for i in range(len(run) - trace_days + 1):
+            selected_days = run[i:i + trace_days]
+            mask = np.isin(days, selected_days)
 
-        actual = np.array([d.toordinal() for d in selected_days])
+            t = timestamps[mask]
+            x = temps[mask]
 
-        # if missing day then skip candidate window
-        if not np.array_equal(actual, expected):
-            i += 1
-            continue
+            t0 = t[0]
+            rel_time = np.array([(ti - t0).total_seconds() for ti in t])
 
-        # Select all timestamps that belong to those selected days
-        mask = np.isin(days, selected_days)
+            out = np.column_stack((rel_time, x))
+            np.savetxt(
+                os.path.join(output_folder, f"{output_prefix}-tid{trace_idx}.csv"),
+                out,
+                delimiter=';',
+                header="time_seconds;temperature",
+                fmt=['%.0f', '%.5f'],
+                comments=''
+            )
+            trace_idx += 1
 
-        t = timestamps[mask]
-        x = temps[mask]
-
-        # Safety check
-        if len(t) == 0:
-            i += trace_days
-            continue
-
-        # rebase time so data start by 0 and increment by delay
-        t0 = t[0]
-        rel_time = np.array([(ti - t0).total_seconds() for ti in t])
-
-        # combine data
-        out = np.column_stack((rel_time, x))
-
-        np.savetxt(
-            os.path.join(output_folder, f"{output_prefix}-tid{trace_idx}.csv"),
-            out,
-            delimiter=';',
-            header="time_seconds;temperature",
-            fmt=['%.0f', '%.5f'],
-            comments=''
-        )
-
-        trace_idx += 1
-        i += trace_days   # ✔ IMPORTANT: non-overlapping traces
-
-    print(f"Done extracting intervals of:{trace_days}. Saved {trace_idx - 1} traces.")
+    print(f"Saved {trace_idx - 1} traces of {trace_days} day(s).")
 
 def get_trace_files(folder_path, extension=".csv", max_files=None,):
     files = []
@@ -176,6 +139,37 @@ def get_trace_files(folder_path, extension=".csv", max_files=None,):
         files = files[:max_files]
 
     return sorted(files)
+
+
+if __name__ == "__main__":
+    from pathlib import Path
+
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+    rooms = ["A", "B", "C", "D", "E", "F"]
+    periods = [("1day", 1), ("7day", 7), ("30day", 30)]
+    room_col_map = {"A": 2, "B": 3, "C": 4, "D": 5, "E": 6, "F": 7}
+    raw_input_file = BASE_DIR / "Data" / "1-Raw" / "dataset-2023-02-27_2023-12-31.csv"
+
+    for room in rooms:
+        formated_file = BASE_DIR / "Data" / "2-FormatedRawData" / f"room{room}-formated.csv"
+
+        if not formated_file.exists():
+            print(f"Formatting room {room}...")
+            format_temperature_data(raw_input_file, formated_file, col=room_col_map[room])
+        else:
+            print(f"Skipping formatting for room {room} (already exists)")
+
+        for period, period_number in periods:
+            experiment_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment" / f"room{room}"
+
+            if experiment_folder.exists() and any(experiment_folder.iterdir()):
+                print(f"Skipping extraction for room {room} / {period} (already exists)")
+                continue
+
+            print(f"Extracting intervals for room {room} / {period}...")
+            extract_time_intervals(formated_file, experiment_folder, f"room{room}-{period}", period_number)
+
 
 
 

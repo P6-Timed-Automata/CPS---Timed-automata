@@ -1,0 +1,15 @@
+digraph G {
+START [style=invisible]
+graph [fontname = "helvetica"]
+node [fontname = "helvetica"]
+edge [fontname = "helvetica"]
+labelloc="t"
+label="A-1trace-1day-persist-s6-skipmin4-skipmax4-k2-ta"
+S88 [shape="doublecircle"]
+S0 [shape="circle"]
+START -> S0
+S0 -> S0 [label="f [0, 25800] t[0, 1122300] p=0.77"]
+S0 -> S0 [label="e [6900, 24300] t[82800, 996300] p=0.22"]
+S0 -> S88 [label="a [26100, 26100] t[1148400, 1148400] p=0.01"]
+S88 -> S88 [label="f [26400, 82500] t[1174800, 11385000] p=1.0"]
+}

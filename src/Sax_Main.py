@@ -1,4 +1,3 @@
-import os
 import string
 import numpy as np
 from scipy.stats import norm
@@ -67,16 +66,16 @@ def build_temp_symbol_map(symbol_map, bins, mean, std):
 
 # --- Config ---
 room = "A"
-w = 276*7 # controls x axis binning
+w = 200 # controls x axis binning
 discretization_method = "sax"
 period = "7day" #1day, 7day, 30day
 
-alphabet_sizes = range(4, 21, 5)  # SAX alphabet: controls discretization
+alphabet_sizes = range(15, 16, 1)  # SAX alphabet: controls discretization
 k_future = 4                       # TAG lookahead: controls TA merging
 
-experiment_folder = f"../Data/3-ExtractInterval/A/{period}"
+experiment_folder = f"../Data/3-ExtractInterval/{period}-experiment/room{room}/"
 
-for trace_nr in range(1, 3):
+for trace_nr in range(9, 10):
     raw_traces = get_trace_files(folder_path=experiment_folder, max_files=trace_nr)
     data_lists = [csv_to_temp_time_list(f) for f in raw_traces]
 

@@ -1,0 +1,30 @@
+digraph G {
+START [style=invisible]
+graph [fontname = "helvetica"]
+node [fontname = "helvetica"]
+edge [fontname = "helvetica"]
+labelloc="t"
+label="A-1trace-7day-persist-s6-skipmin4-skipmax4-k6-ta"
+S65 [shape="circle"]
+S0 [shape="circle"]
+S67 [shape="circle"]
+S66 [shape="circle"]
+S88 [shape="doublecircle"]
+S62 [shape="circle"]
+S68 [shape="circle"]
+S63 [shape="circle"]
+S64 [shape="circle"]
+START -> S0
+S0 -> S0 [label="e [0, 18000] t[0, 549000] p=0.98"]
+S0 -> S62 [label="d [18300, 18300] t[567300, 567300] p=0.02"]
+S62 -> S63 [label="d [18600, 18600] t[585900, 585900] p=1.0"]
+S63 -> S64 [label="e [18900, 18900] t[604800, 604800] p=1.0"]
+S64 -> S65 [label="d [19200, 19200] t[624000, 624000] p=1.0"]
+S65 -> S66 [label="e [19500, 19500] t[643500, 643500] p=1.0"]
+S66 -> S67 [label="e [19800, 19800] t[663300, 663300] p=1.0"]
+S67 -> S68 [label="d [20100, 20100] t[683400, 683400] p=1.0"]
+S68 -> S68 [label="e [20400, 25800] t[703800, 1122300] p=0.95"]
+S68 -> S88 [label="a [26100, 26100] t[1148400, 1148400] p=0.05"]
+S88 -> S88 [label="e [26400, 600900] t[1174800, 602101800] p=0.52"]
+S88 -> S88 [label="f [30600, 592500] t[1575900, 585390000] p=0.48"]
+}

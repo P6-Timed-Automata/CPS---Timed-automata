@@ -25,7 +25,12 @@ extract_1day = f"../Data/3-ExtractInterval/{room}/1day"
 
 # 7 days traces
 extract_7day = f"../Data/3-ExtractInterval/{room}/7day"
-# extract_time_intervals(input_file=room_file, output_folder=extract_7day, output_prefix= f"{room}-7day", trace_days=7)
+#extract_time_intervals(input_file=room_file, output_folder=extract_7day, output_prefix= f"{room}-7day", trace_days=7)
+
+# 14 day traces
+extract_14day = f"../Data/3-ExtractInterval/{room}/14day"
+#extract_time_intervals(input_file=room_file, output_folder=extract_14day, output_prefix= f"{room}-14day", trace_days=14)
+
 
 # 30 day traces
 extract_30day = f"../Data/3-ExtractInterval/{room}/30day"
