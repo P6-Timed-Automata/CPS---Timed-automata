@@ -25,10 +25,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # PARAMETERS SETTINGS
 room = "A"
 discretization_method = "naiv"
-period = "7day"
+period = "1day"
 
 # Parameter for Naiv
-symbols = 8
+symbols = 4
 
 # Parameter for TAG
 k_min = 4
