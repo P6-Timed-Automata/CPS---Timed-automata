@@ -22,7 +22,7 @@ TRACES = {
         (27000, 21.05),
         (29400, 21.80),
         (61200, 23.60),
-        (86100, 21.78),
+        (86100, 21.85),
     ]),
     "tid2": np.array([
         (0,     21.60),   # Slightly cooler day — heating kicks in earlier
@@ -36,7 +36,7 @@ TRACES = {
         (28800, 21.30),
         (31200, 22.10),
         (63000, 23.90),
-        (86100, 22.00),
+        (86100, 22.10),
     ]),
 }
 
@@ -150,7 +150,7 @@ if __name__ == "__main__":
             labels=np.array([l for l, _ in naive_traces[0]]),
             mapping=make_mapping(symbols),
             title=f"Idealized {tid} — Naive (k={symbols})",
-            output_path=str(OUT_GRAPH / "naive (5 bins)" / f"idealized_{tid}_naive.png")
+            output_path=str(OUT_GRAPH / "naive" / f"idealized_{tid}_naive.png")
         )
 
         # Persist
@@ -174,7 +174,7 @@ if __name__ == "__main__":
             labels=np.array([l for l, _ in sax_traces[0]]),
             mapping=make_mapping(symbols),
             title=f"Idealized {tid} — SAX (w={w}, k={symbols})",
-            output_path=str(OUT_GRAPH / "sax (5 bins)" / f"idealized_{tid}_sax.png")
+            output_path=str(OUT_GRAPH / "sax" / f"idealized_{tid}_sax.png")
         )
 
         print(f"Done: {tid}")

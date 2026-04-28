@@ -51,7 +51,7 @@ w       = 200  # SAX PAA segments
 #         traces, bins = equal_width_discretization(data_lists, symbols)
 #         plot_discretized_traces(
 #             discretized_traces=traces,
-#             output_folder=BASE_DIR / "Data" / "Graphs" / "discretized" / "naive" / period / room,
+#             output_folder=BASE_DIR / "Data" / "Graphs" / "discretized" / "naive (5 bins)" / period / room,
 #             mapping=make_mapping(symbols)
 #         )
 #
@@ -72,7 +72,7 @@ w       = 200  # SAX PAA segments
 #         traces, breakpoints = sax_discretization_multi(data_lists, w=w, k=symbols)
 #         plot_discretized_traces(
 #             discretized_traces=traces,
-#             output_folder=BASE_DIR / "Data" / "Graphs" / "discretized" / "sax" / period / room,
+#             output_folder=BASE_DIR / "Data" / "Graphs" / "discretized" / "sax (5 bins)" / period / room,
 #             mapping=make_mapping(symbols)
 #         )
 
@@ -93,7 +93,7 @@ for period in periods:
             traces, bins = equal_width_discretization([trace], symbols)
             plot_discretized_traces(
                 discretized_traces=traces,
-                output_folder=BASE_DIR / "Data" / "Graphs" / "discretized" / "naive (11 individual bins)" / period / room / f"trace_{i}",
+                output_folder=BASE_DIR / "Data" / "Graphs" / "discretized" / "naive (5 bins) (11 individual bins)" / period / room / f"trace_{i}",
                  mapping=make_mapping(symbols)
              )
 
