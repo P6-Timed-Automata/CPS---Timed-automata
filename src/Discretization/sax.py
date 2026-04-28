@@ -10,6 +10,32 @@ from Discretization.discretizationSetup import (
 import matplotlib.pyplot as plt
 import scipy.stats as stats
 
+
+def sax_discretization_multi(data_lists, w, k):
+    breakpoints = norm.ppf(np.linspace(0, 1, k + 1)[1:-1])
+
+    def znorm(v):
+        sigma = v.std()
+        return (v - v.mean()) / sigma if sigma != 0 else np.zeros_like(v)
+
+    def paa(v, t, w):
+        v_segs = np.array_split(v, w)
+        t_segs = np.array_split(t, w)
+        return (
+            np.array([seg.mean() for seg in v_segs]),
+            np.array([int(seg.mean()) for seg in t_segs])
+        )
+
+    discretized = []
+    for trace in data_lists:
+        v = np.array([val for val, _ in trace])
+        t = np.array([time for _, time in trace])
+        paa_v, paa_t = paa(znorm(v), t, w)
+        labels = np.digitize(paa_v, breakpoints)
+        discretized.append([(int(l), int(ts)) for l, ts in zip(labels, paa_t)])
+
+    return discretized, breakpoints
+
 def sax_discretization(trace1, trace2, w, k):
     """
     w: number of PAA segments (output length per trace)
