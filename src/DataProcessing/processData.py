@@ -104,7 +104,7 @@ def extract_time_intervals(input_file, output_folder, output_prefix, trace_days=
         run = valid_days[run_boundaries[b]:run_boundaries[b + 1]]
 
         # Slide a window of trace_days across this run
-        for i in range(len(run) - trace_days + 1):
+        for i in range(0, len(run) - trace_days + 1, trace_days):
             selected_days = run[i:i + trace_days]
             mask = np.isin(days, selected_days)
 

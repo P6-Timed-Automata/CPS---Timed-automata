@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'
+  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+  <declaration>clock cl; int temp; const int a = 2016; const int b = 2287; const int c = 2402; const int d = 2518; const int e = 2789;</declaration>
+  <template>
+    <name>TagModel</name>
+    <declaration></declaration>
+    <location id="id0" x="256" y="-3311">
+      <name x="256" y="-3331">S0</name>
+      <label kind="invariant" x="256" y="-3291">cl &lt;= 1500</label>
+    </location>
+    <location id="id1" x="256" y="-2359">
+      <name x="256" y="-2379">S1</name>
+      <label kind="invariant" x="256" y="-2339">cl &lt;= 21300</label>
+    </location>
+    <location id="id2" x="606" y="-2739">
+      <name x="606" y="-2759">S401</name>
+      <label kind="invariant" x="606" y="-2719">cl &lt;= 4800</label>
+    </location>
+    <location id="id3" x="633" y="-137">
+      <name x="633" y="-157">S7</name>
+      <label kind="invariant" x="633" y="-117">cl &lt;= 603150</label>
+    </location>
+    <location id="id4" x="744" y="-1978">
+      <name x="744" y="-1998">S402</name>
+      <label kind="invariant" x="744" y="-1958">cl &lt;= 8100</label>
+    </location>
+    <location id="id5" x="744" y="-1355">
+      <name x="744" y="-1375">S403</name>
+      <label kind="invariant" x="744" y="-1335">cl &lt;= 11400</label>
+    </location>
+    <location id="id6" x="1383" y="-731">
+      <name x="1383" y="-751">S601</name>
+      <label kind="invariant" x="1383" y="-711">cl &lt;= 41100</label>
+    </location>
+    <location id="id7" x="817" y="-731">
+      <name x="817" y="-751">S404</name>
+      <label kind="invariant" x="817" y="-711">cl &lt;= 34500</label>
+    </location>
+    <init ref="id0"/>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 1500 &amp;&amp; cl &lt;= 1500</label>
+      <label kind="assignment">temp = 2402, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id3"/>
+      <label kind="guard">cl &gt;= 1500 &amp;&amp; cl &lt;= 1500</label>
+      <label kind="assignment">temp = 2518, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id2"/>
+      <label kind="guard">cl &gt;= 1500 &amp;&amp; cl &lt;= 1500</label>
+      <label kind="assignment">temp = 2789, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id1"/>
+      <label kind="guard">cl &gt;= 4800 &amp;&amp; cl &lt;= 18000</label>
+      <label kind="assignment">temp = 2287, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id3"/>
+      <label kind="guard">cl &gt;= 21300 &amp;&amp; cl &lt;= 21300</label>
+      <label kind="assignment">temp = 2016, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id2"/>
+      <target ref="id4"/>
+      <label kind="guard">cl &gt;= 4800 &amp;&amp; cl &lt;= 4800</label>
+      <label kind="assignment">temp = 2789, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">cl &gt;= 18000 &amp;&amp; cl &lt;= 603150</label>
+      <label kind="assignment">temp = 2287, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">cl &gt;= 37800 &amp;&amp; cl &lt;= 603150</label>
+      <label kind="assignment">temp = 2789, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">cl &gt;= 24600 &amp;&amp; cl &lt;= 603150</label>
+      <label kind="assignment">temp = 2016, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">cl &gt;= 8100 &amp;&amp; cl &lt;= 600150</label>
+      <label kind="assignment">temp = 2402, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id3"/>
+      <label kind="guard">cl &gt;= 4800 &amp;&amp; cl &lt;= 603150</label>
+      <label kind="assignment">temp = 2518, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id4"/>
+      <target ref="id5"/>
+      <label kind="guard">cl &gt;= 8100 &amp;&amp; cl &lt;= 8100</label>
+      <label kind="assignment">temp = 2789, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id4"/>
+      <target ref="id6"/>
+      <label kind="guard">cl &gt;= 8100 &amp;&amp; cl &lt;= 8100</label>
+      <label kind="assignment">temp = 2518, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id5"/>
+      <target ref="id7"/>
+      <label kind="guard">cl &gt;= 11400 &amp;&amp; cl &lt;= 11400</label>
+      <label kind="assignment">temp = 2789, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id5"/>
+      <target ref="id3"/>
+      <label kind="guard">cl &gt;= 11400 &amp;&amp; cl &lt;= 11400</label>
+      <label kind="assignment">temp = 2518, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id6"/>
+      <target ref="id6"/>
+      <label kind="guard">cl &gt;= 11400 &amp;&amp; cl &lt;= 37800</label>
+      <label kind="assignment">temp = 2518, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id6"/>
+      <target ref="id3"/>
+      <label kind="guard">cl &gt;= 34500 &amp;&amp; cl &lt;= 34500</label>
+      <label kind="assignment">temp = 2016, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id6"/>
+      <target ref="id3"/>
+      <label kind="guard">cl &gt;= 41100 &amp;&amp; cl &lt;= 41100</label>
+      <label kind="assignment">temp = 2287, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id7"/>
+      <target ref="id7"/>
+      <label kind="guard">cl &gt;= 14700 &amp;&amp; cl &lt;= 31200</label>
+      <label kind="assignment">temp = 2789, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id7"/>
+      <target ref="id3"/>
+      <label kind="guard">cl &gt;= 34500 &amp;&amp; cl &lt;= 34500</label>
+      <label kind="assignment">temp = 2402, cl = 0</label>
+    </transition>
+  </template>
+  <system>Process = TagModel(); system Process;</system>
+  <queries>
+    <query>
+      <formula>simulate [&lt;=86400] { temp }</formula>
+      <comment/>
+    </query>
+  </queries>
+</nta>

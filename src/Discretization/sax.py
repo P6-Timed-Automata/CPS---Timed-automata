@@ -1,61 +1,40 @@
 from scipy.stats import norm
 import numpy as np
-import string
 
+from Discretization.discretizationSetup import (
+    csv_to_temp_time_list,
+    format_output,
+    map_bins_to_symbols
+)
 
 import matplotlib.pyplot as plt
 import scipy.stats as stats
 
 
-def csv_to_temp_time_list(input_file):
-    # Load data
-    data = np.genfromtxt(
-        input_file,
-        delimiter=';',
-        dtype=str,
-        skip_header=1
-    )
+def sax_discretization_multi(data_lists, w, k):
+    breakpoints = norm.ppf(np.linspace(0, 1, k + 1)[1:-1])
 
-    # Extract columns
-    times = data[:, 0].astype(int)
-    temps = data[:, 1].astype(float)
+    def znorm(v):
+        sigma = v.std()
+        return (v - v.mean()) / sigma if sigma != 0 else np.zeros_like(v)
 
-    # Build list of (temperature, time)
-    result = [(temp, time) for temp, time in zip(temps, times)]
+    def paa(v, t, w):
+        v_segs = np.array_split(v, w)
+        t_segs = np.array_split(t, w)
+        return (
+            np.array([seg.mean() for seg in v_segs]),
+            np.array([int(seg.mean()) for seg in t_segs])
+        )
 
-    print("tranformed data to a list")
+    discretized = []
+    for trace in data_lists:
+        v = np.array([val for val, _ in trace])
+        t = np.array([time for _, time in trace])
+        paa_v, paa_t = paa(znorm(v), t, w)
+        labels = np.digitize(paa_v, breakpoints)
+        discretized.append([(int(l), int(ts)) for l, ts in zip(labels, paa_t)])
 
-    return result
-
-
-def format_output(symbolic_res_list):
-    lines = []
-
-    for symbolic_res in symbolic_res_list:
-        line = " ".join(f"{s}:{v}" for s, v in symbolic_res)
-        lines.append(line)
-
-    output = "\n".join(lines)
-
-    with open("output.txt", "w") as f:
-        f.write(output)
-
-    print("File saved")
-
-def map_bins_to_symbols(result, k):
-    # Create symbols: a, b, c, ...
-    symbols = list(string.ascii_lowercase)
-
-    if k > len(symbols):
-        raise ValueError("k too large (max 26 supported with simple letters)")
-
-    # Create mapping: 0->'a', 1->'b', ...
-    mapping = {i: symbols[i] for i in range(k)}
-
-    # Apply mapping
-    symbolic_result = [(mapping[int(label)], int(time)) for label, time in result]
-
-    return symbolic_result, mapping
+    return discretized, breakpoints
 
 def sax_discretization(trace1, trace2, w, k):
     """
@@ -119,11 +98,11 @@ def sax_discretization(trace1, trace2, w, k):
     return trace1_discretized, trace2_discretized, breakpoints
 
 if __name__ == "__main__":
-    input1_file = '../../Data/FormattedData/experiment_5h/formated_data.csv'
-    data1 = csv_to_temp_time_list(input1_file)
+    input1_file = '../../Data/3-ExtractInterval/1day-experiment/roomA/roomA-1day-tid1.csv'
+    input2_file = '../../Data/3-ExtractInterval/1day-experiment/roomA/roomA-1day-tid2.csv'
 
-    input2_file = '../../Data/FormattedData/experiment_5h/formated_data2.csv'
-    data2 = csv_to_temp_time_list(input2_file)
+    data1 = csv_to_temp_time_list([input1_file])[0]
+    data2 = csv_to_temp_time_list([input2_file])[0]
 
     w = 10
     k = 3
@@ -134,15 +113,23 @@ if __name__ == "__main__":
     print("Result1:", trace1_discretized)
     print("Result2:", trace2_discretized)
 
-    symbolic_res1, mapping = map_bins_to_symbols(trace1_discretized, k)
-    symbolic_res2, __ = map_bins_to_symbols(trace2_discretized, k)
+
+    #add outer edges so it workks with map_bins_to_symbols
+    bins_with_edges = np.concatenate([[-3.0], bins, [3.0]])
+
+    symbolic_res1, symbol_map, mapping = map_bins_to_symbols([trace1_discretized], k, bins_with_edges)
+    symbolic_res2, _, _ = map_bins_to_symbols([trace2_discretized], k, bins_with_edges)
+
+
 
     print("Mapping:", mapping)
+    print("Symbolic result 1:", symbolic_res1)
+    print("Symbolic result 2:", symbolic_res2)
 
-    print("Symbolic result:", symbolic_res1)
-    print("Symbolic result:", symbolic_res2)
+    symbolic_res1 = symbolic_res1[0]
+    symbolic_res2 = symbolic_res2[0]
 
     symbolic_res_list = [symbolic_res1, symbolic_res2]
 
-    format_output(symbolic_res_list)
-
+    # Updated to include output_path
+    format_output(symbolic_res_list, output_path="sax_output_test/output.txt")

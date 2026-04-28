@@ -1,0 +1,68 @@
+# #### raw graphs
+#
+# from pathlib import Path
+# from GraphGeneration.graphs import plot_traces
+#
+# # script is at: CPS---Timed-automata/src/output_graphs.py
+# # parent       = src/
+# # parent.parent = CPS---Timed-automata/
+# BASE_DIR = Path(__file__).resolve().parent.parent
+#
+# rooms   = ["A", "B", "C", "D", "E", "F"]
+# periods = ["1day", "7day", "14day", "30day"]
+#
+# for period in periods:
+#     for room in rooms:
+#         plot_traces(
+#             trace_folder  = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment" / f"room{room}",
+#             output_folder = BASE_DIR / "Data" / "Graphs" / "interval_traces" / period / f"room{room}"
+#         )
+#
+# ####
+
+from pathlib import Path
+from GraphGeneration.graphs import plot_discretized_traces
+from DataProcessing.processData import get_trace_files
+from Discretization.discretizationSetup import csv_to_temp_time_list
+from Discretization.naive import equal_width_discretization
+from Discretization.persist import Persist, get_best_bins, flatten_traces_to_ts, discretize_traces_with_bins
+from Discretization.sax import sax_discretization_multi
+
+import numpy as np
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+rooms   = ["A", "B", "C", "D", "E", "F"]
+periods = ["1day", "7day", "30day"]
+symbols = 5
+
+for period in periods:
+    for room in rooms:
+        experiment_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment" / f"room{room}"
+        raw_traces = get_trace_files(folder_path=experiment_folder)
+        data_lists = csv_to_temp_time_list(input_files=raw_traces)
+
+        # --- Naive ---
+        traces, bins = equal_width_discretization(data_lists, symbols)
+        plot_discretized_traces(
+            discretized_traces=traces,
+            output_folder=BASE_DIR / "Data" / "Graphs" / "discretized" / "naive" / period / room ,
+        )
+
+        # --- Persist ---
+        ts = flatten_traces_to_ts(data_lists)
+        p = Persist(x=ts, break_min=2, break_max=16, divergence="w", candidates="EW", skip=np.array([4, 4]))
+        bins = get_best_bins(p, ts)
+        traces = discretize_traces_with_bins(data_lists, bins)
+        plot_discretized_traces(
+            discretized_traces=traces,
+            output_folder=BASE_DIR / "Data" / "Graphs" / "discretized" / "persist" / period / room ,
+        )
+
+        # --- SAX ---
+        w = 200
+        traces, breakpoints = sax_discretization_multi(data_lists, w=w, k=symbols)
+        plot_discretized_traces(
+            discretized_traces=traces,
+            output_folder=BASE_DIR / "Data" / "Graphs" / "discretized" / "sax" / period / room ,
+        )
