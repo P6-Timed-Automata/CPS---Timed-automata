@@ -4,52 +4,6 @@ import numpy as np
 import os
 import re
 
-def plot_discretized_traces(discretized_traces, output_folder, bins=None, mapping=None):
-    os.makedirs(output_folder, exist_ok=True)
-
-    fig_overlay, ax_overlay = plt.subplots(figsize=(12, 5))
-
-    for i, trace in enumerate(discretized_traces):
-        times  = np.array([t for _, t in trace])
-        labels = np.array([l for l, _ in trace])
-
-        # --- Individual plot ---
-        fig, ax = plt.subplots(figsize=(12, 5))
-
-        ax.step(times / 3600, labels, where='post')
-        ax.set_title(f"Trace {i} (Discretized)")
-        ax.set_xlabel("Time (hours)")
-        ax.set_ylabel("Bin")
-
-        # Optional: replace bin numbers with symbols
-        if mapping:
-            ax.set_yticks(list(mapping.keys()))
-            ax.set_yticklabels(list(mapping.values()))
-
-        ax.grid(True, alpha=0.3)
-        fig.tight_layout()
-        fig.savefig(os.path.join(output_folder, f"trace_{i}_discrete.png"), dpi=150)
-        plt.close(fig)
-
-        # --- Overlay ---
-        ax_overlay.step(times / 3600, labels, where='post', label=f"trace_{i}")
-
-    # Overlay formatting
-    ax_overlay.set_title("All Discretized Traces")
-    ax_overlay.set_xlabel("Time (hours)")
-    ax_overlay.set_ylabel("Bin")
-
-    if mapping:
-        ax_overlay.set_yticks(list(mapping.keys()))
-        ax_overlay.set_yticklabels(list(mapping.values()))
-
-    ax_overlay.grid(True, alpha=0.3)
-    ax_overlay.legend(fontsize=7, ncol=2)
-
-    fig_overlay.tight_layout()
-    fig_overlay.savefig(os.path.join(output_folder, "overlay_discrete.png"), dpi=150)
-    plt.close(fig_overlay)
-
 def plot_traces(trace_folder, output_folder):
     """
     Generates individual plots per trace and one overlay plot of all traces.
