@@ -38,7 +38,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 rooms   = ["A", "B", "C", "D", "E", "F"]
 periods = ["1day", "7day", "30day"]
-symbols = 5
+symbols = 11
 w       = 200  # SAX PAA segments
 
 # for period in periods:
@@ -93,28 +93,28 @@ for period in periods:
             traces, bins = equal_width_discretization([trace], symbols)
             plot_discretized_traces(
                 discretized_traces=traces,
-                output_folder=BASE_DIR / "Data" / "Graphs" / "discretized" / "naive (individual bins)" / period / room / f"trace_{i}",
-                mapping=make_mapping(symbols)
-            )
+                output_folder=BASE_DIR / "Data" / "Graphs" / "discretized" / "naive (11 individual bins)" / period / room / f"trace_{i}",
+                 mapping=make_mapping(symbols)
+             )
 
-        # --- Persist (per-trace) ---
-        for i, trace in enumerate(data_lists):
-            ts = flatten_traces_to_ts([trace])
-            p = Persist(
-                x=ts,
-                break_min=2,
-                break_max=16,
-                divergence="w",
-                candidates="EW",
-                skip=np.array([4, 4])
-            )
-            bins = get_best_bins(p, ts)
-            traces = discretize_traces_with_bins([trace], bins)
-            persist_symbols = len(bins) - 1
-            plot_discretized_traces(
-                discretized_traces=traces,
-                output_folder=BASE_DIR / "Data" / "Graphs" / "discretized" / "persist (individual bins)" / period / room / f"trace_{i}",
-                mapping=make_mapping(persist_symbols)
-            )
+        # # --- Persist (per-trace) ---
+        # for i, trace in enumerate(data_lists):
+        #     ts = flatten_traces_to_ts([trace])
+        #     p = Persist(
+        #         x=ts,
+        #         break_min=2,
+        #         break_max=16,
+        #         divergence="w",
+        #         candidates="EW",
+        #         skip=np.array([4, 4])
+        #     )
+        #     bins = get_best_bins(p, ts)
+        #     traces = discretize_traces_with_bins([trace], bins)
+        #     persist_symbols = len(bins) - 1
+        #     plot_discretized_traces(
+        #         discretized_traces=traces,
+        #         output_folder=BASE_DIR / "Data" / "Graphs" / "discretized" / "persist (individual bins(11))" / period / room / f"trace_{i}",
+        #         mapping=make_mapping(persist_symbols)
+        #     )
 
         print(f"Done: room {room} / {period}")
