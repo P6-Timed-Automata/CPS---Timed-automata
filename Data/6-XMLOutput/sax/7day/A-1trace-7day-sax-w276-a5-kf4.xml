@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'
+  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+  <declaration>clock cl; int temp; const int a = 2077; const int b = 2147; const int c = 2177; const int d = 2206; const int e = 2276;</declaration>
+  <template>
+    <name>TagModel</name>
+    <declaration></declaration>
+    <location id="id0" x="217" y="-137">
+      <name x="217" y="-157">S0</name>
+      <label kind="invariant" x="217" y="-117">cl &lt;= 603600</label>
+    </location>
+    <init ref="id0"/>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 1050 &amp;&amp; cl &lt;= 586800</label>
+      <label kind="assignment">temp = 2177, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 3450 &amp;&amp; cl &lt;= 588900</label>
+      <label kind="assignment">temp = 2147, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 15450 &amp;&amp; cl &lt;= 603600</label>
+      <label kind="assignment">temp = 2077, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 46650 &amp;&amp; cl &lt;= 500700</label>
+      <label kind="assignment">temp = 2276, cl = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl &gt;= 41850 &amp;&amp; cl &lt;= 504900</label>
+      <label kind="assignment">temp = 2206, cl = 0</label>
+    </transition>
+  </template>
+  <system>Process = TagModel(); system Process;</system>
+  <queries>
+    <query>
+      <formula>simulate [&lt;=86400] { temp }</formula>
+      <comment/>
+    </query>
+  </queries>
+</nta>
