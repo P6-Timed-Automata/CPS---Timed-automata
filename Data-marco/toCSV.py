@@ -46,25 +46,41 @@
 #     ])
 #
 #     writer.writerows(rows)
+#
+# import json
+# import pandas as pd
+#
+# # Load JSON
+# with open("data_tmv23.json", "r", encoding="utf-8") as f:
+#     data = json.load(f)["data"]
+#
+# # Create DataFrame
+# df = pd.DataFrame(data)
+#
+# # Parse time column (ISO 8601 with timezone)
+# df["time"] = pd.to_datetime(df["time"])
+#
+# # Compute time delta from first measurement
+# df["time_delta_seconds"] = (df["time"] - df["time"].iloc[0]).dt.total_seconds()
+#
+# # Select relevant columns
+# df = df[["time", "time_delta_seconds", "room_temp"]]
+#
+# # Save to CSV
+# df.to_csv("room_data_2.csv", index=False)
 
 import json
 import pandas as pd
 
 # Load JSON
-with open("data_tmv23.json", "r", encoding="utf-8") as f:
+with open("data_patient_100.json", "r", encoding="utf-8") as f:
     data = json.load(f)["data"]
 
 # Create DataFrame
 df = pd.DataFrame(data)
 
-# Parse time column (ISO 8601 with timezone)
-df["time"] = pd.to_datetime(df["time"])
-
-# Compute time delta from first measurement
-df["time_delta_seconds"] = (df["time"] - df["time"].iloc[0]).dt.total_seconds()
-
-# Select relevant columns
-df = df[["time", "time_delta_seconds", "room_temp"]]
+# Select required columns
+df = df[["ts", "MLII", "V5"]]
 
 # Save to CSV
-df.to_csv("room_data_2.csv", index=False)
+df.to_csv("patient_100_ecg.csv", index=False)
