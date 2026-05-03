@@ -28,7 +28,7 @@ discretization_method = "naiv"
 period = "1day"
 
 # Parameter for Naiv
-symbols = 4
+symbols = 5
 
 # Parameter for TAG
 k_min = 4
@@ -37,11 +37,12 @@ k_increment = 2
 
 experiment_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"
 
+
 all_traces = get_trace_files(folder_path = experiment_folder)
 len_traces = len(all_traces)  + 1
 start_traces = 1
-
 len_traces = 2
+
 
 for trace_nr in range(start_traces, len_traces):
 
