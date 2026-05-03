@@ -12,16 +12,17 @@ from DataProcessing.processData import (
 # formatedRawData = "../Data/2-FormatedRawData/dataset-2023-02-27-formatedRaw.csv"
 
 room = "A"
-room_raw_data = f"../Data/1-Raw/room{room}.csv"
+# room_raw_data = f"../Data/1-Raw/room{room}.csv"
+room_raw_data = f"../Data/1-Raw/dataset-2023-02-27_2023-12-31.csv"
 room_file = f"../Data/2-FormatedRawData/dataset-{room}-formatedRaw.csv"
 
-#format_temperature_data(input_file = room_raw_data,output_file=room_file, col=2)
+format_temperature_data(input_file = room_raw_data,output_file=room_file, col=2)
 
 #Extract traces
 
 # 1 day traces
 extract_1day = f"../Data/3-ExtractInterval/{room}/1day"
-# extract_time_intervals(input_file=room_file, output_folder=extract_1day, output_prefix= f"{room}-1day")
+extract_time_intervals(input_file=room_file, output_folder=extract_1day, output_prefix= f"{room}-1day")
 
 # 7 days traces
 extract_7day = f"../Data/3-ExtractInterval/{room}/7day"

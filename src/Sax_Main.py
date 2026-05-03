@@ -1,122 +1,180 @@
-import string
 import numpy as np
-from scipy.stats import norm
+import os
+import string
+import matplotlib.pyplot as plt
+from pathlib import Path
+from scipy.interpolate import CubicSpline
 
-from TAG.TALearner import TALearner
-from Discretization.discretizationSetup import format_output
-from Discretization.sax import csv_to_temp_time_list
-from DataProcessing.processData import get_trace_files
-from GraphGeneration.graphs import plot_discretized_traces
-
-
-def sax_discretization_multi(data_lists, w, k):
-    breakpoints = norm.ppf(np.linspace(0, 1, k + 1)[1:-1])
-
-    def znorm(v):
-        sigma = v.std()
-        return (v - v.mean()) / sigma if sigma != 0 else np.zeros_like(v)
-
-    def paa(v, t, w):
-        v_segs = np.array_split(v, w)
-        t_segs = np.array_split(t, w)
-        return (
-            np.array([seg.mean() for seg in v_segs]),
-            np.array([int(seg.mean()) for seg in t_segs])
-        )
-
-    discretized = []
-    for trace in data_lists:
-        v = np.array([val for val, _ in trace])
-        t = np.array([time for _, time in trace])
-        paa_v, paa_t = paa(znorm(v), t, w)
-        labels = np.digitize(paa_v, breakpoints)
-        discretized.append([(int(l), int(ts)) for l, ts in zip(labels, paa_t)])
-
-    return discretized, breakpoints
+from Discretization.naive import equal_width_discretization
+from Discretization.persist import Persist, get_best_bins, flatten_traces_to_ts, discretize_traces_with_bins
+from Discretization.sax import sax_discretization_multi
 
 
-def map_bins_to_symbols_multi(traces, k):
-    if k > 26:
-        raise ValueError("k > 26 not supported with single-letter symbols")
-    mapping = {i: string.ascii_lowercase[i] for i in range(k)}
-    symbolic = [[(mapping[label], time) for label, time in trace] for trace in traces]
-    return symbolic, mapping, mapping
+def make_mapping(k):
+    return {i: string.ascii_lowercase[i] for i in range(k)}
 
 
-def build_temp_symbol_map(symbol_map, bins, mean, std):
-    """
-    Builds {letter: median_temperature_celsius} for export_ta.
-    symbol_map: {bin_index: letter}
-    bins:       SAX Gaussian breakpoints (z-scores), length k-1
-    """
-    boundaries = np.concatenate([[-np.inf], bins, [np.inf]])
-    temp_map = {}
-    for bin_idx, letter in symbol_map.items():
-        lo = boundaries[bin_idx]
-        hi = boundaries[bin_idx + 1]
-        if np.isinf(lo):
-            z_mid = hi - 1.0
-        elif np.isinf(hi):
-            z_mid = lo + 1.0
-        else:
-            z_mid = (lo + hi) / 2.0
-        temp_map[letter] = round(z_mid * std + mean, 2)
-    return temp_map
+# --- 3 trace definitions ---
+# Each is a list of (time_seconds, temperature) anchors
+TRACES = {
+    "tid1": np.array([
+        (0,     21.78),   # Normal day — matches real trace closely
+        (27000, 21.05),
+        (29400, 21.80),
+        (61200, 23.60),
+        (86100, 21.78),
+    ]),
+    "tid2": np.array([
+        (0,     21.60),   # Slightly cooler day — heating kicks in earlier
+        (25200, 20.90),
+        (27600, 21.65),
+        (59400, 23.30),
+        (86100, 21.60),
+    ]),
+    "tid3": np.array([
+        (0,     22.00),   # Slightly warmer day — heating kicks in later
+        (28800, 21.30),
+        (31200, 22.10),
+        (63000, 23.90),
+        (86100, 22.00),
+    ]),
+}
+
+
+def generate_idealized_trace(anchors, output_path, sampling_interval=300):
+    cs           = CubicSpline(anchors[:, 0], anchors[:, 1])
+    timestamps   = np.arange(0, 86100 + sampling_interval, sampling_interval)
+    temperatures = cs(timestamps)
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    result = np.column_stack((timestamps, temperatures))
+    np.savetxt(
+        output_path,
+        result,
+        delimiter=';',
+        header='time_seconds;temperature',
+        fmt=['%.0f', '%.5f'],
+        comments=''
+    )
+    print(f"Saved {output_path} ({len(result)} rows)")
+    return timestamps, temperatures
+
+
+def plot_raw(timestamps, temperatures, title, output_path):
+    fig, ax = plt.subplots(figsize=(12, 5))
+    ax.plot(timestamps / 3600, temperatures, linewidth=1.5, color='steelblue')
+    ax.set_title(title)
+    ax.set_xlabel("Time (hours)")
+    ax.set_ylabel("Temperature (°C)")
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+
+
+def plot_all_raw(all_traces, output_path):
+    """Overlay of all 3 raw traces for easy comparison."""
+    fig, ax = plt.subplots(figsize=(12, 5))
+    colors = ['steelblue', 'tomato', 'seagreen']
+    for (tid, (timestamps, temperatures)), color in zip(all_traces.items(), colors):
+        ax.plot(timestamps / 3600, temperatures, linewidth=1.5, label=tid, color=color)
+    ax.set_title("All Idealized Traces (Raw)")
+    ax.set_xlabel("Time (hours)")
+    ax.set_ylabel("Temperature (°C)")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    print(f"Saved overlay to {output_path}")
+
+
+def plot_discretized(timestamps, labels, mapping, title, output_path):
+    fig, ax = plt.subplots(figsize=(12, 5))
+    ax.step(timestamps / 3600, labels, where='post', linewidth=1.5, color='steelblue')
+    ax.set_title(title)
+    ax.set_xlabel("Time (hours)")
+    ax.set_ylabel("Symbol")
+    ax.set_yticks(list(mapping.keys()))
+    ax.set_yticklabels(list(mapping.values()))
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    print(f"Saved discretized plot to {output_path}")
+
 
 if __name__ == "__main__":
-    # --- Config ---
-    room = "A"
-    w = 200 # controls x axis binning
-    discretization_method = "sax"
-    period = "7day" #1day, 7day, 30day
+    BASE_DIR  = Path(__file__).resolve().parent.parent
+    OUT_DATA  = BASE_DIR / "Data" / "3-ExtractInterval" / "idealized"
+    OUT_GRAPH = BASE_DIR / "Data" / "Graphs" / "idealized"
 
-    alphabet_sizes = range(15, 16, 1)  # SAX alphabet: controls discretization
-    k_future = 4                       # TAG lookahead: controls TA merging
+    symbols = 11
+    w       = 200
 
-    experiment_folder = f"../Data/3-ExtractInterval/{period}-experiment/room{room}/"
+    # --- Generate all traces and collect for overlay ---
+    raw_results = {}
+    data_lists  = []
 
-    for trace_nr in range(9, 10):
-        raw_traces = get_trace_files(folder_path=experiment_folder, max_files=trace_nr)
-        data_lists = [csv_to_temp_time_list(f) for f in raw_traces]
+    for tid, anchors in TRACES.items():
+        timestamps, temperatures = generate_idealized_trace(
+            anchors=anchors,
+            output_path=str(OUT_DATA / f"roomA-idealized-{tid}.csv")
+        )
+        raw_results[tid] = (timestamps, temperatures)
+        data_lists.append([(float(t), int(s)) for t, s in zip(temperatures, timestamps)])
 
-        # Compute once per trace_nr — mean/std don't change with alphabet
-        all_temps = np.concatenate([np.array([v for v, _ in trace]) for trace in data_lists])
-        global_mean = all_temps.mean()
-        global_std  = all_temps.std()
+        # Individual raw plot
+        plot_raw(
+            timestamps=timestamps,
+            temperatures=temperatures,
+            title=f"Idealized Trace {tid} (Raw)",
+            output_path=str(OUT_GRAPH / "raw" / f"idealized_{tid}_raw.png")
+        )
 
-        for alphabet in alphabet_sizes:
-            traces, breakpoints = sax_discretization_multi(data_lists, w=w, k=alphabet)
-            symbolic_trace, symbol_map, mapping = map_bins_to_symbols_multi(traces, k=alphabet)
+    # Overlay of all raw traces
+    plot_all_raw(raw_results, output_path=str(OUT_GRAPH / "raw" / "idealized_overlay_raw.png"))
 
-            # Scale to int after building the map
-            temp_symbol_map = build_temp_symbol_map(symbol_map, breakpoints, mean=global_mean, std=global_std)
-            temp_symbol_map = {letter: int(round(temp * 100)) for letter, temp in temp_symbol_map.items()}
+    # --- Discretize and plot each trace individually ---
+    for i, (tid, trace) in enumerate(zip(TRACES.keys(), data_lists)):
+        single = [trace]
+        timestamps = np.array([t for _, t in trace])
 
-            discretized_path = (
-                f"../Data/4-DiscretizationData/{discretization_method}/{period}/"
-                f"{room}-{trace_nr}trace-{period}-{discretization_method}-w{w}-a{alphabet}-kf{k_future}-trace.txt"
-            )
-            format_output(symbolic_res_list=symbolic_trace, output_path=discretized_path)
+        # Naive
+        naive_traces, _ = equal_width_discretization(single, symbols)
+        plot_discretized(
+            timestamps=np.array([t for _, t in naive_traces[0]]),
+            labels=np.array([l for l, _ in naive_traces[0]]),
+            mapping=make_mapping(symbols),
+            title=f"Idealized {tid} — Naive (k={symbols})",
+            output_path=str(OUT_GRAPH / "naive (5 bins)" / f"idealized_{tid}_naive.png")
+        )
 
-            plot_discretized_traces(
-                discretized_traces=traces,
-                output_folder=f"../Data/Graphs/Discretized/{discretization_method}/{period}/{trace_nr}trace-w{w}-a{alphabet}",
-                mapping=mapping
-            )
+        # Persist
+        ts   = flatten_traces_to_ts(single)
+        p    = Persist(x=ts, break_min=2, break_max=10, divergence="w", candidates="EW", skip=np.array([4, 4]))
+        bins = get_best_bins(p, ts)
+        persist_traces  = discretize_traces_with_bins(single, bins)
+        persist_symbols = len(bins) - 1
+        plot_discretized(
+            timestamps=np.array([t for _, t in persist_traces[0]]),
+            labels=np.array([l for l, _ in persist_traces[0]]),
+            mapping=make_mapping(persist_symbols),
+            title=f"Idealized {tid} — Persist (k={persist_symbols})",
+            output_path=str(OUT_GRAPH / "persist" / f"idealized_{tid}_persist.png")
+        )
 
-            learner = TALearner(tss_path=discretized_path, display=False, k=k_future)
+        # SAX
+        sax_traces, _ = sax_discretization_multi(single, w=w, k=symbols)
+        plot_discretized(
+            timestamps=np.array([t for _, t in sax_traces[0]]),
+            labels=np.array([l for l, _ in sax_traces[0]]),
+            mapping=make_mapping(symbols),
+            title=f"Idealized {tid} — SAX (w={w}, k={symbols})",
+            output_path=str(OUT_GRAPH / "sax (5 bins)" / f"idealized_{tid}_sax.png")
+        )
 
-            title = f"{room}-{trace_nr}trace-{period}-{discretization_method}-w{w}-a{alphabet}-kf{k_future}-ta"
-            learner.ta.show(
-                title=title,
-                savePng=True,
-                output_path=f"../Data/5-TaResults/{discretization_method}/{period}"
-            )
-
-            learner.ta.export_ta(
-                path=f"../Data/6-XMLOutput/{discretization_method}/{period}/"
-                     f"{room}-{trace_nr}trace-{period}-{discretization_method}-w{w}-a{alphabet}-kf{k_future}.xml",
-                symbol_map=temp_symbol_map  # ← correct map with real °C values
-            )
-
-            print(f"Done: trace={trace_nr}, alphabet={alphabet}, k_future={k_future}")
+        print(f"Done: {tid}")
