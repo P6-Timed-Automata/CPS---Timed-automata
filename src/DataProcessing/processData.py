@@ -4,7 +4,6 @@ from collections import Counter
 import os
 
 
-
 def format_temperature_data(input_file, output_file, col):
     """
     Loads raw temperature CSV data and cleans invalid values.
@@ -16,7 +15,7 @@ def format_temperature_data(input_file, output_file, col):
         output_file: path to save cleaned CSV
         col: column index of temperature data to use
     """
-    #Reads inputfile
+    # Reads inputfile
     data = np.genfromtxt(
         input_file,
         delimiter=',',
@@ -27,7 +26,7 @@ def format_temperature_data(input_file, output_file, col):
         invalid_raise=False
     )
 
-    #remove invalid rows
+    # remove invalid rows
     bad_values = {'#I/T', '#N/A', '', 'nan', 'NaN', None}
     mask = np.array([str(v) not in bad_values for v in data[:, 2]])
     data = data[mask]
@@ -68,7 +67,6 @@ def format_temperature_data(input_file, output_file, col):
     print(f"Saved {len(result)} rows to {output_file}")
 
 
-
 def extract_time_intervals(input_file, output_folder, output_prefix, trace_days=1):
     os.makedirs(output_folder, exist_ok=True)
 
@@ -96,8 +94,10 @@ def extract_time_intervals(input_file, output_folder, output_prefix, trace_days=
     # Find runs of consecutive valid days
     valid_days = np.sort(valid_days)
     ordinals = np.array([d.toordinal() for d in valid_days])
-    gaps = np.diff(ordinals) != 1                          # True where a gap exists
-    run_boundaries = np.concatenate(([0], np.where(gaps)[0] + 1, [len(valid_days)]))
+    # True where a gap exists
+    gaps = np.diff(ordinals) != 1
+    run_boundaries = np.concatenate(
+        ([0], np.where(gaps)[0] + 1, [len(valid_days)]))
 
     trace_idx = 1
     for b in range(len(run_boundaries) - 1):
@@ -116,7 +116,8 @@ def extract_time_intervals(input_file, output_folder, output_prefix, trace_days=
 
             out = np.column_stack((rel_time, x))
             np.savetxt(
-                os.path.join(output_folder, f"{output_prefix}-tid{trace_idx}.csv"),
+                os.path.join(
+                    output_folder, f"{output_prefix}-tid{trace_idx}.csv"),
                 out,
                 delimiter=';',
                 header="time_seconds;temperature",
@@ -126,6 +127,7 @@ def extract_time_intervals(input_file, output_folder, output_prefix, trace_days=
             trace_idx += 1
 
     print(f"Saved {trace_idx - 1} traces of {trace_days} day(s).")
+
 
 def get_trace_files(folder_path, extension=".csv", max_files=None,):
     files = []
@@ -141,6 +143,261 @@ def get_trace_files(folder_path, extension=".csv", max_files=None,):
     return sorted(files)
 
 
+# ============== ECG Data Processing Functions ==============
+
+def format_ecg_data(input_file, output_file, lead_col=1):
+    """
+    Loads and cleans ECG data.
+
+    Args:
+        input_file: raw ECG CSV file (with ts, MLII, V5 columns)
+        output_file: path to save cleaned CSV
+        lead_col: which lead to extract (1=MLII, 2=V5)
+    """
+    # Read ECG data
+    data = np.genfromtxt(
+        input_file,
+        delimiter=',',
+        dtype=str,
+        usecols=(0, lead_col),
+        encoding="utf-8-sig",
+        skip_header=1,
+        invalid_raise=False
+    )
+
+    # Remove invalid rows
+    bad_values = {'#I/T', '#N/A', '', 'nan', 'NaN', None}
+    mask = np.array([str(v) not in bad_values for v in data[:, 1]])
+    data = data[mask]
+
+    # Parse timestamps (in microseconds) and values
+    timestamps = data[:, 0].astype(np.int64)
+    values = data[:, 1].astype(float)
+
+    # Sort by timestamp
+    order = np.argsort(timestamps)
+    timestamps = timestamps[order]
+    values = values[order]
+
+    # Combine into output
+    result = np.column_stack((timestamps, values))
+
+    dirpath = os.path.dirname(output_file)
+    if dirpath:
+        os.makedirs(dirpath, exist_ok=True)
+
+    np.savetxt(
+        output_file,
+        result,
+        delimiter=';',
+        header='timestamp_us;ecg_value',
+        fmt=['%d', '%.5f'],
+        comments=''
+    )
+
+    print(f"Saved {len(result)} ECG samples to {output_file}")
+
+
+def extract_ecg_intervals_by_samples(input_file, output_folder, output_prefix, samples_per_trace=500):
+    """
+    Split ECG data into fixed-size chunks (by number of samples).
+
+    Args:
+        input_file: formatted ECG CSV file
+        output_folder: where to save traces
+        output_prefix: prefix for output files
+        samples_per_trace: number of samples per trace (e.g., 500)
+    """
+    os.makedirs(output_folder, exist_ok=True)
+
+    data = np.genfromtxt(input_file, delimiter=';', dtype=str, skip_header=1)
+    timestamps = data[:, 0].astype(np.int64)
+    values = data[:, 1].astype(float)
+
+    trace_idx = 1
+    for i in range(0, len(timestamps) - samples_per_trace, samples_per_trace):
+        t_chunk = timestamps[i:i + samples_per_trace]
+        v_chunk = values[i:i + samples_per_trace]
+
+        # Convert to relative time (milliseconds)
+        t0 = t_chunk[0]
+        # Convert microseconds to milliseconds
+        rel_time = (t_chunk - t0) / 1000.0
+
+        out = np.column_stack((rel_time, v_chunk))
+        np.savetxt(
+            os.path.join(output_folder, f"{output_prefix}-tid{trace_idx}.csv"),
+            out,
+            delimiter=';',
+            header="time_ms;ecg_value",
+            fmt=['%.0f', '%.5f'],
+            comments=''
+        )
+        trace_idx += 1
+
+    print(
+        f"Saved {trace_idx - 1} ECG traces of {samples_per_trace} samples each.")
+
+
+def extract_ecg_intervals_by_time_window(input_file, output_folder, output_prefix, window_seconds=5):
+    """
+    Split ECG data into time windows.
+
+    Args:
+        input_file: formatted ECG CSV file
+        output_folder: where to save traces
+        output_prefix: prefix for output files
+        window_seconds: duration of each trace in seconds
+    """
+    os.makedirs(output_folder, exist_ok=True)
+
+    data = np.genfromtxt(input_file, delimiter=';', dtype=str, skip_header=1)
+    timestamps = data[:, 0].astype(np.int64)
+    values = data[:, 1].astype(float)
+
+    window_us = window_seconds * 1_000_000  # Convert to microseconds
+
+    trace_idx = 1
+    i = 0
+    while i < len(timestamps):
+        t_start = timestamps[i]
+        t_end = t_start + window_us
+
+        # Find all samples within this window
+        mask = (timestamps >= t_start) & (timestamps < t_end)
+        t_chunk = timestamps[mask]
+        v_chunk = values[mask]
+
+        if len(t_chunk) > 0:
+            # Convert to relative time (milliseconds)
+            t0 = t_chunk[0]
+            rel_time = (t_chunk - t0) / 1000.0
+
+            out = np.column_stack((rel_time, v_chunk))
+            np.savetxt(
+                os.path.join(
+                    output_folder, f"{output_prefix}-tid{trace_idx}.csv"),
+                out,
+                delimiter=';',
+                header="time_ms;ecg_value",
+                fmt=['%.0f', '%.5f'],
+                comments=''
+            )
+            trace_idx += 1
+
+        # Move to next window
+        i += np.sum(mask)
+        if i <= 0:  # Safety check to avoid infinite loop
+            i = i + 1
+
+    print(f"Saved {trace_idx - 1} ECG traces of {window_seconds}s each.")
+
+
+def extract_ecg_intervals_by_beats(
+    input_file,
+    output_folder,
+    output_prefix,
+    beats_per_trace=50,
+    min_rr_seconds=0.3
+):
+    """
+    Split ECG data into traces by detected heartbeats.
+
+    Args:
+        input_file: formatted ECG CSV file
+        output_folder: where to save traces
+        output_prefix: prefix for output files
+        beats_per_trace: number of detected beats per trace
+        min_rr_seconds: minimum distance between peaks in seconds
+    """
+    os.makedirs(output_folder, exist_ok=True)
+
+    data = np.genfromtxt(input_file, delimiter=';', dtype=str, skip_header=1)
+    timestamps = data[:, 0].astype(float).astype(np.int64)
+    values = data[:, 1].astype(float)
+
+    if len(values) < 3:
+        raise ValueError("ECG file must contain at least 3 samples")
+
+    # Remove low-frequency baseline by centering around median
+    signal = values - np.median(values)
+
+    # Simple smoothing to reduce noise
+    window = min(11, len(signal) if len(signal) % 2 == 1 else len(signal) - 1)
+    if window < 3:
+        window = 3
+    kernel = np.ones(window) / float(window)
+    smooth = np.convolve(signal, kernel, mode='same')
+
+    # Use absolute amplitude for peak detection so inverted ECG still works
+    abs_signal = np.abs(smooth)
+    threshold = max(np.mean(abs_signal) + 0.5 *
+                    np.std(abs_signal), np.percentile(abs_signal, 75))
+
+    # Local maxima detection on the absolute smoothed signal
+    candidates = np.where(
+        (abs_signal[1:-1] > abs_signal[:-2]) &
+        (abs_signal[1:-1] >= abs_signal[2:]) &
+        (abs_signal[1:-1] > threshold)
+    )[0] + 1
+
+    if len(candidates) == 0:
+        # Fallback: lower threshold to capture any peaks
+        threshold = np.mean(abs_signal) + 0.25 * np.std(abs_signal)
+        candidates = np.where(
+            (abs_signal[1:-1] > abs_signal[:-2]) &
+            (abs_signal[1:-1] >= abs_signal[2:]) &
+            (abs_signal[1:-1] > threshold)
+        )[0] + 1
+
+    if len(candidates) == 0:
+        raise ValueError("No heartbeat peaks found in ECG signal")
+
+    # Enforce minimum distance between detected peaks
+    min_distance_us = int(min_rr_seconds * 1_000_000)
+    peaks = [candidates[0]]
+    for idx in candidates[1:]:
+        if timestamps[idx] - timestamps[peaks[-1]] >= min_distance_us:
+            peaks.append(idx)
+    peaks = np.array(peaks, dtype=int)
+
+    if len(peaks) < beats_per_trace:
+        raise ValueError(
+            f"Not enough detected beats ({len(peaks)}) for one trace of {beats_per_trace} beats"
+        )
+
+    trace_idx = 1
+    for i in range(0, len(peaks) - beats_per_trace + 1, beats_per_trace):
+        slice_start = peaks[i]
+        slice_end = peaks[i + beats_per_trace - 1]
+
+        # Extend the slice slightly to include the interval after the last beat
+        if slice_end + 1 < len(timestamps):
+            slice_end = slice_end + 1
+
+        t_chunk = timestamps[slice_start:slice_end + 1]
+        v_chunk = values[slice_start:slice_end + 1]
+
+        t0 = t_chunk[0]
+        rel_time = (t_chunk - t0) / 1000.0
+
+        out = np.column_stack((rel_time, v_chunk))
+        np.savetxt(
+            os.path.join(output_folder, f"{output_prefix}-tid{trace_idx}.csv"),
+            out,
+            delimiter=';',
+            header="time_ms;ecg_value",
+            fmt=['%.0f', '%.5f'],
+            comments=''
+        )
+        trace_idx += 1
+
+    print(
+        f"Saved {trace_idx - 1} ECG traces of {beats_per_trace} beats each. "
+        f"Detected {len(peaks)} heartbeat peaks."
+    )
+
+
 if __name__ == "__main__":
     from pathlib import Path
 
@@ -149,29 +406,32 @@ if __name__ == "__main__":
     rooms = ["A", "B", "C", "D", "E", "F"]
     periods = [("1day", 1), ("7day", 7), ("30day", 30)]
     room_col_map = {"A": 2, "B": 3, "C": 4, "D": 5, "E": 6, "F": 7}
-    raw_input_file = BASE_DIR / "Data" / "1-Raw" / "dataset-2023-02-27_2023-12-31.csv"
+    raw_input_file = BASE_DIR / "Data" / "1-Raw" / \
+        "dataset-2023-02-27_2023-12-31.csv"
 
     for room in rooms:
-        formated_file = BASE_DIR / "Data" / "2-FormatedRawData" / f"room{room}-formated.csv"
+        formated_file = BASE_DIR / "Data" / \
+            "2-FormatedRawData" / f"room{room}-formated.csv"
 
         if not formated_file.exists():
             print(f"Formatting room {room}...")
-            format_temperature_data(raw_input_file, formated_file, col=room_col_map[room])
+            format_temperature_data(
+                raw_input_file, formated_file, col=room_col_map[room])
         else:
             print(f"Skipping formatting for room {room} (already exists)")
 
         for period, period_number in periods:
-            experiment_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment" / f"room{room}"
+            experiment_folder = BASE_DIR / "Data" / "3-ExtractInterval" / \
+                f"{period}-experiment" / f"room{room}"
 
             if experiment_folder.exists() and any(experiment_folder.iterdir()):
-                print(f"Skipping extraction for room {room} / {period} (already exists)")
+                print(
+                    f"Skipping extraction for room {room} / {period} (already exists)")
                 continue
 
             print(f"Extracting intervals for room {room} / {period}...")
-            extract_time_intervals(formated_file, experiment_folder, f"room{room}-{period}", period_number)
-
-
-
+            extract_time_intervals(
+                formated_file, experiment_folder, f"room{room}-{period}", period_number)
 
 
 # def format_temperature_data(input_file, output_file, col):
