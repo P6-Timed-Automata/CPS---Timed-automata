@@ -113,20 +113,21 @@ def sax_bins_celsius(breakpoints, original_trace_values, outer_z=3.5):
 
 
 # ---------------------------------------------------------------------------
-# RMSE helpers
+# RMSE and MAE helpers
 # ---------------------------------------------------------------------------
 
 def rmse_signal_vs_grid(t_signal, v_signal, sim_matrix, t_grid):
-    """
-    Compute RMSE of a signal against every row of sim_matrix,
-    by interpolating the signal onto t_grid.
-
-    Returns:
-        1D array of RMSE values, one per simulation
-    """
-    v_interp = np.interp(t_grid, t_signal, v_signal)
-    residuals = sim_matrix - v_interp[np.newaxis, :]   # (n_sims, n_points)
+    """RMSE of a signal against every simulation row. Returns 1D array (n_sims,)."""
+    v_interp  = np.interp(t_grid, t_signal, v_signal)
+    residuals = sim_matrix - v_interp[np.newaxis, :]
     return np.sqrt(np.mean(residuals ** 2, axis=1))
+
+
+def mae_signal_vs_grid(t_signal, v_signal, sim_matrix, t_grid):
+    """MAE of a signal against every simulation row. Returns 1D array (n_sims,)."""
+    v_interp  = np.interp(t_grid, t_signal, v_signal)
+    residuals = sim_matrix - v_interp[np.newaxis, :]
+    return np.mean(np.abs(residuals), axis=1)
 
 
 def rmse_signal_vs_raw(t_signal, v_signal, t_raw, v_raw):
@@ -135,23 +136,25 @@ def rmse_signal_vs_raw(t_signal, v_signal, t_raw, v_raw):
     return float(np.sqrt(np.mean((v_signal - v_raw_interp) ** 2)))
 
 
+def mae_signal_vs_raw(t_signal, v_signal, t_raw, v_raw):
+    """MAE of a discretized signal vs the raw trace (interpolated)."""
+    v_raw_interp = np.interp(t_signal, t_raw, v_raw)
+    return float(np.mean(np.abs(v_signal - v_raw_interp)))
+
+
 # ---------------------------------------------------------------------------
 # Plotting helpers
 # ---------------------------------------------------------------------------
 
-def _plot_sim_band(ax, t_grid, sim_matrix, alpha_band=0.25):
-    """Shade mean ± 1 std of all simulations."""
+def _plot_sim_band(ax, t_grid, sim_matrix, n_std=1, alpha_band=0.25):
+    """Shade mean ± n_std of all simulations."""
     mean = sim_matrix.mean(axis=0)
     std  = sim_matrix.std(axis=0)
     ax.plot(t_grid / 3600, mean, color='black', linewidth=1.4,
             label='UPPAAL mean')
-    ax.fill_between(t_grid / 3600, mean - std, mean + std,
-                    color='black', alpha=alpha_band, label='UPPAAL ±1 std')
-
-
-def _rmse_summary(rmse_arr, label):
-    return (f"{label:30s}  mean={rmse_arr.mean():.4f}  "
-            f"std={rmse_arr.std():.4f}  min={rmse_arr.min():.4f} °C")
+    ax.fill_between(t_grid / 3600, mean - n_std * std, mean + n_std * std,
+                    color='black', alpha=alpha_band,
+                    label=f'UPPAAL ±{n_std} std (~{int(n_std*68)}% of sims)')
 
 
 # ---------------------------------------------------------------------------
@@ -159,12 +162,13 @@ def _rmse_summary(rmse_arr, label):
 # ---------------------------------------------------------------------------
 
 def compare_trace_to_reference(
-        trace_csv,
-        reference_csv,
-        output_path=None,
-        temp_scale=0.01,
-        discretized_traces=None,
-        n_grid=2000,
+    trace_csv,
+    reference_csv,
+    output_path=None,
+    temp_scale=0.01,
+    discretized_traces=None,
+    n_grid=2000,
+    n_std=1,
 ):
     """
     Compare a continuous trace and optional discretized variants against
@@ -199,30 +203,34 @@ def compare_trace_to_reference(
 
     colors = plt.cm.tab10(np.linspace(0, 0.7, max(len(disc_signals), 1)))
 
-    # --- RMSE vs raw trace (for figure 1) ---
+    # --- RMSE and MAE vs raw trace (for figure 1) ---
     rmse_vs_raw = {
         label: rmse_signal_vs_raw(t_d, v_d, t_trace, v_trace)
         for label, (t_d, v_d) in disc_signals.items()
     }
-
-    # --- RMSE distributions vs UPPAAL simulations (for figures 2 & 3) ---
-    rmse_dist = {
-        'Raw trace': rmse_signal_vs_grid(t_trace, v_trace, sim_matrix, t_grid)
+    mae_vs_raw = {
+        label: mae_signal_vs_raw(t_d, v_d, t_trace, v_trace)
+        for label, (t_d, v_d) in disc_signals.items()
     }
+
+    # --- RMSE and MAE distributions vs UPPAAL simulations (for figures 2 & 3) ---
+    rmse_dist = {'Raw trace': rmse_signal_vs_grid(t_trace, v_trace, sim_matrix, t_grid)}
+    mae_dist  = {'Raw trace': mae_signal_vs_grid(t_trace, v_trace, sim_matrix, t_grid)}
     for label, (t_d, v_d) in disc_signals.items():
         rmse_dist[label] = rmse_signal_vs_grid(t_d, v_d, sim_matrix, t_grid)
+        mae_dist[label]  = mae_signal_vs_grid(t_d, v_d, sim_matrix, t_grid)
 
     # -----------------------------------------------------------------------
     # Figure 1: discretizations vs raw trace
     # -----------------------------------------------------------------------
     fig1, (ax1t, ax1b) = plt.subplots(2, 1, figsize=(13, 7), sharex=True,
-                                      gridspec_kw={'height_ratios': [3, 1]})
+                                       gridspec_kw={'height_ratios': [3, 1]})
     ax1t.plot(t_trace / 3600, v_trace, color='steelblue', linewidth=0.9,
               alpha=0.85, label='Raw trace')
     for i, (label, (t_d, v_d)) in enumerate(disc_signals.items()):
         ax1t.step(t_d / 3600, v_d, where='post', color=colors[i],
                   linewidth=1.0, alpha=0.85,
-                  label=f"{label}  RMSE={rmse_vs_raw[label]:.4f} °C")
+                  label=f"{label}  RMSE={rmse_vs_raw[label]:.4f}  MAE={mae_vs_raw[label]:.4f} °C")
     ax1t.set_ylabel("Temperature (°C)")
     ax1t.set_title("Discretizations vs raw trace")
     ax1t.legend(fontsize=8, loc='lower right', framealpha=0.9)
@@ -243,16 +251,18 @@ def compare_trace_to_reference(
     # Figure 2: UPPAAL mean ± std band + raw trace + discretizations
     # -----------------------------------------------------------------------
     fig2, (ax2t, ax2b) = plt.subplots(2, 1, figsize=(13, 7), sharex=True,
-                                      gridspec_kw={'height_ratios': [3, 1]})
-    _plot_sim_band(ax2t, t_grid, sim_matrix)
+                                       gridspec_kw={'height_ratios': [3, 1]})
+    _plot_sim_band(ax2t, t_grid, sim_matrix, n_std=n_std)
     rmse_raw = rmse_dist['Raw trace']
+    mae_raw  = mae_dist['Raw trace']
     ax2t.plot(t_trace / 3600, v_trace, color='steelblue', linewidth=0.9, alpha=0.85,
-              label=f"Raw trace  RMSE mean={rmse_raw.mean():.4f} °C")
+              label=f"Raw trace  RMSE={rmse_raw.mean():.4f}  MAE={mae_raw.mean():.4f} °C")
     for i, (label, (t_d, v_d)) in enumerate(disc_signals.items()):
         rd = rmse_dist[label]
+        md = mae_dist[label]
         ax2t.step(t_d / 3600, v_d, where='post', color=colors[i],
                   linewidth=1.0, alpha=0.85,
-                  label=f"{label}  RMSE mean={rd.mean():.4f} °C")
+                  label=f"{label}  RMSE={rd.mean():.4f}  MAE={md.mean():.4f} °C")
     ax2t.set_ylabel("Temperature (°C)")
     ax2t.set_title("UPPAAL band vs raw trace and discretizations")
     ax2t.legend(fontsize=8, loc='lower right', framealpha=0.9)
@@ -274,27 +284,34 @@ def compare_trace_to_reference(
     fig2.tight_layout()
 
     # -----------------------------------------------------------------------
-    # Figure 3: RMSE distribution — violin + min marker
+    # Figure 3: RMSE and MAE distributions — side-by-side violin plots
     # -----------------------------------------------------------------------
-    fig3, ax3 = plt.subplots(figsize=(8, 5))
     labels_order = list(rmse_dist.keys())
-    data         = [rmse_dist[l] for l in labels_order]
-    vp = ax3.violinplot(data, positions=range(len(labels_order)),
-                        showmedians=True, showextrema=True)
-    for i, (body, label) in enumerate(zip(vp['bodies'], labels_order)):
-        c = 'steelblue' if label == 'Raw trace' else colors[list(disc_signals.keys()).index(label)]
-        body.set_facecolor(c)
-        body.set_alpha(0.6)
-        # Mark minimum RMSE
-        ax3.scatter(i, rmse_dist[label].min(), color=c, zorder=5,
-                    marker='*', s=120, label=f"{label} min={rmse_dist[label].min():.4f}")
+    positions    = range(len(labels_order))
+    signal_colors = [
+        'steelblue' if l == 'Raw trace'
+        else colors[list(disc_signals.keys()).index(l)]
+        for l in labels_order
+    ]
 
-    ax3.set_xticks(range(len(labels_order)))
-    ax3.set_xticklabels(labels_order, fontsize=9)
-    ax3.set_ylabel("RMSE vs UPPAAL simulations (°C)")
-    ax3.set_title("RMSE distribution across all UPPAAL simulations")
-    ax3.legend(fontsize=7, loc='upper right', framealpha=0.9)
-    ax3.grid(True, alpha=0.3, axis='y')
+    fig3, (ax3l, ax3r) = plt.subplots(1, 2, figsize=(14, 5), sharey=False)
+
+    for ax, dist, metric_label in [
+        (ax3l, rmse_dist, 'RMSE'),
+        (ax3r, mae_dist,  'MAE'),
+    ]:
+        data = [dist[l] for l in labels_order]
+        vp   = ax.violinplot(data, positions=list(positions),
+                             showmedians=True, showextrema=True)
+        for body, c in zip(vp['bodies'], signal_colors):
+            body.set_facecolor(c)
+            body.set_alpha(0.6)
+        ax.set_xticks(list(positions))
+        ax.set_xticklabels(labels_order, fontsize=9)
+        ax.set_ylabel(f"{metric_label} vs UPPAAL simulations (°C)")
+        ax.set_title(f"{metric_label} distribution across UPPAAL simulations")
+        ax.grid(True, alpha=0.3, axis='y')
+
     fig3.tight_layout()
 
     # -----------------------------------------------------------------------
@@ -304,7 +321,7 @@ def compare_trace_to_reference(
     for t_s, v_s in simulations:
         ax4.step(t_s / 3600, v_s, where='post', color='grey',
                  linewidth=0.4, alpha=0.3)
-    _plot_sim_band(ax4, t_grid, sim_matrix)
+    _plot_sim_band(ax4, t_grid, sim_matrix, n_std=n_std)
     ax4.set_ylabel("Temperature (°C)")
     ax4.set_xlabel("Time (hours)")
     ax4.set_title(f"UPPAAL reference — {len(simulations)} simulations")
@@ -331,15 +348,17 @@ def compare_trace_to_reference(
     else:
         plt.show()
 
-    # Print summary
-    print("\nRMSE vs raw trace:")
-    for label, rmse in rmse_vs_raw.items():
-        print(f"  {label:30s}  {rmse:.4f} °C")
+    print("\nRMSE / MAE vs raw trace:")
+    for label in rmse_vs_raw:
+        print(f"  {label:30s}  RMSE={rmse_vs_raw[label]:.4f}  MAE={mae_vs_raw[label]:.4f} °C")
     print("\nRMSE vs UPPAAL simulations (mean / std / min):")
     for label, arr in rmse_dist.items():
-        print(f"  {_rmse_summary(arr, label)}")
+        print(f"  {label:30s}  mean={arr.mean():.4f}  std={arr.std():.4f}  min={arr.min():.4f} °C")
+    print("\nMAE vs UPPAAL simulations (mean / std / min):")
+    for label, arr in mae_dist.items():
+        print(f"  {label:30s}  mean={arr.mean():.4f}  std={arr.std():.4f}  min={arr.min():.4f} °C")
 
-    return rmse_vs_raw, rmse_dist
+    return rmse_vs_raw, mae_vs_raw, rmse_dist, mae_dist
 
 
 # ---------------------------------------------------------------------------
@@ -367,6 +386,7 @@ if __name__ == "__main__":
         reference_csv = "../../Data/7-ExtractedUppaalGraphData/test2-multiple.csv",
         output_path   = "comparison.png",
         temp_scale    = 0.01,
+        n_std         = 2,   # 1 = ~68% of sims, 2 = ~95%, 3 = ~99.7%
         discretized_traces = {
             'naive  (k=5)':      (naive_traces[0],   naive_bins_celsius(naive_bins)),
             'sax    (w=20,k=5)': (sax_traces[0],     sax_bins_celsius(sax_breakpoints, raw_values)),
