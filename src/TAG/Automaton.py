@@ -267,182 +267,57 @@ class Automaton:
             print("Saved automaton to:", file_path)
 
 
-    #
-    # def export_ta(self, path: str, symbol_map: dict = None) -> None:
-    #     """
-    #     Export the automaton as a UPPAAL XML file with Graphviz layout coordinates.
-    #     Args:
-    #         path (str): Path for the output .xml file
-    #         symbol_map (dict, optional): Mapping of symbol names to integer values for plotting,
-    #                                      e.g. {'a': 2090, 'b': 2120, 'c': 2148}.
-    #                                      If None, symbols are mapped to indices 0, 1, 2, ...
-    #     """
-    #
-    #
-    #     self.update_probas()
-    #
-    #     state_ids = {s.name: f"id{i}" for i, s in enumerate(self.states)}
-    #     initial = next((s for s in self.states if s.initial), self.states[0])
-    #
-    #     # Use provided symbol map or fall back to integer indices
-    #     if symbol_map is None:
-    #         symbol_values = {sym: i for i, sym in enumerate(self.symbols)}
-    #     else:
-    #         symbol_values = symbol_map
-    #     # Build DOT string to feed into Graphviz for layout
-    #     dot = 'digraph G {\n'
-    #     dot += 'START [style=invisible]\n'
-    #     dot += 'node [shape="circle"]\n'
-    #     for state in self.states:
-    #         if state.accepting:
-    #             dot += f'{state.name} [shape="doublecircle"]\n'
-    #     dot += 'START -> S0\n'
-    #     for state in self.states:
-    #         for e in state.edges_out:
-    #             dot += f'{e.source.name} -> {e.destination.name} [label="{e.symbol}"]\n'
-    #     dot += '}'
-    #
-    #     # Run dot -Tplain to extract positions
-    #     positions = {}
-    #     try:
-    #         result = subprocess.run(
-    #             ['dot', '-Tplain'],
-    #             input=dot, capture_output=True, text=True
-    #         )
-    #         scale = 400
-    #         for line in result.stdout.splitlines():
-    #             parts = line.split()
-    #             if parts[0] == 'node' and parts[1] != 'START':
-    #                 name = parts[1]
-    #                 x = round(float(parts[2]) * scale)
-    #                 y = round(float(parts[3]) * scale)
-    #                 positions[name] = (x, -y)
-    #     except FileNotFoundError:
-    #         print("Warning: 'dot' command not found. Falling back to grid layout.")
-    #
-    #     # Compute invariant upper bounds
-    #     upper_bounds = {}
-    #     for state in self.states:
-    #         bounds = [
-    #             (e.reduce_gtime()[1] if len(e.tss) > 0 else e.reduced_guard()[1])
-    #             for e in state.edges_out
-    #         ]
-    #         upper_bounds[state.name] = max(bounds) if bounds else None
-    #
-    #     # Build const int declarations for each symbol
-    #     const_decls = ' '.join(
-    #         f'const int {sym} = {val};' for sym, val in symbol_values.items()
-    #     )
-    #
-    #
-    #
-    #     lines = [
-    #         '<?xml version="1.0" encoding="utf-8"?>',
-    #         "<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'",
-    #         "  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>",
-    #         '<nta>',
-    #         f'  <declaration>clock cl; int temp; {const_decls}</declaration>',
-    #         '  <template>',
-    #         '    <name>TagModel</name>',
-    #         '    <declaration></declaration>',
-    #     ]
-    #
-    #     for i, state in enumerate(self.states):
-    #         sid = state_ids[state.name]
-    #         x, y = positions.get(state.name, ((i % 10) * 200, (i // 10) * 200))
-    #         lines.append(f'    <location id="{sid}" x="{x}" y="{y}">')
-    #         lines.append(f'      <name x="{x}" y="{y - 20}">{state.name}</name>')
-    #         ub = upper_bounds.get(state.name)
-    #         if ub is not None:
-    #             lines.append(f'      <label kind="invariant" x="{x}" y="{y + 20}">cl &lt;= {ub}</label>')
-    #         lines.append('    </location>')
-    #
-    #     lines.append(f'    <init ref="{state_ids[initial.name]}"/>')
-    #
-    #     for state in self.states:
-    #         for e in state.edges_out:
-    #
-    #             if len(e.tss) > 0:
-    #                 lo, hi = e.reduce_gtime()
-    #             else:
-    #                 lo, hi = e.reduced_guard()
-    #
-    #             val = symbol_values.get(e.symbol, 0)
-    #
-    #             lines.append('    <transition>')
-    #             lines.append(f'      <source ref="{state_ids[e.source.name]}"/>')
-    #             lines.append(f'      <target ref="{state_ids[e.destination.name]}"/>')
-    #
-    #             lines.append(
-    #                 f'      <label kind="guard">cl &gt;= {lo} &amp;&amp; cl &lt;= {hi}</label>'
-    #             )
-    #
-    #             # NO RESET (this is the key fix)
-    #             lines.append(
-    #                 f'      <label kind="assignment">temp = {val}</label>'
-    #             )
-    #
-    #             lines.append('    </transition>')
-    #
-    #     lines += [
-    #         '  </template>',
-    #         '  <system>Process = TagModel(); system Process;</system>',
-    #         '  <queries>',
-    #         '    <query>',
-    #         '      <formula>simulate [&lt;=18000] { temp }</formula>',
-    #         '      <comment/>',
-    #         '    </query>',
-    #         '  </queries>',
-    #         '</nta>',
-    #     ]
-    #
-    #     os.makedirs(os.path.dirname(path), exist_ok=True)
-    #     with open(path, 'w+') as f:
-    #         f.write('\n'.join(lines))
-    #
-    #     print(f"UPPAAL model written to {path}")
 
-    def export_ta(self, path: str, symbol_map: dict = None) -> None:
+    # VERSION with var, global, local
+    def export_ta(self, path: str, symbol_map: dict = None, time: int = 86400, sim_nr: int = 1) -> None:
         """
         Export the automaton as a UPPAAL XML file with Graphviz layout coordinates.
+
         Args:
             path (str): Path for the output .xml file
-            symbol_map (dict, optional): Mapping of symbol names to integer values for plotting,
-                                         e.g. {'a': 2090, 'b': 2120, 'c': 2148}.
-                                         If None, symbols are mapped to indices 0, 1, 2, ...
+            symbol_map (dict, optional): Mapping of symbol names to temperature values,
+                                         e.g. {'a': 2090, 'b': 2120, 'c': 2148}
         """
-
 
         self.update_probas()
 
         state_ids = {s.name: f"id{i}" for i, s in enumerate(self.states)}
         initial = next((s for s in self.states if s.initial), self.states[0])
 
-        # Use provided symbol map or fall back to integer indices
+        # Use provided symbol map or fallback
         if symbol_map is None:
             symbol_values = {sym: i for i, sym in enumerate(self.symbols)}
         else:
             symbol_values = symbol_map
-      # Build DOT string to feed into Graphviz for layout
+
+        # ----------------------------
+        # Graphviz layout generation
+        # ----------------------------
         dot = 'digraph G {\n'
         dot += 'START [style=invisible]\n'
         dot += 'node [shape="circle"]\n'
+
         for state in self.states:
             if state.accepting:
                 dot += f'{state.name} [shape="doublecircle"]\n'
-        dot += 'START -> S0\n'
+
+        dot += f'START -> {initial.name}\n'
+
         for state in self.states:
             for e in state.edges_out:
                 dot += f'{e.source.name} -> {e.destination.name} [label="{e.symbol}"]\n'
+
         dot += '}'
 
-        # Run dot -Tplain to extract positions
         positions = {}
         try:
             result = subprocess.run(
                 ['dot', '-Tplain'],
-                input=dot, capture_output=True, text=True
+                input=dot,
+                capture_output=True,
+                text=True
             )
+
             scale = 400
             for line in result.stdout.splitlines():
                 parts = line.split()
@@ -451,73 +326,363 @@ class Automaton:
                     x = round(float(parts[2]) * scale)
                     y = round(float(parts[3]) * scale)
                     positions[name] = (x, -y)
+
         except FileNotFoundError:
             print("Warning: 'dot' command not found. Falling back to grid layout.")
 
-        # Compute invariant upper bounds
+        # ----------------------------
+        # Compute invariants
+        # ----------------------------
         upper_bounds = {}
+
         for state in self.states:
-            bounds = [e.reduced_guard()[1] for e in state.edges_out]
+            bounds = []
+
+            for e in state.edges_out:
+                _, local_hi = e.reduced_guard()
+                bounds.append(local_hi)
+
             upper_bounds[state.name] = max(bounds) if bounds else None
 
-        # Build const int declarations for each symbol
+
+
+        # ----------------------------
+        # Build UPPAAL declarations
+        # ----------------------------
         const_decls = ' '.join(
-            f'const int {sym} = {val};' for sym, val in symbol_values.items()
+            f'const int {sym} = {val};'
+            for sym, val in symbol_values.items()
         )
 
+        # Determine initial temp from initial state's outgoing symbol (or custom logic)
+        initial_symbol = None
+        if initial.edges_out:
+            initial_symbol = initial.edges_out[0].symbol
 
+        initial_temp_value = initial_symbol if initial_symbol is not None else "0"
 
         lines = [
             '<?xml version="1.0" encoding="utf-8"?>',
             "<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'",
             "  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>",
             '<nta>',
-            f'  <declaration>clock cl; int temp; {const_decls}</declaration>',
+            f'  <declaration>clock cl_local, cl_global; {const_decls} int temp = {initial_temp_value};</declaration>',
             '  <template>',
             '    <name>TagModel</name>',
             '    <declaration></declaration>',
         ]
 
+        # ----------------------------
+        # Locations
+        # ----------------------------
         for i, state in enumerate(self.states):
             sid = state_ids[state.name]
             x, y = positions.get(state.name, ((i % 10) * 200, (i // 10) * 200))
+
             lines.append(f'    <location id="{sid}" x="{x}" y="{y}">')
             lines.append(f'      <name x="{x}" y="{y - 20}">{state.name}</name>')
+
             ub = upper_bounds.get(state.name)
             if ub is not None:
-                lines.append(f'      <label kind="invariant" x="{x}" y="{y + 20}">cl &lt;= {ub}</label>')
+                lines.append(
+                    f'      <label kind="invariant" x="{x}" y="{y + 20}">'
+                    f'cl_local &lt;= {ub}</label>'
+                )
+
             lines.append('    </location>')
 
         lines.append(f'    <init ref="{state_ids[initial.name]}"/>')
 
+        # ----------------------------
+        # Transitions
+        # ----------------------------
         for state in self.states:
             for e in state.edges_out:
-                lo, hi = e.reduced_guard()
-                val = symbol_values.get(e.symbol, 0)
+
+                # Local timing bounds
+                local_lo, local_hi = e.reduced_guard()
+
+                # Global timing bounds
+                if len(e.tss) > 0:
+                    global_lo, global_hi = e.reduce_gtime()
+                else:
+                    global_lo, global_hi = local_lo, local_hi  # fallback if no global timing exists
+
+                symbol_var = e.symbol
+
                 lines.append('    <transition>')
                 lines.append(f'      <source ref="{state_ids[e.source.name]}"/>')
                 lines.append(f'      <target ref="{state_ids[e.destination.name]}"/>')
-                lines.append(f'      <label kind="guard">cl &gt;= {lo} &amp;&amp; cl &lt;= {hi}</label>')
-                lines.append(f'      <label kind="assignment">temp = {val}, cl = 0</label>')
+
+                lines.append(
+                    f'      <label kind="guard">'
+                    f'cl_local &gt;= {local_lo} &amp;&amp; cl_local &lt;= {local_hi} '
+                    f'&amp;&amp; '
+                    f'cl_global &gt;= {global_lo} &amp;&amp; cl_global &lt;= {global_hi}'
+                    f'</label>'
+                )
+
+                lines.append(
+                    f'      <label kind="assignment">'
+                    f'temp = {symbol_var}, cl_local = 0'
+                    f'</label>'
+                )
+
                 lines.append('    </transition>')
+
+        # ----------------------------
+        # Final XML
+        # ----------------------------
+
+        accepting_states = [s.name for s in self.states if s.accepting]
+
+        if not accepting_states:
+            raise ValueError("No accepting/final states defined in automaton.")
+
+        final_expr = " || ".join(f"Process.{name}" for name in accepting_states)
+
 
         lines += [
             '  </template>',
             '  <system>Process = TagModel(); system Process;</system>',
             '  <queries>',
+
             '    <query>',
-            '      <formula>simulate [&lt;=86400] { temp }</formula>',
-            '      <comment/>',
+            f'      <formula>strategy Safe = control: A&lt;&gt; {final_expr}</formula>',
             '    </query>',
+
+            '    <query>',
+            f'      <formula>simulate [&lt;={time}; {sim_nr}] {{ temp }} under Safe</formula>',
+            '    </query>',
+
+            '    <query>',
+            f'      <formula>E&lt;&gt; {final_expr}</formula>',
+            '    </query>',
+
             '  </queries>',
             '</nta>',
         ]
 
         os.makedirs(os.path.dirname(path), exist_ok=True)
+
         with open(path, 'w+') as f:
             f.write('\n'.join(lines))
 
         print(f"UPPAAL model written to {path}")
+
+
+
+
+    # VERSION local, global, variable, weights
+    # def export_ta(self, path: str, symbol_map: dict = None,
+    #               local_slack: int = 0) -> None:
+    #     """
+    #     Export TAG → UPPAAL TA (SMC-ready, LOCAL CLOCK ONLY)
+    #     """
+    #
+    #     self.update_probas()
+    #
+    #     state_ids = {s.name: f"id{i}" for i, s in enumerate(self.states)}
+    #     initial = next((s for s in self.states if s.initial), self.states[0])
+    #
+    #     from collections import defaultdict
+    #     outgoing = defaultdict(list)
+    #
+    #     for state in self.states:
+    #         for e in state.edges_out:
+    #             outgoing[state.name].append(e)
+    #
+    #     # ----------------------------
+    #     # Symbol map
+    #     # ----------------------------
+    #     if symbol_map is None:
+    #         symbol_values = {sym: i for i, sym in enumerate(self.symbols)}
+    #     else:
+    #         symbol_values = symbol_map
+    #
+    #     const_decls = ' '.join(
+    #         f'const int {sym} = {val};'
+    #         for sym, val in symbol_values.items()
+    #     )
+    #
+    #     # ----------------------------
+    #     # Graphviz layout (unchanged)
+    #     # ----------------------------
+    #     dot = 'digraph G {\nSTART [style=invisible]\nnode [shape="circle"]\n'
+    #
+    #     for state in self.states:
+    #         if state.accepting:
+    #             dot += f'{state.name} [shape="doublecircle"]\n'
+    #
+    #     dot += f'START -> {initial.name}\n'
+    #
+    #     for state in self.states:
+    #         for e in state.edges_out:
+    #             dot += f'{e.source.name} -> {e.destination.name} [label="{e.symbol}"]\n'
+    #
+    #     dot += '}'
+    #
+    #     positions = {}
+    #     try:
+    #         result = subprocess.run(
+    #             ['dot', '-Tplain'],
+    #             input=dot,
+    #             capture_output=True,
+    #             text=True
+    #         )
+    #
+    #         scale = 400
+    #         for line in result.stdout.splitlines():
+    #             parts = line.split()
+    #             if parts[0] == 'node' and parts[1] != 'START':
+    #                 name = parts[1]
+    #                 x = round(float(parts[2]) * scale)
+    #                 y = round(float(parts[3]) * scale)
+    #                 positions[name] = (x, -y)
+    #
+    #     except FileNotFoundError:
+    #         print("Warning: 'dot' not found. Using fallback layout.")
+    #
+    #     # ----------------------------
+    #     # Invariants (LOCAL ONLY)
+    #     # ----------------------------
+    #     upper_bounds = {}
+    #
+    #     for state in self.states:
+    #         bounds = [e.reduced_guard()[1] for e in state.edges_out]
+    #         upper_bounds[state.name] = max(bounds) if bounds else None
+    #
+    #     # ----------------------------
+    #     # XML HEADER (NO GLOBAL CLOCK)
+    #     # ----------------------------
+    #     lines = [
+    #         '<?xml version="1.0" encoding="utf-8"?>',
+    #         "<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'",
+    #         "  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>",
+    #         '<nta>',
+    #         f'  <declaration>clock cl_local; clock cl_global; int temp; {const_decls}</declaration>',
+    #         '  <template>',
+    #         '    <name>TagModel</name>',
+    #         '    <declaration></declaration>',
+    #     ]
+    #
+    #     # ----------------------------
+    #     # Locations
+    #     # ----------------------------
+    #     for i, state in enumerate(self.states):
+    #
+    #         sid = state_ids[state.name]
+    #         x, y = positions.get(state.name, ((i % 10) * 200, (i // 10) * 200))
+    #
+    #         lines.append(f'    <location id="{sid}" x="{x}" y="{y}">')
+    #         lines.append(f'      <name x="{x}" y="{y - 20}">{state.name}</name>')
+    #
+    #         ub = upper_bounds.get(state.name)
+    #         if ub is not None:
+    #             lines.append(
+    #                 f'      <label kind="invariant" x="{x}" y="{y + 20}">'
+    #                 f'cl_local &lt;= {ub}</label>'
+    #             )
+    #
+    #         lines.append('    </location>')
+    #
+    #     lines.append(f'    <init ref="{state_ids[initial.name]}"/>')
+    #
+    #     # ----------------------------
+    #     # TRANSITIONS (LOCAL + PROBABILITIES CORRECTED)
+    #     # ----------------------------
+    #
+    #     for state_name, edges in outgoing.items():
+    #
+    #         # normalize probabilities per source state
+    #         probs = []
+    #         for e in edges:
+    #             p = getattr(e, "proba", 1.0)
+    #             if p > 1:
+    #                 p = p / 100.0
+    #             probs.append(p)
+    #
+    #         total = sum(probs)
+    #         # if total == 0:
+    #         #     probs = [1.0 for _ in edges]
+    #         #     total = len(edges)
+    #         #
+    #         # norm_probs = [p / total for p in probs]
+    #         if total == 0:
+    #             norm_probs = [100.0 / len(edges)] * len(edges)
+    #         else:
+    #             norm_probs = [(p / total) * 100.0 for p in probs]
+    #
+    #         for e, p in zip(edges, norm_probs):
+    #
+    #             local_lo, local_hi = e.reduced_guard()
+    #
+    #             if local_hi == local_lo:
+    #                 local_hi = local_lo + local_slack
+    #
+    #             source = state_ids[e.source.name]
+    #             target = state_ids[e.destination.name]
+    #
+    #             # -------------------------
+    #             # SELF LOOP (no special semantics needed now)
+    #             # -------------------------
+    #             lines.append('    <transition>')
+    #             lines.append(f'      <source ref="{source}"/>')
+    #             lines.append(f'      <target ref="{target}"/>')
+    #
+    #             # lines.append(
+    #             #     f'      <label kind="guard">'
+    #             #     f'cl_local &gt;= {local_lo} &amp;&amp; cl_local &lt;= {local_hi}'
+    #             #     f'</label>'
+    #             # )
+    #             global_lo, global_hi = e.reduce_gtime() if len(getattr(e, "tss", [])) > 0 else (local_lo, local_hi)
+    #
+    #             lines.append(
+    #                 f'      <label kind="guard">'
+    #                 f'cl_local &gt;= {local_lo} &amp;&amp; cl_local &lt;= {local_hi} '
+    #                 f'&amp;&amp; '
+    #                 f'cl_global &gt;= {global_lo} &amp;&amp; cl_global &lt;= {global_hi}'
+    #                 f'</label>'
+    #             )
+    #
+    #             lines.append(
+    #                 f'      <label kind="assignment">'
+    #                 f'temp = {e.symbol}, cl_local = 0'
+    #                 f'</label>'
+    #             )
+    #
+    #             # THIS is now correct SMC probability semantics
+    #             lines.append(
+    #                 f'      <label kind="probability">{p}</label>'
+    #             )
+    #
+    #             lines.append('    </transition>')
+    #
+    #     # ----------------------------
+    #     # FOOTER
+    #     # ----------------------------
+    #     lines += [
+    #         '  </template>',
+    #         '  <system>Process = TagModel(); system Process;</system>',
+    #         '  <queries>',
+    #         '    <query>',
+    #         '      <formula>simulate [&lt;=86400] { temp }</formula>',
+    #         '    </query>',
+    #         '  </queries>',
+    #         '</nta>',
+    #     ]
+    #
+    #     os.makedirs(os.path.dirname(path), exist_ok=True)
+    #
+    #     with open(path, 'w+') as f:
+    #         f.write('\n'.join(lines))
+    #
+    #     print(f"UPPAAL model written to {path}")
+
+
+
+
+
 
     def import_from_dot(self, dot_path: str) -> None:
         """
