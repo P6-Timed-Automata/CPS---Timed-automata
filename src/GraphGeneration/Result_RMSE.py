@@ -377,7 +377,7 @@ if __name__ == "__main__":
     naive_traces, naive_bins     = equal_width_discretization(data_lists, k=5)
     sax_traces, sax_breakpoints  = sax_discretization_multi(data_lists, w=20, k=5)
     ts           = flatten_traces_to_ts(data_lists)
-    persist_obj  = Persist(ts, break_min=5, break_max=5)
+    persist_obj  = Persist(ts, break_min=3, break_max=15)
     persist_bins = get_best_bins(persist_obj, ts)
     persist_traces = discretize_traces_with_bins(data_lists, persist_bins)
 
