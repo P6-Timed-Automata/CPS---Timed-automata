@@ -2,6 +2,7 @@ import json, os
 from TAG.TALearner import TALearner
 import graphviz
 from pathlib import Path
+import time
 
 from GraphGeneration.graphs import plot_discretized_traces
 
@@ -18,65 +19,75 @@ from DataProcessing.processData import (
     get_trace_files
 )
 
+total_start = time.perf_counter()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-
-# PARAMETERS SETTINGS
+# PARAMETERS
 room = "A"
 discretization_method = "naiv"
 period = "1day"
 
-# Parameter for Naiv
 symbols = 5
 
-# Parameter for TAG
-k_min = 4
+k_min = 2
 k_max = 4
 k_increment = 2
 
-experiment_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"
+# Paths
+experiment_folder = (
+        BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment" / f"room{room}"
+)
 
+discretinize_data_path = (
+        BASE_DIR / "Data" / "4-DiscretizationData" / discretization_method / period
+        / f"{room}-200traces-{period}-{discretization_method}-s{symbols}.txt"
+)
 
-all_traces = get_trace_files(folder_path = experiment_folder)
-len_traces = len(all_traces)  + 1
-start_traces = 1
-len_traces = 2
+TA_output_path = (
+        BASE_DIR / "Data" / "5-TaResults" / discretization_method / period
+)
 
+# Load traces
+all_traces = get_trace_files(folder_path=experiment_folder)
+rawTraces = all_traces[:200]
 
-for trace_nr in range(start_traces, len_traces):
+print(f"Using {len(rawTraces)} traces")
 
-    # Paths
-    discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
-                              / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
-                              )
+# Preprocess once
+data_lists = csv_to_temp_time_list(input_files=rawTraces)
 
-    # Prepare input for Naiv
-    rawTraces = all_traces[:trace_nr]
-    data_lists = csv_to_temp_time_list(input_files=rawTraces)
+# Discretize once
+traces, bins = equal_width_discretization(data_lists, symbols)
 
-    # Discretize with naiv
-    traces, bins = equal_width_discretization(data_lists, symbols)
+# Map to symbols
+symbolic_trace, symbol_map, mapping = map_bins_to_symbols(traces, symbols, bins)
 
-    # Prpare format for TAG
-    symbolic_trace, symbol_map, mapping = map_bins_to_symbols(traces, symbols, bins)
-    format_output(symbolic_res_list=symbolic_trace, output_path=discretinize_data_path)
+# Save for TAG
+format_output(symbolic_trace, discretinize_data_path)
 
-    # Now vary k
-    for k in range(k_min, k_max + 1, k_increment):
-        #Paths
-        title = f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-k{k}-ta"
-        TA_output_path = (BASE_DIR / "Data" / "5-TaResults" / discretization_method / period)
-        xml_path = (BASE_DIR / "Data" / "6-XMLOutput" / discretization_method / period
-                    / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-k{k}.xml")
+# Run TAG for different k
+for k in range(k_min, k_max + 1, k_increment):
+    start = time.perf_counter()
 
-        # Tranform to TA
-        learner = TALearner(tss_path=discretinize_data_path,display=False,k=k)
-        learner.ta.show(title=title,savePng=True,output_path=TA_output_path)
-        learner.ta.export_ta(path=xml_path, symbol_map=symbol_map)
+    title = f"{room}-200traces-{period}-{discretization_method}-s{symbols}-k{k}"
 
-        print(f"Done: trace={trace_nr}, k={k}, symbols={symbols}")
-        print("-------------------------------------------------------------------------------------")
+    xml_path = (
+            BASE_DIR / "Data" / "6-XMLOutput" / discretization_method / period
+            / f"{room}-200traces-{period}-{discretization_method}-s{symbols}-k{k}.xml"
+    )
 
+    learner = TALearner(
+        tss_path=discretinize_data_path,
+        display=False,
+        k=k
+    )
 
+    learner.ta.show(title=title, savePng=True, output_path=TA_output_path)
+    learner.ta.export_ta(path=xml_path, symbol_map=symbol_map)
 
+    end = time.perf_counter()
+
+    print(f"Done: k={k} | time={end - start:.2f}s")
+total_end = time.perf_counter()
+print(f"Total runtime: {total_end - total_start:.2f}s")
