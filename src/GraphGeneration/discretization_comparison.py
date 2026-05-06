@@ -275,7 +275,7 @@ if __name__ == "__main__":
     benchmark_trace_scaling_with_repeats(
         all_trace_files = all_traces,
         output_folder   = out_dir,
-        alphabet_sizes  = [4, 8, 12, 16, 20],
+        alphabet_sizes  = [5,10,15],
         repeats         = 5,
     )
 
