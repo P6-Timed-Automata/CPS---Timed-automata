@@ -31,7 +31,7 @@ def sax_discretization_multi(data_lists, w, k):
         v = np.array([val for val, _ in trace])
         t = np.array([time for _, time in trace])
         paa_v, paa_t = paa(znorm(v), t, w)
-        labels = np.digitize(paa_v, breakpoints)
+        labels = np.digitize(paa_v, breakpoints, right=True)
         discretized.append([(int(l), int(ts)) for l, ts in zip(labels, paa_t)])
 
     return discretized, breakpoints

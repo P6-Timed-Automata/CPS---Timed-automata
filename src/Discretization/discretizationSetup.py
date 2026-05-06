@@ -77,3 +77,53 @@ def map_bins_to_symbols(result, s, bins):
 
 
 
+def preprocess_test_traces(test_traces, bins, s):
+    """
+    Convert raw test traces into TAG format using:
+    - training bins
+    - s = number of symbols (int)
+    """
+
+    # --------------------------
+    # 1. Create alphabet
+    # --------------------------
+    symbols = list(string.ascii_lowercase)
+
+    if s > len(symbols):
+        raise ValueError("s too large (max 26 supported)")
+
+    symbols = symbols[:s]
+    k = len(bins) - 1
+
+
+
+    # --------------------------
+    # 2. Build mapping (bin -> letter)
+    # --------------------------
+    mapping = {i: symbols[i] for i in range(s)}
+
+    # --------------------------
+    # 3. Discretize using TRAIN bins
+    # --------------------------
+    discretized = []
+
+    for trace in test_traces:
+        values = np.array([v for v, t in trace])
+        times = np.array([t for v, t in trace])
+
+        labels = np.digitize(values, bins) - 1
+        labels = np.clip(labels, 0, k - 1)
+
+        discretized.append([(int(l), int(t)) for l, t in zip(labels, times)])
+
+
+    # --------------------------
+    # 4. Convert to TAG format
+    # --------------------------
+    symbolic_traces = [
+        [f"{mapping[label]}:{t}" for (label, t) in trace]
+        for trace in discretized
+    ]
+
+
+    return symbolic_traces
