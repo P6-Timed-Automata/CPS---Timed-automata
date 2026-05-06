@@ -261,26 +261,137 @@ def benchmark_trace_scaling_with_repeats(
     print(f"Saved {heatmap_path}")
 
 
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def load_trace(path):
+    data = np.genfromtxt(path, delimiter=';', skip_header=1)
+    return data[:, 0], data[:, 1]
+
+
+def load_uppaal_simulations(path, temp_scale=0.01):
+    simulations = []
+    current_t, current_v = [], []
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('####'):
+                continue
+            if line.startswith('#'):
+                if current_t:
+                    simulations.append((np.array(current_t), np.array(current_v)))
+                current_t, current_v = [], []
+                continue
+            parts = line.split(',')
+            if len(parts) != 2:
+                continue
+            try:
+                current_t.append(float(parts[0]))
+                current_v.append(float(parts[1]) * temp_scale)
+            except ValueError:
+                continue
+    if current_t:
+        simulations.append((np.array(current_t), np.array(current_v)))
+    return simulations
+
+
+def eval_step(t_query, t_steps, v_steps):
+    """Evaluate a step function at arbitrary query times."""
+    idx = np.searchsorted(t_steps, t_query, side='right') - 1
+    return v_steps[np.clip(idx, 0, len(v_steps) - 1)]
+
+
+def compare_averages(raw_csv_paths, uppaal_sim_path, output_path, temp_scale=0.01, n_grid=2000):
+    """
+    Computes RMSE between the average of raw traces and the average of
+    UPPAAL simulations, and saves a comparison plot.
+    """
+    # Load raw traces and interpolate onto a common grid
+    raw_traces = [load_trace(p) for p in raw_csv_paths]
+    t_start = max(t[0] for t, _ in raw_traces)
+    t_end = min(t[-1] for t, _ in raw_traces)
+    t_grid = np.linspace(t_start, t_end, n_grid)
+
+    mean_raw = np.mean([np.interp(t_grid, t, v) for t, v in raw_traces], axis=0)
+
+    # Load UPPAAL simulations and evaluate on the same grid
+    simulations = load_uppaal_simulations(uppaal_sim_path, temp_scale=temp_scale)
+    mean_sim = np.mean([eval_step(t_grid, t, v) for t, v in simulations], axis=0)
+
+    # RMSE and MAE between the two averages
+    residual = mean_raw - mean_sim
+    rmse = float(np.sqrt(np.mean(residual ** 2)))
+    mae = float(np.mean(np.abs(residual)))
+
+    print(f"RMSE: {rmse:.4f} °C")
+    print(f"MAE:  {mae:.4f} °C")
+
+    for p in raw_paths:
+        t, v = load_trace(p)
+        print(f"{p}  →  first 3 values: {v[:3]}  mean: {v.mean():.2f}")
+
+    # Plot
+    t_hours = t_grid / 3600
+    fig, (ax_top, ax_bot) = plt.subplots(2, 1, figsize=(12, 6), sharex=True,
+                                         gridspec_kw={'height_ratios': [3, 1]})
+
+    ax_top.plot(t_hours, mean_raw, color='steelblue', linewidth=1.5,
+                label=f"Mean raw trace (n={len(raw_traces)})")
+    ax_top.plot(t_hours, mean_sim, color='darkorange', linewidth=1.5,
+                label=f"Mean UPPAAL sim (n={len(simulations)})")
+    ax_top.set_ylabel("Temperature (°C)")
+    ax_top.set_title(f"Average Raw Trace vs Average UPPAAL Simulation — RMSE={rmse:.4f} °C  MAE={mae:.4f} °C")
+    ax_top.legend(fontsize=9)
+    ax_top.grid(True, linestyle='--', alpha=0.4)
+
+    ax_bot.axhline(0, color='black', linewidth=0.9, linestyle='--')
+    ax_bot.plot(t_hours, residual, color='crimson', linewidth=0.9)
+    ax_bot.fill_between(t_hours, residual, color='crimson', alpha=0.15)
+    ax_bot.set_ylabel("Residual (°C)")
+    ax_bot.set_xlabel("Time (hours)")
+    ax_bot.grid(True, linestyle='--', alpha=0.4)
+
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    print(f"Saved {output_path}")
+
+    return rmse, mae
+
+
 # ---------------------------------------------------------------------------
 # 5. MAIN
 # ---------------------------------------------------------------------------
+#
+# if __name__ == "__main__":
+#     all_traces = sorted(glob.glob(
+#         "../../data/3-ExtractInterval/1day-experiment/roomA/*.csv"
+#     ))[:20]
+#
+#     out_dir = "../../data/Graphs/TA_Benchmark"
+#
+#     benchmark_trace_scaling_with_repeats(
+#         all_trace_files = all_traces,
+#         output_folder   = out_dir,
+#         alphabet_sizes  = [5,10,15],
+#         repeats         = 5,
+#     )
+
 
 if __name__ == "__main__":
-    all_traces = sorted(glob.glob(
+    import glob
+
+    raw_paths = sorted(glob.glob(
         "../../data/3-ExtractInterval/1day-experiment/roomA/*.csv"
-    ))[:20]
+    ))[:5]  # select how many traces to average over
 
-    out_dir = "../../data/Graphs/TA_Benchmark"
-
-    benchmark_trace_scaling_with_repeats(
-        all_trace_files = all_traces,
-        output_folder   = out_dir,
-        alphabet_sizes  = [5,10,15],
-        repeats         = 5,
+    compare_averages(
+        raw_csv_paths=raw_paths,
+        uppaal_sim_path="../../data/7-ExtractedUppaalGraphData/test2-multiple.csv",
+        output_path="../../data/Graphs/average_comparison.png",
+        temp_scale=0.01,
     )
-
-
-
 
 # import matplotlib.pyplot as plt
 # import numpy as np
