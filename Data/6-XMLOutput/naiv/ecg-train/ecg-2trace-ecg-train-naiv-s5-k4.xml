@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'
+  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+  <declaration>clock cl_local, cl_global; const int a = -50; const int b = -15; const int c = 19; const int d = 53; const int e = 88; int temp = b;</declaration>
+  <template>
+    <name>TagModel</name>
+    <declaration></declaration>
+    <location id="id0" x="833" y="-3107">
+      <name x="833" y="-3127">S0</name>
+      <label kind="invariant" x="833" y="-3087">cl_local &lt;= 0</label>
+    </location>
+    <location id="id1" x="1144" y="-2161">
+      <name x="1144" y="-2181">S1</name>
+      <label kind="invariant" x="1144" y="-2141">cl_local &lt;= 155556</label>
+    </location>
+    <location id="id2" x="533" y="-2538">
+      <name x="533" y="-2558">S71</name>
+      <label kind="invariant" x="533" y="-2518">cl_local &lt;= 5011110</label>
+    </location>
+    <location id="id3" x="533" y="-1806">
+      <name x="533" y="-1826">S75</name>
+      <label kind="invariant" x="533" y="-1786">cl_local &lt;= 4202777</label>
+    </location>
+    <location id="id4" x="511" y="-1234">
+      <name x="511" y="-1254">S76</name>
+      <label kind="invariant" x="511" y="-1214">cl_local &lt;= 4205554</label>
+    </location>
+    <location id="id5" x="811" y="-687">
+      <name x="811" y="-707">S2</name>
+      <label kind="invariant" x="811" y="-667">cl_local &lt;= 5005554</label>
+    </location>
+    <location id="id6" x="239" y="-140">
+      <name x="239" y="-160">S70</name>
+      <label kind="invariant" x="239" y="-120">cl_local &lt;= 5008332</label>
+    </location>
+    <init ref="id0"/>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id1"/>
+      <label kind="guard">cl_local &gt;= 0 &amp;&amp; cl_local &lt;= 0 &amp;&amp; cl_global &gt;= 0 &amp;&amp; cl_global &lt;= 0</label>
+      <label kind="assignment">temp = b, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id2"/>
+      <label kind="guard">cl_local &gt;= 0 &amp;&amp; cl_local &lt;= 0 &amp;&amp; cl_global &gt;= 0 &amp;&amp; cl_global &lt;= 0</label>
+      <label kind="assignment">temp = e, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id1"/>
+      <label kind="guard">cl_local &gt;= 2778 &amp;&amp; cl_local &lt;= 152778 &amp;&amp; cl_global &gt;= 2778 &amp;&amp; cl_global &lt;= 4277778</label>
+      <label kind="assignment">temp = b, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id5"/>
+      <label kind="guard">cl_local &gt;= 155556 &amp;&amp; cl_local &lt;= 155556 &amp;&amp; cl_global &gt;= 4433334 &amp;&amp; cl_global &lt;= 4433334</label>
+      <label kind="assignment">temp = a, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id2"/>
+      <target ref="id3"/>
+      <label kind="guard">cl_local &gt;= 5556 &amp;&amp; cl_local &lt;= 4199999 &amp;&amp; cl_global &gt;= 8334 &amp;&amp; cl_global &lt;= 3177299112</label>
+      <label kind="assignment">temp = d, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id2"/>
+      <target ref="id5"/>
+      <label kind="guard">cl_local &gt;= 1647222 &amp;&amp; cl_local &lt;= 1647222 &amp;&amp; cl_global &gt;= 489224863 &amp;&amp; cl_global &lt;= 489224863</label>
+      <label kind="assignment">temp = c, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id2"/>
+      <target ref="id2"/>
+      <label kind="guard">cl_local &gt;= 2778 &amp;&amp; cl_local &lt;= 5011110 &amp;&amp; cl_global &gt;= 2778 &amp;&amp; cl_global &lt;= 4522526513</label>
+      <label kind="assignment">temp = e, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id4"/>
+      <label kind="guard">cl_local &gt;= 8333 &amp;&amp; cl_local &lt;= 4202777 &amp;&amp; cl_global &gt;= 16667 &amp;&amp; cl_global &lt;= 3181501889</label>
+      <label kind="assignment">temp = c, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id4"/>
+      <target ref="id5"/>
+      <label kind="guard">cl_local &gt;= 11111 &amp;&amp; cl_local &lt;= 4205554 &amp;&amp; cl_global &gt;= 27778 &amp;&amp; cl_global &lt;= 3185707443</label>
+      <label kind="assignment">temp = b, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id4"/>
+      <target ref="id4"/>
+      <label kind="guard">cl_local &gt;= 2441666 &amp;&amp; cl_local &lt;= 2749999 &amp;&amp; cl_global &gt;= 1074333032 &amp;&amp; cl_global &lt;= 1362624618</label>
+      <label kind="assignment">temp = a, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id5"/>
+      <target ref="id5"/>
+      <label kind="guard">cl_local &gt;= 183333 &amp;&amp; cl_local &lt;= 4997221 &amp;&amp; cl_global &gt;= 6141667 &amp;&amp; cl_global &lt;= 4497498742</label>
+      <label kind="assignment">temp = b, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id5"/>
+      <target ref="id5"/>
+      <label kind="guard">cl_local &gt;= 188889 &amp;&amp; cl_local &lt;= 5002776 &amp;&amp; cl_global &gt;= 6516667 &amp;&amp; cl_global &lt;= 4507501517</label>
+      <label kind="assignment">temp = c, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id5"/>
+      <target ref="id6"/>
+      <label kind="guard">cl_local &gt;= 191667 &amp;&amp; cl_local &lt;= 5005554 &amp;&amp; cl_global &gt;= 6708334 &amp;&amp; cl_global &lt;= 4512507071</label>
+      <label kind="assignment">temp = d, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id5"/>
+      <target ref="id5"/>
+      <label kind="guard">cl_local &gt;= 13889 &amp;&amp; cl_local &lt;= 4991665 &amp;&amp; cl_global &gt;= 41667 &amp;&amp; cl_global &lt;= 4487507078</label>
+      <label kind="assignment">temp = a, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id6"/>
+      <target ref="id2"/>
+      <label kind="guard">cl_local &gt;= 194444 &amp;&amp; cl_local &lt;= 3402777 &amp;&amp; cl_global &gt;= 6902778 &amp;&amp; cl_global &lt;= 2085902195</label>
+      <label kind="assignment">temp = d, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id6"/>
+      <target ref="id2"/>
+      <label kind="guard">cl_local &gt;= 800000 &amp;&amp; cl_local &lt;= 5008332 &amp;&amp; cl_global &gt;= 115599968 &amp;&amp; cl_global &lt;= 4517515403</label>
+      <label kind="assignment">temp = e, cl_local = 0</label>
+    </transition>
+  </template>
+  <system>Process = TagModel(); system Process;</system>
+  <queries>
+    <query>
+      <formula>strategy Safe = control: A&lt;&gt; Process.S71</formula>
+    </query>
+    <query>
+      <formula>simulate [&lt;=86400; 1] { temp } under Safe</formula>
+    </query>
+    <query>
+      <formula>E&lt;&gt; Process.S71</formula>
+    </query>
+  </queries>
+</nta>
