@@ -47,20 +47,18 @@ all_traces = get_trace_files(folder_path=experiment_folder)
 if not all_traces:
     raise RuntimeError(f"No ECG trace files found in {experiment_folder}")
 
-start_traces = 1
 max_trace_files = 20
-len_traces = min(max_trace_files, len(all_traces)) + 1
+selected_traces = all_traces[:max_trace_files]
 
-for trace_nr in range(start_traces, len_traces):
+for trace_nr, input_file in enumerate(selected_traces, start=1):
 
     # Paths
     discretinize_data_path = (BASE_DIR / "Data" / "4-DiscretizationData" / discretization_method / period
                               / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
                               )
 
-    # Prepare input for Naiv
-    rawTraces = all_traces[:trace_nr]
-    data_lists = csv_to_temp_time_list(input_files=rawTraces)
+    # Prepare input for Naiv using a single input file per trace
+    data_lists = csv_to_temp_time_list(input_files=[input_file])
 
     if not data_lists:
         print(f"Skipping trace {trace_nr}: no data to discretize")

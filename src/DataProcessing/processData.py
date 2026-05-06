@@ -198,7 +198,7 @@ def format_ecg_data(input_file, output_file, lead_col=1):
     print(f"Saved {len(result)} ECG samples to {output_file}")
 
 
-def extract_ecg_intervals_by_samples(input_file, output_folder, output_prefix, samples_per_trace=500):
+def extract_ecg_intervals_by_samples(input_file, output_folder, output_prefix, samples_per_trace=500, max_traces=None):
     """
     Split ECG data into fixed-size chunks (by number of samples).
 
@@ -235,8 +235,13 @@ def extract_ecg_intervals_by_samples(input_file, output_folder, output_prefix, s
         )
         trace_idx += 1
 
+        if max_traces and trace_idx > max_traces:
+            break
+
+    saved_count = trace_idx - 1
+    limit_note = f" (limited to {max_traces})" if max_traces and saved_count >= max_traces else ""
     print(
-        f"Saved {trace_idx - 1} ECG traces of {samples_per_trace} samples each.")
+        f"Saved {saved_count} ECG traces of {samples_per_trace} samples each{limit_note}.")
 
 
 def extract_ecg_intervals_by_time_window(input_file, output_folder, output_prefix, window_seconds=5):
@@ -293,12 +298,148 @@ def extract_ecg_intervals_by_time_window(input_file, output_folder, output_prefi
     print(f"Saved {trace_idx - 1} ECG traces of {window_seconds}s each.")
 
 
+def _detect_ecg_peaks(timestamps, values, min_rr_seconds=0.3):
+    if len(values) < 3:
+        return np.array([], dtype=int)
+
+    signal = values - np.median(values)
+    window = min(11, len(signal) if len(signal) % 2 == 1 else len(signal) - 1)
+    if window < 3:
+        window = 3
+
+    kernel = np.ones(window) / float(window)
+    smooth = np.convolve(signal, kernel, mode='same')
+    abs_signal = np.abs(smooth)
+
+    threshold = max(
+        np.mean(abs_signal) + 0.5 * np.std(abs_signal),
+        np.percentile(abs_signal, 75)
+    )
+
+    candidates = np.where(
+        (abs_signal[1:-1] > abs_signal[:-2]) &
+        (abs_signal[1:-1] >= abs_signal[2:]) &
+        (abs_signal[1:-1] > threshold)
+    )[0] + 1
+
+    if len(candidates) == 0:
+        threshold = np.mean(abs_signal) + 0.25 * np.std(abs_signal)
+        candidates = np.where(
+            (abs_signal[1:-1] > abs_signal[:-2]) &
+            (abs_signal[1:-1] >= abs_signal[2:]) &
+            (abs_signal[1:-1] > threshold)
+        )[0] + 1
+
+    if len(candidates) == 0:
+        return np.array([], dtype=int)
+
+    min_distance_us = int(min_rr_seconds * 1_000_000)
+    peaks = [candidates[0]]
+    for idx in candidates[1:]:
+        if timestamps[idx] - timestamps[peaks[-1]] >= min_distance_us:
+            peaks.append(idx)
+
+    return np.array(peaks, dtype=int)
+
+
+def _save_ecg_segment(output_folder, output_prefix, trace_idx, t_chunk, v_chunk):
+    t0 = t_chunk[0]
+    rel_time = (t_chunk - t0) / 1000.0
+    out = np.column_stack((rel_time, v_chunk))
+    np.savetxt(
+        os.path.join(output_folder, f"{output_prefix}-tid{trace_idx}.csv"),
+        out,
+        delimiter=';',
+        header="time_ms;ecg_value",
+        fmt=['%.0f', '%.5f'],
+        comments=''
+    )
+
+
+def extract_ecg_intervals_by_time_and_beats(
+    input_file,
+    output_folder,
+    output_prefix,
+    window_seconds=5,
+    beats_per_trace=50,
+    min_rr_seconds=0.3,
+    max_traces=None
+):
+    """
+    Split ECG data into fixed time windows, then cut beats inside each window.
+
+    Args:
+        input_file: formatted ECG CSV file
+        output_folder: where to save traces
+        output_prefix: prefix for output files
+        window_seconds: length of each time slice in seconds
+        beats_per_trace: number of beats per saved trace inside each window
+        min_rr_seconds: minimum distance between peaks in seconds
+    """
+    os.makedirs(output_folder, exist_ok=True)
+
+    data = np.genfromtxt(input_file, delimiter=';', dtype=str, skip_header=1)
+    timestamps = data[:, 0].astype(np.int64)
+    values = data[:, 1].astype(float)
+
+    window_us = window_seconds * 1_000_000  # Convert to microseconds
+    trace_idx = 1
+    i = 0
+
+    while i < len(timestamps):
+        t_start = timestamps[i]
+        t_end = t_start + window_us
+
+        mask = (timestamps >= t_start) & (timestamps < t_end)
+        t_window = timestamps[mask]
+        v_window = values[mask]
+
+        if len(t_window) >= 3:
+            peaks = _detect_ecg_peaks(t_window, v_window, min_rr_seconds)
+            if len(peaks) >= beats_per_trace:
+                for j in range(0, len(peaks) - beats_per_trace + 1, beats_per_trace):
+                    slice_start = peaks[j]
+                    slice_end = peaks[j + beats_per_trace - 1]
+                    if slice_end + 1 < len(t_window):
+                        slice_end += 1
+
+                    _save_ecg_segment(
+                        output_folder,
+                        output_prefix,
+                        trace_idx,
+                        t_window[slice_start:slice_end + 1],
+                        v_window[slice_start:slice_end + 1]
+                    )
+                    trace_idx += 1
+
+                    if max_traces and trace_idx > max_traces:
+                        break
+
+                if max_traces and trace_idx > max_traces:
+                    break
+
+        i += np.sum(mask)
+        if i <= 0:
+            i += 1
+
+        if max_traces and trace_idx > max_traces:
+            break
+
+    saved_count = trace_idx - 1
+    limit_note = f" (limited to {max_traces})" if max_traces and saved_count >= max_traces else ""
+    print(
+        f"Saved {saved_count} ECG traces from {window_seconds}s windows "
+        f"with {beats_per_trace} beats each{limit_note}."
+    )
+
+
 def extract_ecg_intervals_by_beats(
     input_file,
     output_folder,
     output_prefix,
     beats_per_trace=50,
-    min_rr_seconds=0.3
+    min_rr_seconds=0.3,
+    max_traces=None
 ):
     """
     Split ECG data into traces by detected heartbeats.
@@ -392,8 +533,13 @@ def extract_ecg_intervals_by_beats(
         )
         trace_idx += 1
 
+        if max_traces and trace_idx > max_traces:
+            break
+
+    saved_count = trace_idx - 1
+    limit_note = f" (limited to {max_traces})" if max_traces and saved_count >= max_traces else ""
     print(
-        f"Saved {trace_idx - 1} ECG traces of {beats_per_trace} beats each. "
+        f"Saved {saved_count} ECG traces of {beats_per_trace} beats each{limit_note}. "
         f"Detected {len(peaks)} heartbeat peaks."
     )
 

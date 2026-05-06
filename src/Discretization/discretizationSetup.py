@@ -25,28 +25,44 @@ def csv_to_temp_time_list(input_files):
 
         all_results.append(result)
 
-
     print("tranformed data to a list")
 
     return all_results
 
 
-def format_output(symbolic_res_list,output_path):
+def format_output(symbolic_res_list, output_path):
     lines = []
 
     for symbolic_res in symbolic_res_list:
-        line = " ".join(f"{s}:{v}" for s, v in symbolic_res)
+        if not symbolic_res:
+            continue
+
+        # Convert absolute timestamps into successive delays for timed automaton input
+        deltas = []
+        prev_time = None
+        for symbol, timestamp in symbolic_res:
+            if prev_time is None:
+                delay = int(timestamp)
+            else:
+                delay = int(timestamp) - int(prev_time)
+            deltas.append((symbol, delay))
+            prev_time = timestamp
+
+        line = " ".join(f"{s}:{v}" for s, v in deltas)
         lines.append(line)
 
     output = "\n".join(lines)
 
     # Ensure the directory exists
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    dir_path = os.path.dirname(output_path)
+    if dir_path:
+        os.makedirs(dir_path, exist_ok=True)
 
     with open(output_path, "w") as f:
         f.write(output)
 
     print(f"File saved to {output_path}")
+
 
 def map_bins_to_symbols(result, s, bins):
     # Create symbols: a, b, c, ...
@@ -58,7 +74,7 @@ def map_bins_to_symbols(result, s, bins):
     # Create mapping: 0->'a', 1->'b', ...
     mapping = {i: symbols[i] for i in range(s)}
 
-    #Midpoint symbol map
+    # Midpoint symbol map
     symbol_map = None
     if bins is not None:
         symbol_map = {
@@ -69,11 +85,8 @@ def map_bins_to_symbols(result, s, bins):
     # Apply mapping to traces
     symbolic_results = []
     for trace in result:
-        symbolic_trace = [(mapping[int(label)], int(time)) for label, time in trace]
+        symbolic_trace = [(mapping[int(label)], int(time))
+                          for label, time in trace]
         symbolic_results.append(symbolic_trace)
 
-
     return symbolic_results, symbol_map, mapping
-
-
-

@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """Extract ECG beat traces and split them into train/test/val sets."""
 
-from processData import extract_ecg_intervals_by_beats
+from processData import (
+    extract_ecg_intervals_by_beats,
+    extract_ecg_intervals_by_time_window,
+    extract_ecg_intervals_by_time_and_beats,
+    extract_ecg_intervals_by_samples,
+)
 import os
 import random
 import shutil
@@ -30,9 +35,15 @@ TRAIN_RATIO = 0.70
 TEST_RATIO = 0.15
 VAL_RATIO = 0.15
 RANDOM_SEED = 42
-BEATS_PER_TRACE = 10
+# Extraction method: beats, window, window_and_beats, samples
+EXTRACTION_METHOD = "samples"
+WINDOW_SECONDS = 5
+BEATS_PER_TRACE = 1
 MIN_RR_SECONDS = 0.3
+SAMPLES_PER_TRACE = 100  # Fixed number of samples per trace for consistent length
 OUTPUT_PREFIX = "patient100-beats"
+# Limit total number of extracted traces to reduce file count.
+MAX_TRACES = 30
 
 
 def create_directories():
@@ -59,14 +70,44 @@ def extract_beat_traces(force=False):
             f"Extraction folder already contains {len(existing_files)} CSV files. Skipping extraction.")
         return
 
-    print(f"Extracting beat-based traces to {EXTRACTION_DIR}...")
-    extract_ecg_intervals_by_beats(
-        input_file=str(FORMATTED_ECG_FILE),
-        output_folder=str(EXTRACTION_DIR),
-        output_prefix=OUTPUT_PREFIX,
-        beats_per_trace=BEATS_PER_TRACE,
-        min_rr_seconds=MIN_RR_SECONDS
-    )
+    print(
+        f"Extracting ECG traces to {EXTRACTION_DIR} using method={EXTRACTION_METHOD}...")
+    if EXTRACTION_METHOD == "beats":
+        extract_ecg_intervals_by_beats(
+            input_file=str(FORMATTED_ECG_FILE),
+            output_folder=str(EXTRACTION_DIR),
+            output_prefix=OUTPUT_PREFIX,
+            beats_per_trace=BEATS_PER_TRACE,
+            min_rr_seconds=MIN_RR_SECONDS,
+            max_traces=MAX_TRACES
+        )
+    elif EXTRACTION_METHOD == "window":
+        extract_ecg_intervals_by_time_window(
+            input_file=str(FORMATTED_ECG_FILE),
+            output_folder=str(EXTRACTION_DIR),
+            output_prefix=OUTPUT_PREFIX,
+            window_seconds=WINDOW_SECONDS
+        )
+    elif EXTRACTION_METHOD == "window_and_beats":
+        extract_ecg_intervals_by_time_and_beats(
+            input_file=str(FORMATTED_ECG_FILE),
+            output_folder=str(EXTRACTION_DIR),
+            output_prefix=OUTPUT_PREFIX,
+            window_seconds=WINDOW_SECONDS,
+            beats_per_trace=BEATS_PER_TRACE,
+            min_rr_seconds=MIN_RR_SECONDS,
+            max_traces=MAX_TRACES
+        )
+    elif EXTRACTION_METHOD == "samples":
+        extract_ecg_intervals_by_samples(
+            input_file=str(FORMATTED_ECG_FILE),
+            output_folder=str(EXTRACTION_DIR),
+            output_prefix=OUTPUT_PREFIX,
+            samples_per_trace=SAMPLES_PER_TRACE,
+            max_traces=MAX_TRACES
+        )
+    else:
+        raise ValueError(f"Unknown EXTRACTION_METHOD: {EXTRACTION_METHOD}")
 
 
 def split_files():
@@ -108,7 +149,7 @@ def split_files():
 
 if __name__ == "__main__":
     create_directories()
-    extract_beat_traces()
+    extract_beat_traces(force=True)
 
     print(
         f"\nSplitting files with ratios: Train={TRAIN_RATIO*100:.0f}%, Test={TEST_RATIO*100:.0f}%, Val={VAL_RATIO*100:.0f}%")
