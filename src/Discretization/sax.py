@@ -10,6 +10,35 @@ from Discretization.discretizationSetup import (
 import matplotlib.pyplot as plt
 import scipy.stats as stats
 
+#
+# def sax_discretization_multi(data_lists, w, k):
+#     breakpoints = norm.ppf(np.linspace(0, 1, k + 1)[1:-1])
+#
+#     def znorm(v):
+#         sigma = v.std()
+#         return (v - v.mean()) / sigma if sigma != 0 else np.zeros_like(v)
+#
+#     def paa(v, t, w):
+#         v_segs = np.array_split(v, w)
+#         t_segs = np.array_split(t, w)
+#         return (
+#             np.array([seg.mean() for seg in v_segs]),
+#             np.array([int(seg.mean()) for seg in t_segs])
+#         )
+#
+#     discretized = []
+#     for trace in data_lists:
+#         v = np.array([val for val, _ in trace])
+#         t = np.array([time for _, time in trace])
+#         paa_v, paa_t = paa(znorm(v), t, w)
+#         labels = np.digitize(paa_v, breakpoints, right=False)
+#         discretized.append([(int(l), int(ts)) for l, ts in zip(labels, paa_t)])
+#
+#
+#
+#
+#     return discretized, breakpoints
+
 
 def sax_discretization_multi(data_lists, w, k):
     breakpoints = norm.ppf(np.linspace(0, 1, k + 1)[1:-1])
@@ -27,14 +56,29 @@ def sax_discretization_multi(data_lists, w, k):
         )
 
     discretized = []
+    all_norm_vals = []
+
     for trace in data_lists:
         v = np.array([val for val, _ in trace])
         t = np.array([time for _, time in trace])
-        paa_v, paa_t = paa(znorm(v), t, w)
-        labels = np.digitize(paa_v, breakpoints, right=True)
+
+        norm_v = znorm(v)
+        all_norm_vals.extend(norm_v)
+
+        paa_v, paa_t = paa(norm_v, t, w)
+        labels = np.digitize(paa_v, breakpoints, right=False)
+
         discretized.append([(int(l), int(ts)) for l, ts in zip(labels, paa_t)])
 
-    return discretized, breakpoints
+    bins = np.concatenate((
+        [np.min(all_norm_vals)],
+        breakpoints,
+        [np.max(all_norm_vals)]
+    ))
+
+    return discretized, bins
+
+
 
 def sax_discretization(trace1, trace2, w, k):
     """
