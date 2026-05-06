@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Extract ECG beat traces and split them into train/test/val sets."""
 
+from processData import extract_ecg_intervals_by_beats
 import os
 import random
 import shutil
@@ -15,10 +16,10 @@ PROCESSING_DIR = Path(__file__).resolve().parent
 if str(PROCESSING_DIR) not in sys.path:
     sys.path.insert(0, str(PROCESSING_DIR))
 
-from processData import extract_ecg_intervals_by_beats
 
 # Configuration
-FORMATTED_ECG_FILE = ROOT_DIR / "Data-marco" / "Formatted" / "patient_100_ecg_formatted.csv"
+FORMATTED_ECG_FILE = ROOT_DIR / "Data-marco" / \
+    "Formatted" / "patient_100_ecg_formatted.csv"
 SOURCE_DIR = ROOT_DIR / "Data" / "3-ExtractInterval" / "ecg-experimenrt"
 EXTRACTION_DIR = SOURCE_DIR / "beats"
 TRAIN_DIR = SOURCE_DIR / "train"
@@ -44,15 +45,18 @@ def create_directories():
 def extract_beat_traces(force=False):
     """Extract ECG traces by heartbeat peaks into the extraction folder."""
     if not FORMATTED_ECG_FILE.exists():
-        raise FileNotFoundError(f"Formatted ECG file not found: {FORMATTED_ECG_FILE}")
+        raise FileNotFoundError(
+            f"Formatted ECG file not found: {FORMATTED_ECG_FILE}")
 
     if force and os.path.exists(EXTRACTION_DIR):
         shutil.rmtree(EXTRACTION_DIR)
 
     os.makedirs(EXTRACTION_DIR, exist_ok=True)
-    existing_files = [f for f in os.listdir(EXTRACTION_DIR) if f.endswith('.csv')]
+    existing_files = [f for f in os.listdir(
+        EXTRACTION_DIR) if f.endswith('.csv')]
     if existing_files:
-        print(f"Extraction folder already contains {len(existing_files)} CSV files. Skipping extraction.")
+        print(
+            f"Extraction folder already contains {len(existing_files)} CSV files. Skipping extraction.")
         return
 
     print(f"Extracting beat-based traces to {EXTRACTION_DIR}...")
@@ -71,7 +75,8 @@ def split_files():
                  if f.endswith('.csv') and os.path.isfile(os.path.join(EXTRACTION_DIR, f))]
 
     if not csv_files:
-        raise FileNotFoundError(f"No ECG beat trace files found in {EXTRACTION_DIR}")
+        raise FileNotFoundError(
+            f"No ECG beat trace files found in {EXTRACTION_DIR}")
 
     random.seed(RANDOM_SEED)
     random.shuffle(csv_files)
@@ -85,11 +90,14 @@ def split_files():
     val_files = csv_files[train_count + test_count:]
 
     for file in train_files:
-        shutil.copy2(os.path.join(EXTRACTION_DIR, file), os.path.join(TRAIN_DIR, file))
+        shutil.copy2(os.path.join(EXTRACTION_DIR, file),
+                     os.path.join(TRAIN_DIR, file))
     for file in test_files:
-        shutil.copy2(os.path.join(EXTRACTION_DIR, file), os.path.join(TEST_DIR, file))
+        shutil.copy2(os.path.join(EXTRACTION_DIR, file),
+                     os.path.join(TEST_DIR, file))
     for file in val_files:
-        shutil.copy2(os.path.join(EXTRACTION_DIR, file), os.path.join(VAL_DIR, file))
+        shutil.copy2(os.path.join(EXTRACTION_DIR, file),
+                     os.path.join(VAL_DIR, file))
 
     print(f"\nSplit Summary:")
     print(f"  Total files: {total_files}")
