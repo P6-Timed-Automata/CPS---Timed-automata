@@ -16,7 +16,8 @@ from Discretization.persist import (
 from Discretization.discretizationSetup import (
     csv_to_temp_time_list,
     format_output,
-    map_bins_to_symbols
+    map_bins_to_symbols,
+    preprocess_test_traces
 )
 
 from DataProcessing.processData import (
@@ -30,7 +31,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # PARAMETERS SETTINGS
 room = "A"
 discretization_method = "persist"
-period = "7day"
+period = "1day"
 
 #Parameters for Persist
 break_max = 8
@@ -43,33 +44,50 @@ k_min = 4
 k_max = 4
 k_increment = 2
 
-experiment_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"
+#Prepare train traces
+train_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/ f"{room}-train"
+train_raw_traces = get_trace_files(folder_path = train_folder)
+train_raw_lists = csv_to_temp_time_list(input_files=train_raw_traces)
+ts = flatten_traces_to_ts(train_raw_lists)
+p = Persist(x = ts, break_min=break_min, break_max=break_max, divergence="w", candidates="EW", skip=np.array([skip_min, skip_max]))
 
-all_traces = get_trace_files(folder_path = experiment_folder)
-len_traces = len(all_traces)  + 1
+# best breakpoints
+bins = get_best_bins(p, ts)
+symbols = len(bins) - 1
 
-len_traces = 2
+print("bins",bins)
+print("symbols", symbols)
 
+train_traces = discretize_traces_with_bins(train_raw_lists, bins)
+symbolic_train_trace, symbol_map, mapping = map_bins_to_symbols(train_traces, symbols, bins)
+
+
+#Prepare test traces (positive and negative samples)
+test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/positive"
+test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/negative"
+
+test_positive_raw_traces = get_trace_files(folder_path = test_positive_folder)
+test_negative_raw_traces = get_trace_files(folder_path = test_negative_folder)
+
+test_positive_raw_lists = csv_to_temp_time_list(input_files=test_positive_raw_traces)
+test_negative_raw_lists = csv_to_temp_time_list(input_files=test_negative_raw_traces)
+
+test_positive_traces_lists = preprocess_test_traces(test_traces = test_positive_raw_lists, bins = bins, s = symbols)
+test_negative_traces_lists = preprocess_test_traces(test_traces = test_negative_raw_lists, bins = bins, s = symbols)
+
+
+
+#Path to log data
+log_data_path = BASE_DIR /"Data" /"8-LoggedData" / f"{discretization_method}-log.csv"
+
+
+# Parameter for nr of Traces
+len_traces = len(train_raw_traces)  + 1
 start_traces = 1
+len_traces = 6
+
 
 for trace_nr in range(start_traces, len_traces):
-
-
-    # Prepare input for Persist
-    rawTraces = all_traces[:trace_nr]
-    data_lists = csv_to_temp_time_list(input_files=rawTraces)
-    ts = flatten_traces_to_ts(data_lists)
-
-    # Discretenize with Persist
-    p = Persist(x = ts, break_min=break_min, break_max=break_max, divergence="w", candidates="EW", skip=np.array([skip_min, skip_max]))
-
-    # best breakpoints
-    bins = get_best_bins(p, ts)
-    symbols = len(bins) - 1
-
-    print("bins", bins)
-    print("symbols", symbols)
-
 
     # Paths
     discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
@@ -77,15 +95,14 @@ for trace_nr in range(start_traces, len_traces):
                             )
     save_path = (BASE_DIR / "Data"/ "Graphs" /"persistGraph"/ f"{room}-{trace_nr}trace-{period}-s{symbols}-skipmin{skip_min}-skipmax{skip_max}-breakpoints.png")
 
-    # Combine delays together with bins
-    traces = discretize_traces_with_bins(data_lists, bins)
 
     # Vizualize breakpoints on an instance of time series
+    ts_subset = ts[:trace_nr]
     plot_and_save_breakpoints(ts,bins,save_path,show=False)
 
-    symbolic_trace, symbol_map, mapping = map_bins_to_symbols(traces, symbols, bins)
+    symbolic_train_trace_subset = symbolic_train_trace[:trace_nr ]
 
-    format_output(symbolic_res_list=symbolic_trace, output_path=discretinize_data_path)
+    format_output(symbolic_res_list=symbolic_train_trace_subset, output_path=discretinize_data_path)
 
     # Now vary k
     for k in range(k_min, k_max + 1, k_increment):
@@ -96,11 +113,18 @@ for trace_nr in range(start_traces, len_traces):
         xml_path = (BASE_DIR / "Data" / "6-XMLOutput" / discretization_method / period
                     / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-skipmin{skip_min}-skipmax{skip_max}-k{k}.xml")
 
+        run_id = f"{period}-{room}-{trace_nr}trace-s{symbols}-skipmin{skip_min}-skipmax{skip_max}-k{k}"
+
+
         # Transform to TA
         learner = TALearner(tss_path=discretinize_data_path, display=False, k=k)
         learner.ta.show(title = title, savePng = True, output_path = TA_output_path)
         learner.ta.export_ta(path=xml_path, symbol_map=symbol_map)
 
-        print(f"Done: trace={trace_nr}, k={k}, symbols={symbols},skipmin{skip_min},skipmax{skip_max}-")
+        # Compute metrics
+        metrics = learner.ta.evaluate_classifier(positive_tss = test_positive_traces_lists, negative_tss = test_negative_traces_lists,  save_path = log_data_path, run_id= run_id, timed=True)
+
+
+        print(f"Done: trace={trace_nr}, k:{k}, symbols:{symbols}, skipmin:{skip_min}, skipmax:{skip_max}, Positive Acceptance Rate: {metrics['PAR']:.2f}%, Negative Acceptance Rate: {metrics['NAR']:.2f}%  ")
 
         print("-------------------------------------------------------------------------------------")

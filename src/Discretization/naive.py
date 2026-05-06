@@ -47,4 +47,3 @@ def equal_width_discretization(traces, k):
     return discretized_traces, bins
 
 
-

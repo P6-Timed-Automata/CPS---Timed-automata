@@ -770,6 +770,89 @@ class Automaton:
             if show: self.show()
         return len(mem)
 
+
+    def evaluate_classifier(self,
+                            positive_tss: list,
+                            negative_tss: list,
+                            timed: bool = True,
+                            save_path: str = None,
+                            run_id: str = "run") -> dict:
+        """
+        Evaluate automaton as binary classifier using positive and negative traces.
+        Returns precision, recall, F1, accuracy, confusion matrix.
+        """
+
+        n_positive = len(positive_tss)
+        n_negative = len(negative_tss)
+
+        TP = FN = FP = TN = 0
+
+        # Positive samples
+        for ts in positive_tss:
+            if self.__exist_path(ts, timed):
+                TP += 1
+            else:
+                FN += 1
+
+        # Negative samples
+        fp_indices = []
+        for i,ts in enumerate(negative_tss):
+            if self.__exist_path(ts, timed):
+                FP += 1
+                fp_indices.append(i)
+            else:
+                TN += 1
+
+        # Metrics
+        precision = TP / (TP + FP) if (TP + FP) > 0 else 0
+        recall    = TP / (TP + FN) if (TP + FN) > 0 else 0
+        f1        = (
+            2 * precision * recall / (precision + recall)
+            if (precision + recall) > 0 else 0
+        )
+
+        positive_acceptance_rate = 100 * TP / n_positive
+        negative_acceptance_rate = 100 * FP / n_negative
+
+
+        metrics = {
+            "TP": TP,
+            "FP": FP,
+            "TN": TN,
+            "FN": FN,
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+            "PAR": positive_acceptance_rate,
+            "NAR": negative_acceptance_rate,
+        }
+
+        # Save log
+        if save_path is not None:
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            file_exists = os.path.exists(save_path)
+
+            with open(save_path, "a", encoding="utf-8") as f:
+                if not file_exists:
+                    f.write(
+                        "run_id,NR_POS,NR_NEG,TP,FP,TN,FN,precision,recall,f1,PAR,NAR,FP_indices\n"
+                    )
+
+                f.write(
+                    f"{run_id},"
+                    f"{n_positive},{n_negative},"
+                    f"{TP},{FP},{TN},{FN},"
+                    f"{precision:.4f},"
+                    f"{recall:.4f},"
+                    f"{f1:.4f},"
+                    f"{positive_acceptance_rate:.4f},"
+                    f"{negative_acceptance_rate:.4f},"
+                    f"{fp_indices}\n"
+                )
+
+        return metrics
+
+
     def show_h(self, state: State, text: str = "") -> None:
         """
         Displays the automaton with a state highlighted
