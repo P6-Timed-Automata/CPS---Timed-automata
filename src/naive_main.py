@@ -72,9 +72,6 @@ len_traces = len(train_raw_traces)  + 1
 start_traces = 1
 len_traces = 20
 
-
-
-
 for trace_nr in range(start_traces, len_traces):
     # Paths
     discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
