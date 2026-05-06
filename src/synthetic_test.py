@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Synthetic 24h room temperature trace generator
@@ -95,13 +96,14 @@ def generate_trace_set(
 
 def save_traces_as_csv(traces, output_folder):
     """Save traces as semicolon-delimited CSVs matching your existing format."""
-    os.makedirs(output_folder, exist_ok=True)
+    output_folder = Path(output_folder)
+    output_folder.mkdir(parents=True, exist_ok=True)
     for i, (t, v) in enumerate(traces):
-        path = os.path.join(output_folder, f"synthetic_tid{i+1}.csv")
+        path = output_folder / f"synthetic_tid{i+1}.csv"
         with open(path, 'w') as f:
             f.write("time_s;temperature\n")
             for ti, vi in zip(t, v):
-                f.write(f"{ti:.1f};{vi:.5f}\n")
+                f.write(f"{int(ti)};{vi:.5f}\n")
     print(f"Saved {len(traces)} traces to {output_folder}")
 
 
@@ -146,7 +148,7 @@ def plot_trace_sets(clean_traces, noisy_traces, output_path):
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    out_root = "../../data/synthetic"
+    out_root = Path("../Data/synthetic_data")
 
     # --- Clean set: small noise, traces are nearly identical ---
     # This is the "optimal" case — TAG should learn a tight TA
@@ -159,11 +161,11 @@ if __name__ == "__main__":
         phase_std_h    = 0.1,   # tiny timing variation
         noise_std      = 0.05,  # very low pointwise noise
     )
-    save_traces_as_csv(clean_traces, os.path.join(out_root, "clean"))
+    save_traces_as_csv(clean_traces, out_root / "clean")
 
     # --- Noisy set: larger variation, mimics your real data issues ---
     noisy_traces = generate_trace_set(
-        n_traces       = 20,
+        n_traces       = 300,
         base_temp      = 22.0,
         amplitude      = 3.0,
         base_temp_std  = 2.0,   # traces from different temperature regimes
@@ -171,9 +173,9 @@ if __name__ == "__main__":
         phase_std_h    = 1.0,   # peak/trough timing shifts by up to ~1h
         noise_std      = 0.3,   # higher pointwise noise
     )
-    save_traces_as_csv(noisy_traces, os.path.join(out_root, "noisy"))
+    save_traces_as_csv(noisy_traces, out_root / "noisy")
 
     plot_trace_sets(
         clean_traces, noisy_traces,
-        output_path = os.path.join(out_root, "synthetic_comparison.png")
+        output_path = str(out_root / "synthetic_comparison.png")
     )
