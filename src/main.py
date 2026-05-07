@@ -1,5 +1,4 @@
-import json
-import os
+import json, os
 from TAG.TALearner import TALearner
 import graphviz
 from pathlib import Path
@@ -9,9 +8,12 @@ from GraphGeneration.graphs import plot_discretized_traces
 from Discretization.discretizationSetup import (
     csv_to_temp_time_list,
     format_output,
-    map_bins_to_symbols
+    map_bins_to_symbols,
+    preprocess_test_traces
 )
-from Discretization.naive import equal_width_discretization
+from Discretization.naive import (
+    equal_width_discretization
+)
 
 from DataProcessing.processData import (
     format_temperature_data,
@@ -22,75 +24,93 @@ from DataProcessing.processData import (
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+
 # PARAMETERS SETTINGS
-room = "ecg"
+room = "train"
 discretization_method = "naiv"
-period = "ecg-train"
+period = "ecg"
 
 # Parameter for Naiv
-symbols = 5
+symbols = 6
 
 # Parameter for TAG
 k_min = 4
 k_max = 4
 k_increment = 2
 
-if period.startswith("ecg-"):
-    split_name = period.replace("ecg-", "")
-    experiment_folder = BASE_DIR / "Data" / \
-        "3-ExtractInterval" / "ecg-experimenrt" / split_name
+
+if period == "ecg":
+    train_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experimenrt"/ "train"
 else:
-    experiment_folder = BASE_DIR / "Data" / \
-        "3-ExtractInterval" / f"{period}-experiment"
+    train_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/ f"{room}-train"
 
-all_traces = get_trace_files(folder_path=experiment_folder)
-if not all_traces:
-    raise RuntimeError(f"No ECG trace files found in {experiment_folder}")
 
-max_trace_files = 20
-selected_traces = all_traces[:max_trace_files]
+#Prepare train traces
+train_raw_traces = get_trace_files(folder_path = train_folder)
+train_raw_lists = csv_to_temp_time_list(input_files=train_raw_traces)
+train_traces, bins = equal_width_discretization(train_raw_lists, symbols)
+symbolic_train_trace, symbol_map, mapping = map_bins_to_symbols(train_traces, symbols, bins)
+print("SYMBOL MAP:", symbol_map)
+print("UNIQUE LABELS IN TRACE:", set([l for trace in train_traces for l, _ in trace]))
 
-for trace_nr, input_file in enumerate(selected_traces, start=1):
+print("NUM TRACES:", len(train_traces))
+print("FIRST TRACE LENGTH:", len(train_traces[0]) if train_traces else 0)
 
+
+
+#Prepare test traces (positive and negative samples)
+#test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/positive"
+#test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/negative"
+
+#test_positive_raw_traces = get_trace_files(folder_path = test_positive_folder)
+#test_negative_raw_traces = get_trace_files(folder_path = test_negative_folder)
+
+#test_positive_raw_lists = csv_to_temp_time_list(input_files=test_positive_raw_traces)
+#test_negative_raw_lists = csv_to_temp_time_list(input_files=test_negative_raw_traces)
+
+#test_positive_traces_lists = preprocess_test_traces(test_traces = test_positive_raw_lists, bins = bins, s = symbols)
+#test_negative_traces_lists = preprocess_test_traces(test_traces = test_negative_raw_lists, bins = bins, s = symbols)
+
+
+
+#Path to log data
+log_data_path = BASE_DIR /"Data" /"8-LoggedData" / f"{discretization_method}-log.csv"
+
+
+# Parameter for nr of Traces
+len_traces = len(train_raw_traces)  + 1
+start_traces = 1
+len_traces = 20
+
+for trace_nr in range(start_traces, len_traces):
     # Paths
-    discretinize_data_path = (BASE_DIR / "Data" / "4-DiscretizationData" / discretization_method / period
+    discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
                               / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
                               )
 
-    # Prepare input for Naiv using a single input file per trace
-    data_lists = csv_to_temp_time_list(input_files=[input_file])
+    symbolic_train_trace_subset = symbolic_train_trace[:trace_nr ]
 
-    if not data_lists:
-        print(f"Skipping trace {trace_nr}: no data to discretize")
-        continue
+    format_output(symbolic_res_list=symbolic_train_trace_subset, output_path=discretinize_data_path)
 
-    # Discretize with naiv
-    traces, bins = equal_width_discretization(data_lists, symbols)
 
-    # Prpare format for TAG
-    symbolic_trace, symbol_map, mapping = map_bins_to_symbols(
-        traces, symbols, bins)
-    format_output(symbolic_res_list=symbolic_trace,
-                  output_path=discretinize_data_path)
-
-    # Now vary k
+    # Loop over varying K-future
     for k in range(k_min, k_max + 1, k_increment):
+
+        #Prepare Paths
         title = f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-k{k}-ta"
-        TA_output_path = BASE_DIR / "Data" / \
-            "5-TaResults" / discretization_method / period
+        TA_output_path = (BASE_DIR / "Data" / "5-TaResults" / discretization_method / period)
         xml_path = (BASE_DIR / "Data" / "6-XMLOutput" / discretization_method / period
                     / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-k{k}.xml")
+        run_id = f"{period}-{room}-{trace_nr}trace-s{symbols}-k{k}"
 
-        try:
-            learner = TALearner(
-                tss_path=discretinize_data_path, display=False, k=k)
-            learner.ta.show(title=title, savePng=True,
-                            output_path=TA_output_path)
-            learner.ta.export_ta(path=xml_path, symbol_map=symbol_map)
-            print(f"Done: trace={trace_nr}, k={k}, symbols={symbols}")
-        except Exception as exc:
-            print(
-                f"WARNING: TA generation failed for trace={trace_nr}, k={k}: {exc}")
-            continue
+        # Tranform to TA
+        learner = TALearner(tss_path=discretinize_data_path,display=False,k=k)
+        learner.ta.show(title=title,savePng=True,output_path=TA_output_path)
+        learner.ta.export_ta(path=xml_path, symbol_map=symbol_map)
 
+        # Compute metrics
+        #metrics = learner.ta.evaluate_classifier(positive_tss = test_positive_traces_lists, negative_tss = test_negative_traces_lists,  save_path = log_data_path, run_id= run_id, timed=True)
+
+        print(f"Done: trace:{trace_nr}, k:{k}, symbols={symbols}")
+        
         print("-------------------------------------------------------------------------------------")

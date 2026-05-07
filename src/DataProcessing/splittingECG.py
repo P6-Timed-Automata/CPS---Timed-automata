@@ -37,10 +37,10 @@ VAL_RATIO = 0.15
 RANDOM_SEED = 42
 # Extraction method: beats, window, window_and_beats, samples
 EXTRACTION_METHOD = "samples"
-WINDOW_SECONDS = 5
+WINDOW_SECONDS = 10
 BEATS_PER_TRACE = 1
 MIN_RR_SECONDS = 0.3
-SAMPLES_PER_TRACE = 100  # Fixed number of samples per trace for consistent length
+SAMPLES_PER_TRACE = 1000  # Fixed number of samples per trace for consistent length
 OUTPUT_PREFIX = "patient100-beats"
 # Limit total number of extracted traces to reduce file count.
 MAX_TRACES = 30

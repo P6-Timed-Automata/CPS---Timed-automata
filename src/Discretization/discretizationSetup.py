@@ -25,44 +25,28 @@ def csv_to_temp_time_list(input_files):
 
         all_results.append(result)
 
+
     print("tranformed data to a list")
 
     return all_results
 
 
-def format_output(symbolic_res_list, output_path):
+def format_output(symbolic_res_list,output_path):
     lines = []
 
     for symbolic_res in symbolic_res_list:
-        if not symbolic_res:
-            continue
-
-        # Convert absolute timestamps into successive delays for timed automaton input
-        deltas = []
-        prev_time = None
-        for symbol, timestamp in symbolic_res:
-            if prev_time is None:
-                delay = int(timestamp)
-            else:
-                delay = int(timestamp) - int(prev_time)
-            deltas.append((symbol, delay))
-            prev_time = timestamp
-
-        line = " ".join(f"{s}:{v}" for s, v in deltas)
+        line = " ".join(f"{s}:{v}" for s, v in symbolic_res)
         lines.append(line)
 
     output = "\n".join(lines)
 
     # Ensure the directory exists
-    dir_path = os.path.dirname(output_path)
-    if dir_path:
-        os.makedirs(dir_path, exist_ok=True)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     with open(output_path, "w") as f:
         f.write(output)
 
     print(f"File saved to {output_path}")
-
 
 def map_bins_to_symbols(result, s, bins):
     # Create symbols: a, b, c, ...
@@ -74,7 +58,7 @@ def map_bins_to_symbols(result, s, bins):
     # Create mapping: 0->'a', 1->'b', ...
     mapping = {i: symbols[i] for i in range(s)}
 
-    # Midpoint symbol map
+    #Midpoint symbol map
     symbol_map = None
     if bins is not None:
         symbol_map = {
@@ -85,8 +69,61 @@ def map_bins_to_symbols(result, s, bins):
     # Apply mapping to traces
     symbolic_results = []
     for trace in result:
-        symbolic_trace = [(mapping[int(label)], int(time))
-                          for label, time in trace]
+        symbolic_trace = [(mapping[int(label)], int(time)) for label, time in trace]
         symbolic_results.append(symbolic_trace)
 
+
     return symbolic_results, symbol_map, mapping
+
+
+
+def preprocess_test_traces(test_traces, bins, s):
+    """
+    Convert raw test traces into TAG format using:
+    - training bins
+    - s = number of symbols (int)
+    """
+
+    # --------------------------
+    # 1. Create alphabet
+    # --------------------------
+    symbols = list(string.ascii_lowercase)
+
+    if s > len(symbols):
+        raise ValueError("s too large (max 26 supported)")
+
+    symbols = symbols[:s]
+    k = len(bins) - 1
+
+
+
+    # --------------------------
+    # 2. Build mapping (bin -> letter)
+    # --------------------------
+    mapping = {i: symbols[i] for i in range(s)}
+
+    # --------------------------
+    # 3. Discretize using TRAIN bins
+    # --------------------------
+    discretized = []
+
+    for trace in test_traces:
+        values = np.array([v for v, t in trace])
+        times = np.array([t for v, t in trace])
+
+        labels = np.digitize(values, bins) - 1
+        labels = np.clip(labels, 0, k - 1)
+
+        discretized.append([(int(l), int(t)) for l, t in zip(labels, times)])
+
+
+    # --------------------------
+    # 4. Convert to TAG format
+    # --------------------------
+    symbolic_traces = [
+        [f"{mapping[label]}:{t}" for (label, t) in trace]
+        for trace in discretized
+    ]
+
+
+    return symbolic_traces

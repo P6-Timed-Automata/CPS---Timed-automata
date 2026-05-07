@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'
+  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+  <declaration>clock cl_local, cl_global; const int a = 10166610; const int b = 29388830; const int c = 48611050; const int d = 67833270; const int e = 87055490; int temp = c;</declaration>
+  <template>
+    <name>TagModel</name>
+    <declaration></declaration>
+    <location id="id0" x="390" y="-1326">
+      <name x="390" y="-1346">S0</name>
+      <label kind="invariant" x="390" y="-1306">cl_local &lt;= 2658332</label>
+    </location>
+    <location id="id1" x="140" y="-757">
+      <name x="140" y="-777">S68</name>
+      <label kind="invariant" x="140" y="-737">cl_local &lt;= 2361111</label>
+    </location>
+    <location id="id2" x="307" y="-162">
+      <name x="307" y="-182">S69</name>
+      <label kind="invariant" x="307" y="-142">cl_local &lt;= 891666</label>
+    </location>
+    <init ref="id0"/>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id1"/>
+      <label kind="guard">cl_local &gt;= 313889 &amp;&amp; cl_local &lt;= 1800000 &amp;&amp; cl_global &gt;= 1019441 &amp;&amp; cl_global &lt;= 9199999</label>
+      <label kind="assignment">temp = c, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl_local &gt;= 27777 &amp;&amp; cl_local &lt;= 1808333 &amp;&amp; cl_global &gt;= 27777 &amp;&amp; cl_global &lt;= 8630551</label>
+      <label kind="assignment">temp = e, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl_local &gt;= 0 &amp;&amp; cl_local &lt;= 2658332 &amp;&amp; cl_global &gt;= 0 &amp;&amp; cl_global &lt;= 15158323</label>
+      <label kind="assignment">temp = a, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl_local &gt;= 52777 &amp;&amp; cl_local &lt;= 1902777 &amp;&amp; cl_global &gt;= 99997 &amp;&amp; cl_global &lt;= 11952779</label>
+      <label kind="assignment">temp = b, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl_local &gt;= 0 &amp;&amp; cl_local &lt;= 1888888 &amp;&amp; cl_global &gt;= 0 &amp;&amp; cl_global &lt;= 9188887</label>
+      <label kind="assignment">temp = d, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id2"/>
+      <label kind="guard">cl_local &gt;= 861111 &amp;&amp; cl_local &lt;= 2361111 &amp;&amp; cl_global &gt;= 1880552 &amp;&amp; cl_global &lt;= 11561110</label>
+      <label kind="assignment">temp = a, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id2"/>
+      <target ref="id0"/>
+      <label kind="guard">cl_local &gt;= 891666 &amp;&amp; cl_local &lt;= 891666 &amp;&amp; cl_global &gt;= 2772218 &amp;&amp; cl_global &lt;= 2772218</label>
+      <label kind="assignment">temp = d, cl_local = 0</label>
+    </transition>
+  </template>
+  <system>Process = TagModel(); system Process;</system>
+  <queries>
+    <query>
+      <formula>strategy Safe = control: A&lt;&gt; Process.S0 || Process.S69</formula>
+    </query>
+    <query>
+      <formula>simulate [&lt;=86400; 1] { temp } under Safe</formula>
+    </query>
+    <query>
+      <formula>E&lt;&gt; Process.S0 || Process.S69</formula>
+    </query>
+  </queries>
+</nta>
