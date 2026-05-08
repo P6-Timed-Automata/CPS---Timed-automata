@@ -644,55 +644,56 @@ def benchmark_trace_scaling_with_repeats(all_trace_files, output_folder, repeats
 
 if __name__ == "__main__":
 
-    # 1. Gather all available traces (ensure you have at least 10 in this path)
-    all_traces = glob.glob("../../data/3-ExtractInterval/1day-experiment/roomA/*.csv")
-    all_traces = sorted(all_traces)[:20] # Ensure we have exactly 10
-
-    out_dir = "../../data/Graphs/TA_Benchmark"
-
-    # Load raw data for the run_ta_pipeline requirement
-    t_raw, v_raw = load_trace(all_traces[0])
-
-    # 2. Run the benchmark
-    benchmark_trace_scaling_with_repeats(all_traces, out_dir)
-
-
-    #
-    # # --- CONFIGURE PATHS ---
-    # # Update these to the specific 3 traces you want to use
-    # trace_files = [
-    #     "../../data/3-ExtractInterval/1day-experiment/roomA/roomA-1day-tid5.csv",
-    #     "../../data/3-ExtractInterval/1day-experiment/roomA/roomA-1day-tid6.csv",
-    #     "../../data/3-ExtractInterval/1day-experiment/roomA/roomA-1day-tid7.csv"
-    # ]
+    # # 1. Gather all available traces (ensure you have at least 10 in this path)
+    # all_traces = glob.glob("../../data/3-ExtractInterval/1day-experiment/roomA/*.csv")
+    # all_traces = sorted(all_traces)[:20] # Ensure we have exactly 10
     #
     # out_dir = "../../data/Graphs/TA_Benchmark"
     #
-    # # 1. Load the first trace for plotting/error calculation (Ground Truth)
-    # # We still compare accuracy against one primary trace to keep metrics consistent
-    # t_raw, v_raw = load_trace(trace_files[0])
+    # # Load raw data for the run_ta_pipeline requirement
+    # t_raw, v_raw = load_trace(all_traces[0])
     #
-    # # 2. Load all 3 traces for training
-    # # csv_to_temp_time_list accepts a list of files and returns a list of lists
-    # data_lists = csv_to_temp_time_list(input_files=trace_files)
-    #
-    # print(f"Loaded {len(data_lists)} traces for training.")
-    #
-    # # A. Naive Sweep
-    # naive_vars = {}
-    # for k_val in [4, 8, 12, 16, 20]:
-    #     naive_vars[f"k={k_val}"] = create_variant("naive", {'k': k_val}, data_lists)
-    # compare_discretization_params("Naive", t_raw, v_raw, naive_vars, out_dir)
-    #
-    # # B. SAX Sweep
-    # sax_vars = {}
-    # for w_val in [20, 100, 288]: # Reduced slightly for speed with 3 traces
-    #     for k_val in [4, 8, 16, 20]:
-    #         sax_vars[f"w={w_val}, k={k_val}"] = create_variant("sax", {'w': w_val, 'k': k_val}, data_lists)
-    # compare_discretization_params("SAX", t_raw, v_raw, sax_vars, out_dir)
-    #
-    # # C. Persist Sweep
-    # persist_vars = {}
-    # for k_val in [4, 8, 12, 20]:
-    #     persist_vars[f"k={k_val}"] = create_variant("persist", {'k': k_val}, data_lists)
-    # compare_discretization_params("Persist", t_raw, v_raw, persist_vars, out_dir)
+    # # 2. Run the benchmark
+    # benchmark_trace_scaling_with_repeats(all_traces, out_dir)
+
+
+
+    # --- CONFIGURE PATHS ---
+    # Update these to the specific 3 traces you want to use
+    trace_files = [
+        "../../data/3-ExtractInterval/1day-experiment/roomA/roomA-1day-tid5.csv",
+        "../../data/3-ExtractInterval/1day-experiment/roomA/roomA-1day-tid6.csv",
+        "../../data/3-ExtractInterval/1day-experiment/roomA/roomA-1day-tid7.csv"
+    ]
+
+    out_dir = "../../data/Graphs/TA_Benchmark"
+
+    # 1. Load the first trace for plotting/error calculation (Ground Truth)
+    # We still compare accuracy against one primary trace to keep metrics consistent
+    t_raw, v_raw = load_trace(trace_files[0])
+
+    # 2. Load all 3 traces for training
+    # csv_to_temp_time_list accepts a list of files and returns a list of lists
+    data_lists = csv_to_temp_time_list(input_files=trace_files)
+
+    print(f"Loaded {len(data_lists)} traces for training.")
+
+    # A. Naive Sweep
+    naive_vars = {}
+    for k_val in [4, 8, 12, 16, 20]:
+        naive_vars[f"k={k_val}"] = create_variant("naive", {'k': k_val}, data_lists)
+    compare_discretization_params("Naive", t_raw, v_raw, naive_vars, out_dir)
+
+    # B. SAX Sweep
+    sax_vars = {}
+    for w_val in [20, 100, 288]: # Reduced slightly for speed with 3 traces
+        for k_val in [4, 8, 16, 20]:
+            sax_vars[f"w={w_val}, k={k_val}"] = create_variant("sax", {'w': w_val, 'k': k_val}, data_lists)
+    compare_discretization_params("SAX", t_raw, v_raw, sax_vars, out_dir)
+
+    # C. Persist Sweep
+    persist_vars = {}
+
+    for k_val in [4, 8, 12, 20]:
+        persist_vars[f"k={k_val}"] = create_variant("persist", {'k': k_val}, data_lists)
+    compare_discretization_params("Persist", t_raw, v_raw, persist_vars, out_dir)
