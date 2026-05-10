@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'
+  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+  <declaration>clock cl_local, cl_global; const int a = 1808; const int b = 2087; const int c = 2366; const int d = 2646; const int e = 2925; int temp = b;</declaration>
+  <template>
+    <name>TagModel</name>
+    <declaration></declaration>
+    <location id="id0" x="217" y="-2653">
+      <name x="217" y="-2673">S0</name>
+      <label kind="invariant" x="217" y="-2633">cl_local &lt;= 46500</label>
+    </location>
+    <location id="id1" x="217" y="-2080">
+      <name x="217" y="-2100">S156</name>
+      <label kind="invariant" x="217" y="-2060">cl_local &lt;= 75000</label>
+    </location>
+    <location id="id2" x="217" y="-1457">
+      <name x="217" y="-1477">S251</name>
+      <label kind="invariant" x="217" y="-1437">cl_local &lt;= 75300</label>
+    </location>
+    <location id="id3" x="217" y="-834">
+      <name x="217" y="-854">S252</name>
+      <label kind="invariant" x="217" y="-814">cl_local &lt;= 75600</label>
+    </location>
+    <location id="id4" x="217" y="-188">
+      <name x="217" y="-208">S253</name>
+      <label kind="invariant" x="217" y="-168">cl_local &lt;= 86100</label>
+    </location>
+    <init ref="id0"/>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id0"/>
+      <label kind="guard">cl_local &gt;= 0 &amp;&amp; cl_local &lt;= 46200 &amp;&amp; cl_global &gt;= 0 &amp;&amp; cl_global &lt;= 3580500</label>
+      <label kind="assignment">temp = b, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id1"/>
+      <label kind="guard">cl_local &gt;= 46500 &amp;&amp; cl_local &lt;= 46500 &amp;&amp; cl_global &gt;= 3627000 &amp;&amp; cl_global &lt;= 3627000</label>
+      <label kind="assignment">temp = c, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id1"/>
+      <label kind="guard">cl_local &gt;= 46800 &amp;&amp; cl_local &lt;= 74700 &amp;&amp; cl_global &gt;= 3673800 &amp;&amp; cl_global &lt;= 9337500</label>
+      <label kind="assignment">temp = c, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id2"/>
+      <label kind="guard">cl_local &gt;= 75000 &amp;&amp; cl_local &lt;= 75000 &amp;&amp; cl_global &gt;= 9412500 &amp;&amp; cl_global &lt;= 9412500</label>
+      <label kind="assignment">temp = b, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id2"/>
+      <target ref="id3"/>
+      <label kind="guard">cl_local &gt;= 75300 &amp;&amp; cl_local &lt;= 75300 &amp;&amp; cl_global &gt;= 9487800 &amp;&amp; cl_global &lt;= 9487800</label>
+      <label kind="assignment">temp = c, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id4"/>
+      <label kind="guard">cl_local &gt;= 75600 &amp;&amp; cl_local &lt;= 75600 &amp;&amp; cl_global &gt;= 9563400 &amp;&amp; cl_global &lt;= 9563400</label>
+      <label kind="assignment">temp = c, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id4"/>
+      <target ref="id4"/>
+      <label kind="guard">cl_local &gt;= 75900 &amp;&amp; cl_local &lt;= 86100 &amp;&amp; cl_global &gt;= 9639300 &amp;&amp; cl_global &lt;= 12398400</label>
+      <label kind="assignment">temp = b, cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id4"/>
+      <target ref="id4"/>
+      <label kind="guard">cl_local &gt;= 76200 &amp;&amp; cl_local &lt;= 78900 &amp;&amp; cl_global &gt;= 9715500 &amp;&amp; cl_global &lt;= 10414800</label>
+      <label kind="assignment">temp = c, cl_local = 0</label>
+    </transition>
+  </template>
+  <system>Process = TagModel(); system Process;</system>
+  <queries>
+    <query>
+      <formula>strategy Safe = control: A&lt;&gt; Process.S253</formula>
+    </query>
+    <query>
+      <formula>simulate [&lt;=86400; 1] { temp } under Safe</formula>
+    </query>
+    <query>
+      <formula>E&lt;&gt; Process.S253</formula>
+    </query>
+  </queries>
+</nta>
