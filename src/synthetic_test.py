@@ -143,6 +143,46 @@ def plot_trace_sets(clean_traces, noisy_traces, output_path):
     print(f"Saved {output_path}")
 
 
+def generate_negative_trace_set(n_traces=20, seed=99):
+    """
+    Generates traces that look like temperature data but violate
+    physical or temporal constraints.
+    """
+    rng = np.random.default_rng(seed)
+    neg_traces = []
+
+    for i in range(n_traces):
+        # Pick a failure mode
+        mode = i % 4
+
+        # Base trace for modification
+        t, v = generate_synthetic_trace(duration_hours=24, noise_std=0.05, rng=rng)
+
+        if mode == 0:  # MODE 0: Massive Spikes (Rate Violation)
+            spike_indices = rng.choice(len(v), size=3, replace=False)
+            v[spike_indices] += rng.uniform(5.0, 10.0)
+            label = "Spikes"
+
+        elif mode == 1:  # MODE 1: Extreme Phase Shift (Temporal Violation)
+            # Shift by 12 hours so midday is midnight
+            t, v = generate_synthetic_trace(duration_hours=24, phase_shift_h=12.0, rng=rng)
+            label = "Shifted"
+
+        elif mode == 2:  # MODE 2: Stuck Signal (Guard Violation)
+            # Temperature stops moving mid-day
+            v[40:120] = v[40]
+            label = "Stuck"
+
+        else:  # MODE 3: Out of Range (Value Violation)
+            v += 15.0  # Way too hot for the learned model
+            label = "Off-set"
+
+        neg_traces.append((t, v))
+
+    return neg_traces
+
+
+
 # ---------------------------------------------------------------------------
 # Main — generate both a clean and a noisy set
 # ---------------------------------------------------------------------------
@@ -150,32 +190,76 @@ def plot_trace_sets(clean_traces, noisy_traces, output_path):
 if __name__ == "__main__":
     out_root = Path("../Data/synthetic_data")
 
-    # --- Clean set: small noise, traces are nearly identical ---
-    # This is the "optimal" case — TAG should learn a tight TA
-    clean_traces = generate_trace_set(
-        n_traces       = 20,
-        base_temp      = 22.0,
-        amplitude      = 3.0,
-        base_temp_std  = 0.0,   # no regime variation
-        amplitude_std  = 0.1,   # tiny swing variation
-        phase_std_h    = 0.1,   # tiny timing variation
-        noise_std      = 0.05,  # very low pointwise noise
-    )
+
+
+    # 1. Clean Positive Set
+    clean_traces = generate_trace_set(n_traces=20, noise_std=0.05)
     save_traces_as_csv(clean_traces, out_root / "clean")
 
-    # --- Noisy set: larger variation, mimics your real data issues ---
-    noisy_traces = generate_trace_set(
-        n_traces       = 300,
-        base_temp      = 22.0,
-        amplitude      = 3.0,
-        base_temp_std  = 2.0,   # traces from different temperature regimes
-        amplitude_std  = 1.0,   # swing varies a lot between days
-        phase_std_h    = 1.0,   # peak/trough timing shifts by up to ~1h
-        noise_std      = 0.3,   # higher pointwise noise
-    )
-    save_traces_as_csv(noisy_traces, out_root / "noisy")
+    # 2. Negative Set (The "Fail" cases)
+    negative_traces = generate_negative_trace_set(n_traces=20)
+    save_traces_as_csv(negative_traces, out_root / "negative")
 
-    plot_trace_sets(
-        clean_traces, noisy_traces,
-        output_path = str(out_root / "synthetic_comparison.png")
-    )
+    # 3. Visualization
+    plt.figure(figsize=(12, 6))
+
+    # Plot one of each type
+    plt.plot(clean_traces[0][0] / 3600, clean_traces[0][1],
+             label="Positive (Normal)", color="green", lw=2.5, zorder=5)
+
+    plt.plot(negative_traces[0][0] / 3600, negative_traces[0][1],
+             label="Neg: Spikes (Mode 0)", color="red", alpha=0.6)
+
+    plt.plot(negative_traces[1][0] / 3600, negative_traces[1][1],
+             label="Neg: Shifted (Mode 1)", color="orange", alpha=0.6)
+
+    # --- THE MISSING TRACES ---
+    plt.plot(negative_traces[2][0] / 3600, negative_traces[2][1],
+             label="Neg: Stuck (Mode 2)", color="purple", alpha=0.8, linestyle='--')
+
+    plt.plot(negative_traces[3][0] / 3600, negative_traces[3][1],
+             label="Neg: Off-set (Mode 3)", color="brown", alpha=0.6)
+    # --------------------------
+
+    plt.title("Classifier Validation: Positive vs. All Negative Modes")
+    plt.xlabel("Time (Hours)")
+    plt.ylabel("Temp (°C)")
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')  # Move legend outside to see clearly
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(out_root / "test_cases_all_modes.png")
+    plt.show()
+
+
+# if __name__ == "__main__":
+#     out_root = Path("../Data/synthetic_data")
+#
+#     # --- Clean set: small noise, traces are nearly identical ---
+#     # This is the "optimal" case — TAG should learn a tight TA
+#     clean_traces = generate_trace_set(
+#         n_traces       = 20,
+#         base_temp      = 22.0,
+#         amplitude      = 3.0,
+#         base_temp_std  = 0.0,   # no regime variation
+#         amplitude_std  = 0.1,   # tiny swing variation
+#         phase_std_h    = 0.1,   # tiny timing variation
+#         noise_std      = 0.05,  # very low pointwise noise
+#     )
+#     save_traces_as_csv(clean_traces, out_root / "clean")
+#
+#     # --- Noisy set: larger variation, mimics your real data issues ---
+#     noisy_traces = generate_trace_set(
+#         n_traces       = 300,
+#         base_temp      = 22.0,
+#         amplitude      = 3.0,
+#         base_temp_std  = 2.0,   # traces from different temperature regimes
+#         amplitude_std  = 1.0,   # swing varies a lot between days
+#         phase_std_h    = 1.0,   # peak/trough timing shifts by up to ~1h
+#         noise_std      = 0.3,   # higher pointwise noise
+#     )
+#     save_traces_as_csv(noisy_traces, out_root / "noisy")
+#
+#     plot_trace_sets(
+#         clean_traces, noisy_traces,
+#         output_path = str(out_root / "synthetic_comparison.png")
+#     )
