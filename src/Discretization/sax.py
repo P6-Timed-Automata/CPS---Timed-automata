@@ -78,43 +78,148 @@ import scipy.stats as stats
 #
 #     return discretized, bins
 
+#
+# def sax_discretization_multi(data_lists, w, k):
+#     breakpoints = norm.ppf(np.linspace(0, 1, k + 1)[1:-1])
+#
+#     # Compute global stats once across all traces
+#     all_v = np.concatenate([np.array([val for val, _ in trace]) for trace in data_lists])
+#     global_mean = all_v.mean()
+#     global_std = all_v.std() if all_v.std() != 0 else 1.0
+#
+#     def paa(v, t, w):
+#         v_segs = np.array_split(v, w)
+#         t_segs = np.array_split(t, w)
+#         return (
+#             np.array([seg.mean() for seg in v_segs]),
+#             np.array([int(seg.mean()) for seg in t_segs])
+#         )
+#
+#     discretized = []
+#     all_norm_vals = []
+#
+#     for trace in data_lists:
+#         v = np.array([val for val, _ in trace])
+#         t = np.array([time for _, time in trace])
+#         norm_v = (v - global_mean) / global_std  # global normalization
+#         all_norm_vals.extend(norm_v)
+#         paa_v, paa_t = paa(norm_v, t, w)
+#         labels = np.digitize(paa_v, breakpoints, right=False)
+#         discretized.append([(int(l), int(ts)) for l, ts in zip(labels, paa_t)])
+#
+#     bins = np.concatenate((
+#         [np.min(all_norm_vals)],
+#         breakpoints,
+#         [np.max(all_norm_vals)]
+#     ))
+#
+#     return discretized, bins, global_mean, global_std  # return stats for inverse transform
+
+import numpy as np
+from scipy.stats import norm
 
 def sax_discretization_multi(data_lists, w, k):
+
     breakpoints = norm.ppf(np.linspace(0, 1, k + 1)[1:-1])
 
-    # Compute global stats once across all traces
-    all_v = np.concatenate([np.array([val for val, _ in trace]) for trace in data_lists])
-    global_mean = all_v.mean()
-    global_std = all_v.std() if all_v.std() != 0 else 1.0
+    # ---- SAFE GLOBAL NORMALIZATION ----
+    all_v = np.concatenate([
+        np.array([val for val, _ in trace])
+        for trace in data_lists
+        if len(trace) > 0
+    ])
 
-    def paa(v, t, w):
-        v_segs = np.array_split(v, w)
-        t_segs = np.array_split(t, w)
-        return (
-            np.array([seg.mean() for seg in v_segs]),
-            np.array([int(seg.mean()) for seg in t_segs])
-        )
+    global_mean = np.mean(all_v)
+    global_std = np.std(all_v)
+
+    if global_std == 0 or np.isnan(global_std):
+        global_std = 1.0
+
+    def safe_paa(v, t, w):
+        """
+        Robust PAA:
+        - prevents empty segments
+        - avoids NaN propagation
+        """
+
+        n = len(v)
+
+        if n == 0:
+            return np.array([]), np.array([])
+
+        # ensure w does not exceed signal length
+        w_eff = min(w, n)
+
+        # split safely
+        v_segs = np.array_split(v, w_eff)
+        t_segs = np.array_split(t, w_eff)
+
+        paa_v = []
+        paa_t = []
+
+        for vs, ts in zip(v_segs, t_segs):
+
+            if len(vs) == 0:
+                continue
+
+            # signal PAA (safe)
+            v_mean = np.nanmean(vs)
+            if np.isnan(v_mean):
+                v_mean = 0.0
+
+            # time PAA (use midpoint, NOT mean cast)
+            if len(ts) > 0:
+                t_mean = float(np.nanmean(ts))
+            else:
+                t_mean = 0.0
+
+            paa_v.append(v_mean)
+            paa_t.append(int(t_mean))
+
+        return np.array(paa_v), np.array(paa_t)
 
     discretized = []
     all_norm_vals = []
 
     for trace in data_lists:
-        v = np.array([val for val, _ in trace])
-        t = np.array([time for _, time in trace])
-        norm_v = (v - global_mean) / global_std  # global normalization
+
+        if len(trace) == 0:
+            continue
+
+        v = np.array([val for val, _ in trace], dtype=float)
+        t = np.array([time for _, time in trace], dtype=float)
+
+        # ---- SAFE NORMALIZATION ----
+        norm_v = (v - global_mean) / global_std
+        norm_v = np.nan_to_num(norm_v)
+
         all_norm_vals.extend(norm_v)
-        paa_v, paa_t = paa(norm_v, t, w)
+
+        paa_v, paa_t = safe_paa(norm_v, t, w)
+
+        if len(paa_v) == 0:
+            continue
+
         labels = np.digitize(paa_v, breakpoints, right=False)
-        discretized.append([(int(l), int(ts)) for l, ts in zip(labels, paa_t)])
 
-    bins = np.concatenate((
-        [np.min(all_norm_vals)],
-        breakpoints,
-        [np.max(all_norm_vals)]
-    ))
+        discretized.append([
+            (int(l), int(ts))
+            for l, ts in zip(labels, paa_t)
+        ])
 
-    return discretized, bins, global_mean, global_std  # return stats for inverse transform
+    # ---- SAFE BIN CONSTRUCTION ----
+    all_norm_vals = np.array(all_norm_vals)
 
+    if len(all_norm_vals) == 0:
+        bins = breakpoints
+    else:
+        bins = np.concatenate((
+            [np.min(all_norm_vals)],
+            breakpoints,
+            [np.max(all_norm_vals)]
+        ))
+
+    return discretized, bins, global_mean, global_std
 
 def sax_discretization(trace1, trace2, w, k):
     """

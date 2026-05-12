@@ -33,21 +33,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # PARAMETERS SETTINGS
+data_type ="ecg"
 room = "A"
 discretization_method = "naiv"
-period = "1day"
+beats="1beat"
+period = beats
 
 # Parameter for Naiv
-symbols = 25
+symbols = 12
 
 # Parameter for TAG
 k_min = 4
 k_max = 4
 k_increment = 2
 
-
+train_folder = ""
 #Prepare train traces
-train_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/ f"{room}-train"
+if (data_type == "temp"):
+    train_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/ f"{room}-train"
+elif(data_type == "ecg"):
+    train_folder = BASE_DIR / "Data" / "3-ExtractInterval" /"ecg" / f"{beats}-experiment"/ f"{beats}-train"
+
+
 train_raw_traces = get_trace_files(folder_path = train_folder)
 train_raw_lists = csv_to_temp_time_list(input_files=train_raw_traces)
 train_traces, bins = equal_width_discretization(train_raw_lists, symbols)
@@ -55,8 +62,15 @@ symbolic_train_trace, symbol_map, mapping = map_bins_to_symbols(train_traces, sy
 
 
 #Prepare test traces (positive and negative samples)
-test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/positive"
-test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/negative"
+test_positive_folder = ""
+test_negative_folder = ""
+if (data_type == "temp"):
+    test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/positive"
+    test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/negative"
+elif(data_type == "ecg"):
+    test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" /  "ecg" / f"{period}-experiment"/ f"{period}-test/positive"
+    test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{period}-experiment"/f"{period}-test/negative"
+
 test_positive_raw_traces = get_trace_files(folder_path = test_positive_folder)
 test_negative_raw_traces = get_trace_files(folder_path = test_negative_folder)
 
@@ -81,19 +95,29 @@ title_prefix = f"{discretization_method}-{period}-s{symbols}"
 # )
 
 #Path to log data
-log_data_path = BASE_DIR /"Data" /"8-LoggedData" / f"{discretization_method}-log.csv"
+log_data_path = ""
+if (data_type == "temp"):
+    log_data_path = BASE_DIR /"Data" /"8-LoggedData" / f"{discretization_method}-temp-log.csv"
+elif(data_type == "ecg"):
+    log_data_path = BASE_DIR /"Data" /"8-LoggedData" / f"{discretization_method}-ecg-log.csv"
 
 
 # Parameter for nr of Traces
 len_traces = len(train_raw_traces)  + 1
 start_traces = 1
-len_traces = 2
+len_traces = 10
 
 for trace_nr in range(start_traces, len_traces):
     # Paths
-    discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
-                              / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
-                              )
+
+    if (data_type == "temp"):
+        discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
+                                  / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
+                                  )
+    elif (data_type == "ecg"):
+        discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
+                                  / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
+                                  )
 
     symbolic_train_trace_subset = symbolic_train_trace[:trace_nr ]
 
