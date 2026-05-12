@@ -316,7 +316,7 @@ if __name__ == "__main__":
     symbols = 5
     k_val   = 2
     sax_w   = 20
-    n_train, n_test, n_neg = 15, 10, 10
+    n_train, n_test, n_neg = 100, 50, 50
 
     out_root     = BASE_DIR / "Data" / "synthetic_data"
     graph_folder = BASE_DIR / "Data" / "Graphs" / "synthetic_comparison"

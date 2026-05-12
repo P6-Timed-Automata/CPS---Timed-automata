@@ -188,7 +188,7 @@ def generate_negative_trace_set(n_traces=20, seed=99):
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    out_root = Path("../../Data/synthetic_data")
+    out_root = Path("../../Data/synthetic_data-absolute")
 
 
 
