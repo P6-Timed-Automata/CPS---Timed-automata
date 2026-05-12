@@ -22,7 +22,7 @@ from DataProcessing.processData import (
 
 from DataProcessing.negative_samples_production import (
     generate_negative_samples,
-    plot_and_save_traces
+    plot_and_save_traces, period
 )
 
 
@@ -33,21 +33,37 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # PARAMETERS SETTINGS
+data_type ="ecg"
 room = "A"
 discretization_method = "naiv"
-period = "1day"
+period_nr = 1
+
+time = 0
+period = ""
+if data_type == "temp":
+    period = f"{period_nr}day"
+    time = 86400
+elif data_type == "ecg":
+    period = "1beat"
+    time = 250
+
 
 # Parameter for Naiv
-symbols = 25
+symbols = 12
 
 # Parameter for TAG
 k_min = 4
 k_max = 4
 k_increment = 2
 
-
+train_folder = ""
 #Prepare train traces
-train_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/ f"{room}-train"
+if (data_type == "temp"):
+    train_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/ f"{room}-train"
+elif(data_type == "ecg"):
+    train_folder = BASE_DIR / "Data" / "3-ExtractInterval" /"ecg" / f"{period}-experiment"/ f"{period}-train"
+
+
 train_raw_traces = get_trace_files(folder_path = train_folder)
 train_raw_lists = csv_to_temp_time_list(input_files=train_raw_traces)
 train_traces, bins = equal_width_discretization(train_raw_lists, symbols)
@@ -55,8 +71,15 @@ symbolic_train_trace, symbol_map, mapping = map_bins_to_symbols(train_traces, sy
 
 
 #Prepare test traces (positive and negative samples)
-test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/positive"
-test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/negative"
+test_positive_folder = ""
+test_negative_folder = ""
+if (data_type == "temp"):
+    test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/positive"
+    test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/negative"
+elif(data_type == "ecg"):
+    test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" /  "ecg" / f"{period}-experiment"/ f"{period}-test/positive"
+    test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{period}-experiment"/f"{period}-test/negative"
+
 test_positive_raw_traces = get_trace_files(folder_path = test_positive_folder)
 test_negative_raw_traces = get_trace_files(folder_path = test_negative_folder)
 
@@ -81,7 +104,11 @@ title_prefix = f"{discretization_method}-{period}-s{symbols}"
 # )
 
 #Path to log data
-log_data_path = BASE_DIR /"Data" /"8-LoggedData" / f"{discretization_method}-log.csv"
+log_data_path = ""
+if (data_type == "temp"):
+    log_data_path = BASE_DIR /"Data" /"8-LoggedData" / f"{discretization_method}-temp-log.csv"
+elif(data_type == "ecg"):
+    log_data_path = BASE_DIR /"Data" /"8-LoggedData" / f"{discretization_method}-ecg-log.csv"
 
 
 # Parameter for nr of Traces
@@ -91,9 +118,15 @@ len_traces = 2
 
 for trace_nr in range(start_traces, len_traces):
     # Paths
-    discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
-                              / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
-                              )
+
+    if (data_type == "temp"):
+        discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
+                                  / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
+                                  )
+    elif (data_type == "ecg"):
+        discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
+                                  / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
+                                  )
 
     symbolic_train_trace_subset = symbolic_train_trace[:trace_nr ]
 
@@ -113,7 +146,7 @@ for trace_nr in range(start_traces, len_traces):
         # Tranform to TA
         learner = TALearner(tss_path=discretinize_data_path,display=False,k=k )
         learner.ta.show(title=title,savePng=True,output_path=TA_output_path)
-        learner.ta.export_ta(path=xml_path, symbol_map=symbol_map)
+        learner.ta.export_ta(path=xml_path, symbol_map=symbol_map, data_type = data_type, time = time )
 
         # Compute metrics
         metrics = learner.ta.evaluate_classifier(positive_tss = test_positive_traces_lists, negative_tss = test_negative_traces_lists,  save_path = log_data_path, run_id= run_id, timed=True)

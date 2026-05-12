@@ -164,223 +164,6 @@ def convert_traces_for_plotting(traces, symbol_map=None):
 
 
 
-# def generate_negative_samples(
-#         positive_traces,
-#         out_folder,
-#         time_jitter=0.5,
-#         swap_prob=0.25,
-#         mutate_prob=0.25,
-#         spike_prob=0.10,
-#         seed=None,
-#         symbol_map=None
-# ):
-#     """
-#     Convert real observed traces (positive samples) into synthetic negative samples.
-#
-#     Negative traces:
-#         - keep SAME length as positives
-#         - stay realistic (not random noise)
-#         - violate timing, order, and symbol/bin consistency
-#
-#     Args:
-#         positive_traces (list[list[str]]):
-#             Each trace is a sequence like ["a:10", "b:5", "c:7"]
-#
-#         out_folder (str, optional):
-#             If set, saves visual comparisons of positive vs negative traces.
-#
-#         time_jitter (float):
-#             Strength of timestamp perturbation.
-#
-#             Higher values → larger timing distortion.
-#
-#         swap_prob (float):
-#             Probability of swapping adjacent events.
-#
-#             Introduces local ordering errors.
-#
-#         mutate_prob (float):
-#             Probability of changing a symbol/bin.
-#
-#             Uses symbol_map for realistic replacements.
-#
-#         spike_prob (float):
-#             Probability that a mutation becomes a large bin "spike"
-#             instead of a local change.
-#
-#         seed (int, optional):
-#             Random seed for reproducibility.
-#
-#         symbol_map (dict):
-#             Maps symbols to ordered bins for structured mutations.
-#
-#     Returns:
-#         list[list[str]]:
-#             Negative traces with same structure and length as inputs.
-#     """
-#
-#     # ---------------------------------------------------------------
-#     # Reproducibility
-#     # ---------------------------------------------------------------
-#     if seed is not None:
-#         random.seed(seed)
-#         np.random.seed(seed)
-#
-#     negative_traces = []
-#
-#     # ---------------------------------------------------------------
-#     # Build ordered symbol/bin structure
-#     # ---------------------------------------------------------------
-#     if symbol_map is not None:
-#
-#         ordered_symbols = sorted(
-#             symbol_map.keys(),
-#             key=lambda s: symbol_map[s]
-#         )
-#
-#     else:
-#         raise ValueError(
-#             "symbol_map is required for realistic bin perturbations."
-#         )
-#
-#     # ===============================================================
-#     # PROCESS EACH POSITIVE TRACE
-#     # ===============================================================
-#     for trace in positive_traces:
-#
-#         # -----------------------------------------------------------
-#         # Parse trace
-#         # -----------------------------------------------------------
-#         events = [x.split(":") for x in trace]
-#
-#         symbols = [s for s, _ in events]
-#
-#         times = np.array([
-#             float(t) for _, t in events
-#         ])
-#
-#         # ===========================================================
-#         # 1. TIMING CORRUPTION (FIXED)
-#         # ===========================================================
-#
-#         t_min = np.min(times)
-#         t_max = np.max(times)
-#         span = t_max - t_min
-#
-#         for k in range(len(times)):
-#
-#             if random.random() < 0.3:
-#
-#                 # small relative jitter only (NO drift)
-#                 noise = random.uniform(
-#                     -time_jitter * span,
-#                     time_jitter * span
-#                 )
-#
-#                 times[k] += noise
-#
-#         # HARD CLAMP (CRITICAL)
-#         times = np.clip(times, t_min, t_max)
-#
-#         # ===========================================================
-#         # 2. SYMBOL / BIN MUTATION
-#         # ===========================================================
-#         for i in range(len(symbols)):
-#
-#             if random.random() < mutate_prob:
-#
-#                 current = symbols[i]
-#
-#                 idx = ordered_symbols.index(current)
-#
-#                 # ---------------------------------------------------
-#                 # LARGE SPIKE
-#                 # ---------------------------------------------------
-#                 if random.random() < spike_prob:
-#
-#                     step = random.choice([
-#                         -6, -5, 5, 6
-#                     ])
-#
-#                 # ---------------------------------------------------
-#                 # LOCAL PERTURBATION
-#                 # ---------------------------------------------------
-#                 else:
-#
-#                     step = random.choice([
-#                         -2, -1, 1, 2
-#                     ])
-#
-#                 # clamp to valid symbol range
-#                 new_idx = max(
-#                     0,
-#                     min(
-#                         len(ordered_symbols) - 1,
-#                         idx + step
-#                     )
-#                 )
-#
-#                 symbols[i] = ordered_symbols[new_idx]
-#
-#         # ===========================================================
-#         # 3. LOCAL SEQUENCE SWAPS
-#         # ===========================================================
-#         for i in range(len(symbols)):
-#
-#             if random.random() < swap_prob:
-#
-#                 # choose swap direction
-#                 direction = random.choice([-1, 1])
-#
-#                 j = i + direction
-#
-#                 # ensure valid index
-#                 if 0 <= j < len(symbols):
-#
-#                     # swap symbols
-#                     symbols[i], symbols[j] = (
-#                         symbols[j],
-#                         symbols[i]
-#                     )
-#
-#                     # swap timestamps too
-#                     times[i], times[j] = (
-#                         times[j],
-#                         times[i]
-#                     )
-#
-#         # ===========================================================
-#         # 4. REBUILD TRACE
-#         # ===========================================================
-#
-#         neg_trace = [
-#             f"{s}:{t:.2f}"
-#             for s, t in zip(symbols, times)
-#         ]
-#
-#         # ensure truly changed
-#         if neg_trace != trace:
-#
-#             negative_traces.append(neg_trace)
-#
-#
-#     # ---------------------------------------------------------------
-#     # SAVE NEGATIVE TRACES TO FILES
-#     # ---------------------------------------------------------------
-#     out_folder = Path(out_folder)
-#     out_folder.mkdir(parents=True, exist_ok=True)
-#     for i, trace in enumerate(negative_traces):
-#
-#         file_path = out_folder / f"neg_trace_{i}.txt"
-#
-#         with open(file_path, "w") as f:
-#             for event in trace:
-#                 f.write(event + "\n")
-#
-#
-#     return negative_traces
-#
-
 
 def generate_negative_samples(
         positive_traces,
@@ -466,26 +249,7 @@ def generate_negative_samples(
         original_values = values.copy()
         original_times = times.copy()
 
-        # ===========================================================
-        # 1. TIMING CORRUPTION
-        # ===========================================================
-        t_min = np.min(times)
-        # t_max = np.max(times)
-        # span = t_max - t_min
-        #
-        # for k in range(len(times)):
-        #
-        #     if random.random() < 0.3:
-        #
-        #         noise = random.uniform(
-        #             -time_jitter * span,
-        #             time_jitter * span
-        #         )
-        #
-        #         times[k] += noise
-        #
-        # # keep timestamps valid
-        # times = np.clip(times, t_min, t_max)
+
 
         times = original_times.copy()
 
@@ -587,7 +351,7 @@ def generate_negative_samples(
 def split_dataset(
         input_folder,
         output_folder,
-        room,
+        prefix,
         train_ratio=0.7,
         seed=42
 ):
@@ -606,8 +370,8 @@ def split_dataset(
 
     random.seed(seed)
 
-    train_dir = output_folder / f"{room}-train"
-    test_dir = output_folder /  f"{room}-test" / "positive"
+    train_dir = output_folder / f"{prefix}-train"
+    test_dir = output_folder /  f"{prefix}-test" / "positive"
 
     train_dir.mkdir(parents=True, exist_ok=True)
     test_dir.mkdir(parents=True, exist_ok=True)
@@ -636,32 +400,37 @@ SEED = 42
 
 room = "A"
 period = "1day"
-
+beats = "3beat"
 
 file_prefix = f"room{room}-{period}"
 
+file_ecg_prefix = f"{beats}"
+
 all_traces_folder = BASE_DIR / "Data" / "3-ExtractInterval" /  f"{period}-experiment" / f"room{room}"
-
 output_folder = BASE_DIR / "Data" / "3-ExtractInterval" /  f"{period}-experiment"
-
 test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/positive"
 test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/negative"
 
 
+all_ecg_traces_folder = BASE_DIR / "Data" / "3-ExtractInterval" /  "ecg" / "1beat"
+output_ecg_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{beats}-experiment"
 
+test_ecg_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" /  "ecg" / f"{beats}-experiment"/f"{beats}-test/positive"
+test_ecg_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{beats}-experiment"/f"{beats}-test/negative"
+
+
+
+
+# split_dataset(input_folder = all_ecg_traces_folder,
+#               output_folder = output_ecg_folder,
+#               prefix = beats)
 #
-# split_dataset(input_folder = all_traces_folder,
-#               output_folder = output_folder,
-#               room = room)
-
-
-
-
-test_positive_raw_traces = get_trace_files(folder_path = test_positive_folder)
-test_positive_raw_lists = csv_to_temp_time_list(input_files=test_positive_raw_traces)
-
-
-test_negative_raw_lists = generate_negative_samples( positive_traces = test_positive_raw_lists, seed= SEED, out_folder=test_negative_folder, file_prefix =file_prefix )
-
-
-
+#
+#
+# test_positive_raw_traces = get_trace_files(folder_path = test_ecg_positive_folder)
+# test_positive_raw_lists = csv_to_temp_time_list(input_files=test_positive_raw_traces)
+#
+# test_negative_raw_lists = generate_negative_samples( positive_traces = test_positive_raw_lists, seed= SEED, out_folder=test_ecg_negative_folder, file_prefix =file_ecg_prefix )
+#
+#
+#

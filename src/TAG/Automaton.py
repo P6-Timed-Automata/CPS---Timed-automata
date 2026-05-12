@@ -269,7 +269,7 @@ class Automaton:
 
 
     # VERSION with var, global, local
-    def export_ta(self, path: str, symbol_map: dict = None, time: int = 86400, sim_nr: int = 1) -> None:
+    def export_ta(self, path: str, symbol_map: dict = None, time: int = 86400, sim_nr: int = 1, data_type = "temp") -> None:
         """
         Export the automaton as a UPPAAL XML file with Graphviz layout coordinates.
 
@@ -350,7 +350,7 @@ class Automaton:
         # Build UPPAAL declarations
         # ----------------------------
         const_decls = ' '.join(
-            f'const int {sym} = {val};'
+            f'const int {sym} = {val};\n'
             for sym, val in symbol_values.items()
         )
 
@@ -361,16 +361,49 @@ class Automaton:
 
         initial_temp_value = initial_symbol if initial_symbol is not None else "0"
 
-        lines = [
-            '<?xml version="1.0" encoding="utf-8"?>',
-            "<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'",
-            "  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>",
-            '<nta>',
-            f'  <declaration>clock cl_local, cl_global; {const_decls} int temp = {initial_temp_value};</declaration>',
-            '  <template>',
-            '    <name>TagModel</name>',
-            '    <declaration></declaration>',
-        ]
+        lines = []
+
+        if data_type == "temp":
+
+            lines = [
+                '<?xml version="1.0" encoding="utf-8"?>',
+                "<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'",
+                "  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>",
+                '<nta>',
+                f'  <declaration>clock cl_local, cl_global;\n'
+                f'{const_decls} \n'
+                f'int temp = {initial_temp_value};\n'
+                'const int spike_threshold = 8000;\n'
+                'const int stable_threshold = 4000; \n'
+                'int prev_temp;\n'
+                'bool spike = false;\n'
+                'bool stable = true;\n'
+                'const int temp_min = 1800; \n'
+                'const int temp_max = 2800;\n'
+                '</declaration>',
+                '  <template>',
+                '    <name>TagModel</name>',
+                '    <declaration></declaration>',
+            ]
+        elif data_type == "ecg":
+            lines = [
+                '<?xml version="1.0" encoding="utf-8"?>',
+                "<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'",
+                "  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>",
+                '<nta>',
+                f'  <declaration>clock cl_local, cl_global;\n'
+                f'{const_decls} \n'
+                f'int temp = {initial_temp_value};\n'
+                'const int flat_threshold = -10; \n'
+                'const int peak_threshold = 50;\n'
+                'const int first_flat_window = 90;\n'
+                'const int second_flat_window = 180;\n'
+                '</declaration>',
+                '  <template>',
+                '    <name>TagModel</name>',
+                '    <declaration></declaration>',
+            ]
+
 
         # ----------------------------
         # Locations
@@ -422,11 +455,23 @@ class Automaton:
                     f'</label>'
                 )
 
-                lines.append(
-                    f'      <label kind="assignment">'
-                    f'temp = {symbol_var}, cl_local = 0'
-                    f'</label>'
-                )
+
+                if data_type == "temp":
+                    lines.append(
+                        '      <label kind="assignment">'
+                        f'temp = {symbol_var},\n'
+                        'spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),\n'
+                        'stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),\n'
+                        f'prev_temp = temp,'
+                        'cl_local = 0'
+                        '</label>'
+                    )
+                elif data_type == "ecg":
+                    lines.append(
+                        f'      <label kind="assignment">'
+                        f'temp = {symbol_var}, cl_local = 0'
+                        f'</label>'
+                    )
 
                 lines.append('    </transition>')
 
@@ -441,54 +486,124 @@ class Automaton:
 
         final_expr = " || ".join(f"Process.{name}" for name in accepting_states)
 
+        if data_type == "temp":
+            lines += [
+                '  </template>',
+                '  <system>Process = TagModel(); system Process;</system>',
+                '  <queries>',
 
-        lines += [
-            '  </template>',
-            '  <system>Process = TagModel(); system Process;</system>',
-            '  <queries>',
+                '    <query>',
+                f'      <formula>strategy Safe = control: A&lt;&gt; {final_expr}</formula>',
+                '    </query>',
 
-            '    <query>',
-            f'      <formula>strategy Safe = control: A&lt;&gt; {final_expr}</formula>',
-            '    </query>',
+                # Simulation under controller
+                '    <query>',
+                f'      <formula>simulate [&lt;={time}; {sim_nr}] {{ temp }} under Safe</formula>',
+                '    </query>',
 
-            # Simulation under controller
-            '    <query>',
-            f'      <formula>simulate [&lt;={time}; {sim_nr}] {{ temp }} under Safe</formula>',
-            '    </query>',
+                # Reachability
+                '    <query>',
+                f'      <formula>E&lt;&gt; {final_expr}</formula>',
+                '    </query>',
 
-            # Reachability
-            '    <query>',
-            f'      <formula>E&lt;&gt; {final_expr}</formula>',
-            '    </query>',
+                # Safety
+                '    <query>',
+                '      <formula>A[] not deadlock</formula>',
+                '    </query>',
 
-            # Safety
-            '    <query>',
-            '      <formula>A[] not deadlock</formula>',
-            '    </query>',
+                # Eventually reach accepting state
+                '    <query>',
+                f'      <formula>A&lt;&gt; {final_expr}</formula>',
+                '    </query>',
 
-            # Eventually reach accepting state
-            '    <query>',
-            f'      <formula>A&lt;&gt; {final_expr}</formula>',
-            '    </query>',
+                # Statistical probability of reaching accepting states
+                '    <query>',
+                f'      <formula>Pr[&lt;={time}] (&lt;&gt; {final_expr})</formula>',
+                '    </query>',
 
-            # Statistical probability of reaching accepting states
-            '    <query>',
-            f'      <formula>Pr[&lt;={time}] (&lt;&gt; {final_expr})</formula>',
-            '    </query>',
+                # Expected value of temperature
+                '    <query>',
+                f'      <formula>E[&lt;={time};100] (max: temp)</formula>',
+                '    </query>',
 
-            # Expected value of temperature
-            '    <query>',
-            f'      <formula>E[&lt;={time};100] (max: temp)</formula>',
-            '    </query>',
+                # Expected global clock evolution
+                '    <query>',
+                f'      <formula>simulate [&lt;={time}; {sim_nr}] {{ cl_global }}</formula>',
+                '    </query>',
 
-            # Expected global clock evolution
-            '    <query>',
-            f'      <formula>simulate [&lt;={time}; {sim_nr}] {{ cl_global }}</formula>',
-            '    </query>',
+                '    <query>',
+                f'       <formula>A&lt;&gt; stable </formula>',
+                '    </query>',
 
-            '  </queries>',
-            '</nta>',
-        ]
+                '    <query>',
+                f'       <formula>A[] not spike</formula>',
+                '    </query>',
+                '  </queries>',
+
+                '</nta>',
+            ]
+        elif data_type == "ecg":
+            lines += [
+                '  </template>',
+                '  <system>Process = TagModel(); system Process;</system>',
+                '  <queries>',
+
+                '    <query>',
+                f'      <formula>strategy Safe = control: A&lt;&gt; {final_expr}</formula>',
+                '    </query>',
+
+                # Simulation under controller
+                '    <query>',
+                f'      <formula>simulate [&lt;={time}; {sim_nr}] {{ temp }} under Safe</formula>',
+                '    </query>',
+
+                # Reachability
+                '    <query>',
+                f'      <formula>E&lt;&gt; {final_expr}</formula>',
+                '    </query>',
+
+                # Safety
+                '    <query>',
+                '      <formula>A[] not deadlock</formula>',
+                '    </query>',
+
+                # Eventually reach accepting state
+                '    <query>',
+                f'      <formula>A&lt;&gt; {final_expr}</formula>',
+                '    </query>',
+
+                # Statistical probability of reaching accepting states
+                '    <query>',
+                f'      <formula>Pr[&lt;={time}] (&lt;&gt; {final_expr})</formula>',
+                '    </query>',
+
+                # Expected value of temperature
+                '    <query>',
+                f'      <formula>E[&lt;={time};100] (max: temp)</formula>',
+                '    </query>',
+
+                # Expected global clock evolution
+                '    <query>',
+                f'      <formula>simulate [&lt;={time}; {sim_nr}] {{ cl_global }}</formula>',
+                '    </query>',
+
+                '    <query>',
+                f'       <formula>E&lt;&gt; (temp &gt;= peak_threshold) </formula>',
+                '    </query>',
+
+                '    <query>',
+                f'       <formula>A[] (cl_global &lt;= first_flat_window imply temp &lt;= flat_threshold) </formula>',
+                '    </query>',
+
+
+                '    <query>',
+                f'       <formula>A[] (cl_global &gt;= second_flat_window imply temp &lt;= flat_threshold) </formula>',
+                '    </query>',
+                '  </queries>',
+
+
+                '</nta>',
+            ]
 
         os.makedirs(os.path.dirname(path), exist_ok=True)
 

@@ -4,12 +4,14 @@ from TAG.TALearner import TALearner
 
 from DataProcessing.processData import (
     format_temperature_data,
+    convert_ns_to_ms,
     extract_time_intervals,
     get_trace_files,
     format_ecg_data,
     extract_ecg_intervals_by_samples,
     extract_ecg_intervals_by_time_window,
-    extract_ecg_intervals_by_beats
+    extract_ecg_intervals_by_beats,
+    extract_fixed_beats_traces
 )
 
 # Format data
@@ -49,12 +51,33 @@ room = "A"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 ecg_raw = BASE_DIR / "Data-marco" / "patient_100_ecg.csv"
-ecg_formatted = BASE_DIR / "Data-marco" / \
-    "Formatted" / "patient_100_ecg_formatted.csv"
+ecg_formatted = BASE_DIR / "Data-marco" / "Formatted" /  "patient_100_ecg_formatted.csv"
+
+output_egg_formated = BASE_DIR / "Data" / "2-FormatedRawData" / "patient_100_ecg.csv"
 
 # Step 1: Format ECG data (use MLII lead - column 1)
-format_ecg_data(input_file=str(ecg_raw),
-                output_file=str(ecg_formatted), lead_col=1)
+# format_ecg_data(input_file=str(ecg_raw),
+# #                 output_file=str(ecg_formatted), lead_col=1)
+
+
+# Transfer from microseconds into milisecpnds
+# convert_ns_to_ms(input_file=ecg_formatted, output_file=output_egg_formated)
+
+#Extract traces
+min_distance = 100
+beats = 3
+pre_peak = 120
+post_peak = 200
+egg_output_folder = BASE_DIR / "Data" /"3-ExtractInterval" /"ecg" / f"{beats}beat"
+ecg_output_prefix = f"{beats}beat"
+
+# extract_fixed_beats_traces(
+#     input_file=output_egg_formated, output_folder=egg_output_folder,
+#     n_beats = beats,
+#     output_prefix = ecg_output_prefix ,
+#     pre_peak = pre_peak,
+#     post_peak = post_peak,
+#     min_distance = min_distance)
 
 # Step 2a: Extract traces by fixed number of samples (e.g., 500 samples = 1 trace)
 # Good for: consistent chunk sizes, simple analysis
@@ -76,14 +99,14 @@ format_ecg_data(input_file=str(ecg_raw),
 
 # Step 2c: Extract traces by detected heartbeats
 # Good for: heartbeat-aligned segmentation and beat-count traces
-extract_ecg_intervals_by_beats(
-    input_file=str(ecg_formatted),
-    output_folder=str(BASE_DIR / "Data" /
-                      "3-ExtractInterval" / "ecg-experimenrt"),
-    output_prefix="patient100-beats",
-    beats_per_trace=50,
-    min_rr_seconds=0.3
-)
+# extract_ecg_intervals_by_beats(
+#     input_file=str(ecg_formatted),
+#     output_folder=str(BASE_DIR / "Data" /
+#                       "3-ExtractInterval" / "ecg-experimenrt"),
+#     output_prefix="patient100-beats",
+#     beats_per_trace=50,
+#     min_rr_seconds=0.3
+# )
 
 
 # Process Data

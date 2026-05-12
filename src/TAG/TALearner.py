@@ -111,6 +111,8 @@ class TALearner:
                 states.append(edge.destination)
                 symbols.append(edge.symbol)
                 futures = self.__compute_future(states, symbols, futures, level + 1)
+
+
         else:
             if level == 1: return futures  # TODO: ARG
             if futures[states[0]] is None: futures[states[0]] = list()
@@ -130,6 +132,9 @@ class TALearner:
         seq_symbol_1 = set([tuple(f[1]) for f in future_1])
         seq_symbol_2 = set([tuple(f[1]) for f in future_2])
         return bool(seq_symbol_1 == seq_symbol_2)
+
+
+
 
     def __edges_merge(self, edge_1: Edge, edge_2: Edge) -> None:
         """
