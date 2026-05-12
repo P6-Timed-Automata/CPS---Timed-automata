@@ -29,8 +29,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 data_type ="temp"
 room = "A"
 discretization_method = "sax"
-period = "1day"
-beats = "1beat"
+period_nr = 1
+
+time = 0
+period = ""
+if data_type == "temp":
+    period = f"{period_nr}day"
+    time = 86400
+elif data_type == "ecg":
+    period = "1beat"
+    time = 250
+
 
 
 # Parameter for SAX
@@ -46,7 +55,7 @@ k_increment = 2
 if (data_type == "temp"):
     train_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/ f"{room}-train"
 elif(data_type == "ecg"):
-    train_folder = BASE_DIR / "Data" / "3-ExtractInterval" /"ecg" / f"{beats}-experiment"/ f"{beats}-train"
+    train_folder = BASE_DIR / "Data" / "3-ExtractInterval" /"ecg" / f"{period}-experiment"/ f"{period}-train"
 
 train_raw_traces = get_trace_files(folder_path = train_folder)
 train_raw_lists = csv_to_temp_time_list(input_files=train_raw_traces)
@@ -113,7 +122,7 @@ for trace_nr in range(start_traces, len_traces):
         # Tranform to TA
         learner = TALearner(tss_path=discretinize_data_path,display=False,k=k)
         learner.ta.show(title=title,savePng=True,output_path=TA_output_path)
-        learner.ta.export_ta(path=xml_path, symbol_map=symbol_map)
+        learner.ta.export_ta(path=xml_path, symbol_map=symbol_map, data_type = data_type, time = time)
 
         # Compute metrics
         metrics = learner.ta.evaluate_classifier(positive_tss = test_positive_traces_lists, negative_tss = test_negative_traces_lists,  save_path = log_data_path, run_id= run_id, timed=True)
