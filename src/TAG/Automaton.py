@@ -451,12 +451,39 @@ class Automaton:
             f'      <formula>strategy Safe = control: A&lt;&gt; {final_expr}</formula>',
             '    </query>',
 
+            # Simulation under controller
             '    <query>',
             f'      <formula>simulate [&lt;={time}; {sim_nr}] {{ temp }} under Safe</formula>',
             '    </query>',
 
+            # Reachability
             '    <query>',
             f'      <formula>E&lt;&gt; {final_expr}</formula>',
+            '    </query>',
+
+            # Safety
+            '    <query>',
+            '      <formula>A[] not deadlock</formula>',
+            '    </query>',
+
+            # Eventually reach accepting state
+            '    <query>',
+            f'      <formula>A&lt;&gt; {final_expr}</formula>',
+            '    </query>',
+
+            # Statistical probability of reaching accepting states
+            '    <query>',
+            f'      <formula>Pr[&lt;={time}] (&lt;&gt; {final_expr})</formula>',
+            '    </query>',
+
+            # Expected value of temperature
+            '    <query>',
+            f'      <formula>E[&lt;={time};100] (max: temp)</formula>',
+            '    </query>',
+
+            # Expected global clock evolution
+            '    <query>',
+            f'      <formula>simulate [&lt;={time}; {sim_nr}] {{ cl_global }}</formula>',
             '    </query>',
 
             '  </queries>',
