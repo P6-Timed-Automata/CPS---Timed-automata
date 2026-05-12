@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5ba9154e-1552-4a06-ba58-76c2badffcee" name="Changes" comment="test updates (synthetic data og fixes til discretization (persist)" />
+    <list default="true" id="5ba9154e-1552-4a06-ba58-76c2badffcee" name="Changes" comment="restructuring and updates">
+      <change beforePath="$PROJECT_DIR$/.idea/CPS---Timed-automata.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/CPS---Timed-automata.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <list id="9c5b5554-fc7d-4357-8b2a-5156ac369d56" name="Changes by litha" comment="Changes by litha" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,6 +22,7 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="PUSH_AUTO_UPDATE" value="true" />
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
         <entry key="$PROJECT_DIR$" value="Data-Marco" />
@@ -71,6 +75,7 @@
     &quot;Python.main_synthetic3.executor&quot;: &quot;Run&quot;,
     &quot;Python.naive.executor&quot;: &quot;Run&quot;,
     &quot;Python.processData.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scaling.executor&quot;: &quot;Run&quot;,
     &quot;Python.synthetic_eval_comp.executor&quot;: &quot;Run&quot;,
     &quot;Python.synthetic_test.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
@@ -102,11 +107,11 @@
       <recent name="C:\Users\litha\OneDrive\andet\Documents\GitHub\CPS---Timed-automata\Data\3-ExtractInterval\1day-experiment" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\kyros\Documents\GitHub\CPS---Timed-automata\src\GraphGeneration" />
+      <recent name="C:\Users\kyros\Documents\GitHub\CPS---Timed-automata\src\2-Synthetic_section" />
+      <recent name="C:\Users\kyros\Documents\GitHub\CPS---Timed-automata\src\Discretization_figures" />
       <recent name="C:\Users\kyros\Documents\GitHub\CPS---Timed-automata\src\old_scripts" />
       <recent name="C:\Users\Jacob\Documents\GitHub\CPS---Timed-automata\Data\7-ExtractedUppaalGraphData" />
-      <recent name="C:\Users\litha\OneDrive\andet\Documents\GitHub\CPS---Timed-automata\Data\3-ExtractInterval" />
-      <recent name="C:\Users\litha\OneDrive\andet\Documents\GitHub\CPS---Timed-automata\Data\7-XMLOutput" />
-      <recent name="C:\Users\litha\OneDrive\andet\Documents\GitHub\CPS---Timed-automata\Data" />
     </key>
   </component>
   <component name="RunManager" selected="Python.discretizationSetup">
@@ -200,6 +205,7 @@
       <workItem from="1778185613090" duration="6096000" />
       <workItem from="1778232336789" duration="4605000" />
       <workItem from="1778237344977" duration="2293000" />
+      <workItem from="1778482192159" duration="13348000" />
     </task>
     <task id="LOCAL-00001" summary="pipeline med naiv data, 20/3">
       <option name="closed" value="true" />
@@ -369,7 +375,15 @@
       <option name="project" value="LOCAL" />
       <updated>1778236990847</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="restructuring and updates">
+      <option name="closed" value="true" />
+      <created>1778569267434</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1778569267434</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -403,7 +417,8 @@
     <MESSAGE value="graph update" />
     <MESSAGE value="commited synthetic data and files" />
     <MESSAGE value="test updates (synthetic data og fixes til discretization (persist)" />
-    <option name="LAST_COMMIT_MESSAGE" value="test updates (synthetic data og fixes til discretization (persist)" />
+    <MESSAGE value="restructuring and updates" />
+    <option name="LAST_COMMIT_MESSAGE" value="restructuring and updates" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
@@ -411,8 +426,9 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/workspace_xml$firstValueTest.coverage" NAME="firstValueTest Coverage Results" MODIFIED="1778051244108" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/GraphGeneration" />
+    <SUITE FILE_PATH="coverage/workspace_xml$scaling.coverage" NAME="scaling Coverage Results" MODIFIED="1778501062263" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/Discretization_section" />
     <SUITE FILE_PATH="coverage/sax_py$main.coverage" NAME="main Coverage Results" MODIFIED="1777825465135" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
-    <SUITE FILE_PATH="coverage/workspace_xml$discretization_comparison2.coverage" NAME="discretization_comparison2 Coverage Results" MODIFIED="1778235198741" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/GraphGeneration" />
+    <SUITE FILE_PATH="coverage/workspace_xml$discretization_comparison2.coverage" NAME="discretization_comparison2 Coverage Results" MODIFIED="1778492532883" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/GraphGeneration" />
     <SUITE FILE_PATH="coverage/workspace_xml$main_synthetic.coverage" NAME="main_synthetic Coverage Results" MODIFIED="1778067723385" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/workspace_xml$main.coverage" NAME="main Coverage Results" MODIFIED="1778057206030" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/processData_py$graphs.coverage" NAME="graphs Coverage Results" MODIFIED="1776364280762" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/GraphGeneration" />
