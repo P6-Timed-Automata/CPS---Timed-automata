@@ -227,7 +227,7 @@ if __name__ == "__main__":
         "../../data/3-ExtractInterval/1day-experiment/roomA/roomA-1day-tid9.csv",
     ]
 
-    out_dir = "../../Data/Graphs/TA_Benchmark2"
+    out_dir = "../0-old_scripts/TA_Benchmark2"
 
     t_raw, v_raw = load_trace(trace_files[0])
 
