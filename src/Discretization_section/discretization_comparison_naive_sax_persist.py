@@ -60,30 +60,30 @@ def run_ta_pipeline(method_type, params, single_trace_data, tag_k=2):
     tmp_file = os.path.join(os.getcwd(), "tmp_ta_learning_data.txt")
 
     if method_type == "naive":
-        traces, bins_c = equal_width_discretization(single_trace_data, k=params['k'])
+        traces, bins_c = equal_width_discretization(single_trace_data, k=params['bins'])
 
     elif method_type == "persist":
         ts = flatten_traces_to_ts(single_trace_data)
-        persist_obj = Persist(ts, break_min=2, break_max=params['k'], skip=np.array([4, 4]))
+        persist_obj = Persist(ts, break_min=2, break_max=params['bins'], skip=np.array([4, 4]))
         bins_c  = get_best_bins(persist_obj, ts)
         traces  = discretize_traces_with_bins(single_trace_data, bins_c)
 
     elif method_type == "sax":
         traces, bins_z, mean_, std_ = sax_discretization_multi(
-            single_trace_data, w=params['w'], k=params['k']
+            single_trace_data, w=params['w'], k=params['bins']
         )
         bins_c = sax_bins_celsius(bins_z, mean_, std_)
 
     else:
         raise ValueError(method_type)
 
-    actual_k = len(bins_c) - 1
+    actual_bins = len(bins_c) - 1
 
-    symbolic_trace, symbol_map, _ = map_bins_to_symbols(traces, actual_k, bins_c)
+    symbolic_trace, symbol_map, _ = map_bins_to_symbols(traces, actual_bins, bins_c)
     format_output(symbolic_trace, tmp_file)
     _ = TALearner(tmp_file, display=False, k=tag_k)
 
-    return traces, bins_c, actual_k
+    return traces, bins_c, actual_bins
 
 
 # ---------------------------------------------------------------------------
@@ -109,17 +109,17 @@ def compare_discretization_params(
         per_trace_rmse  = []
         per_trace_times = []
         plot_t_d = plot_v_d = plot_resids = None
-        actual_k = None
+        actual_bins = None
 
-        per_trace_k = []
+        per_trace_bins = []
 
         for i, (trace_path, trace_data) in enumerate(zip(trace_files, data_lists)):
 
             t_i, v_i = load_trace(trace_path)
 
             start = time.perf_counter()
-            disc_traces, bins_c, actual_k = run_ta_pipeline(method_type, params, [trace_data])
-            per_trace_k.append(actual_k)
+            disc_traces, bins_c, actual_bins = run_ta_pipeline(method_type, params, [trace_data])
+            per_trace_bins.append(actual_bins)
             elapsed = time.perf_counter() - start
 
             per_trace_times.append(elapsed)
@@ -144,11 +144,11 @@ def compare_discretization_params(
             'rmse_std':  std_rmse,
             'time_mean': mean_time,
             'time_std':  std_time,
-            'actual_k':  actual_k,
+            'actual_bins':  actual_bins,
             't_d':       plot_t_d,
             'v_d':       plot_v_d,
             'resids':    plot_resids,
-            'per_trace_k': per_trace_k,
+            'per_trace_bins': per_trace_bins,
         })
 
     # -----------------------------------------------------------------------
@@ -183,13 +183,13 @@ def compare_discretization_params(
         table_data = [
             [
                 r['label'],
-                ", ".join(map(str, r['per_trace_k'])),
+                ", ".join(map(str, r['per_trace_bins'])),
                 f"{r['rmse_mean']:.2f}±{r['rmse_std']:.2f}",
                 f"{r['time_mean']:.2f}±{r['time_std']:.2f}s"
             ]
             for r in results
         ]
-        cols = ["Parameter", "k per trace", "RMSE", "Time"]
+        cols = ["Parameter", "bins per trace", "RMSE", "Time"]
     else:
         table_data = [
             [r['label'],
@@ -237,7 +237,7 @@ if __name__ == "__main__":
     # -----------------------------------------------------------------------
     # NAIVE
     # -----------------------------------------------------------------------
-    naive_vars = {f"k={k}": ("naive", {'k': k}) for k in [2, 4, 6, 8, 10, 12, 14, 16]}
+    naive_vars = {f"bins={bins}": ("naive", {'bins': bins}) for bins in [2, 4, 6, 8, 10, 12, 14, 16]}
 
     compare_discretization_params(
         "Naive", t_raw, v_raw, naive_vars, data_lists, trace_files, out_dir
@@ -247,9 +247,9 @@ if __name__ == "__main__":
     # SAX
     # -----------------------------------------------------------------------
     sax_vars = {
-        f"w={w}, k={k}": ("sax", {'w': w, 'k': k})
+        f"w={w}, bins={bins}": ("sax", {'w': w, 'bins': bins})
         for w in [20, 100, 288]
-        for k in [4, 8, 16]
+        for bins in [4, 8, 16]
     }
 
     compare_discretization_params(
@@ -259,7 +259,7 @@ if __name__ == "__main__":
     # -----------------------------------------------------------------------
     # PERSIST
     # -----------------------------------------------------------------------
-    persist_vars = {f"k_max={k}": ("persist", {'k': k}) for k in [2, 4, 6, 8, 10, 12, 14, 16]}
+    persist_vars = {f"bins_max={bins}": ("persist", {'bins': bins}) for bins in [2, 4, 6, 8, 10, 12, 14, 16]}
 
     compare_discretization_params(
         "Persist", t_raw, v_raw, persist_vars, data_lists, trace_files, out_dir
