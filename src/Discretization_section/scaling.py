@@ -188,15 +188,15 @@ if __name__ == "__main__":
     BASE_DIR     = Path(__file__).resolve().parent.parent.parent
    # TRACE_FOLDER = BASE_DIR / "Data" / "3-ExtractInterval" / "1day-experiment" / "roomA"
     TRACE_FOLDER = BASE_DIR / "Data" / "synthetic_data" / "clean"
-    OUT_DIR      = BASE_DIR / "Data" / "Graphs" / "TA_Scaling-5-100-5-10-noRepeat"
+    OUT_DIR      = BASE_DIR / "Data" / "Graphs" / "Persist_Test"
 
-    MAX_TRACES = 20
+    MAX_TRACES = 5
     REPEATS    = 1
     TAG_K      = 2
 
     EXPERIMENTS = [
-        ("naive",   {'bins': 5}),
-        ("sax",     {'w': 288, 'bins': 5}),
+        # ("naive",   {'bins': 5}),
+        # ("sax",     {'w': 288, 'bins': 5}),
         ("persist", {'bins': 5}),
     ]
 
