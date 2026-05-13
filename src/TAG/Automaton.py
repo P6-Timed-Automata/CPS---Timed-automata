@@ -543,63 +543,65 @@ class Automaton:
                 '</nta>',
             ]
         elif data_type == "ecg":
-            lines += [
-                '  </template>',
-                '  <system>Process = TagModel(); system Process;</system>',
-                '  <queries>',
+            for acc in accepting_states:
+                 state_expr = f"Process.{acc}"
+                 lines += [
+                    '  </template>',
+                    '  <system>Process = TagModel(); system Process;</system>',
+                    '  <queries>',
 
-                '    <query>',
-                f'      <formula>strategy Safe = control: A&lt;&gt; {final_expr}</formula>',
-                '    </query>',
+                    '    <query>',
+                    f'      <formula>strategy Safe = control: A&lt;&gt; {state_expr}</formula>',
+                    '    </query>',
 
-                # Simulation under controller
-                '    <query>',
-                f'      <formula>simulate [&lt;={time}; {sim_nr}] {{ temp }} under Safe</formula>',
-                '    </query>',
+                    # Simulation under controller
+                    '    <query>',
+                    f'      <formula>simulate [&lt;={time}; {sim_nr}] {{ temp }} under Safe</formula>',
+                    '    </query>',
 
-                # Reachability
-                '    <query>',
-                f'      <formula>E&lt;&gt; {final_expr}</formula>',
-                '    </query>',
+                    # Reachability
+                    '    <query>',
+                    f'      <formula>E&lt;&gt; {state_expr}</formula>',
+                    '    </query>',
 
-                # Safety
-                '    <query>',
-                '      <formula>A[] not deadlock</formula>',
-                '    </query>',
+                    # Safety
+                    '    <query>',
+                    '      <formula>A[] not deadlock</formula>',
+                    '    </query>',
 
-                # Eventually reach accepting state
-                '    <query>',
-                f'      <formula>A&lt;&gt; {final_expr} under Safe</formula>',
-                '    </query>',
+                    # Eventually reach accepting state
+                    '    <query>',
+                    f'      <formula>A&lt;&gt; {state_expr} under Safe</formula>',
+                    '    </query>',
 
-                '    <query>',
-                f'       <formula>A&lt;&gt; (temp &gt;= peak_threshold) under Safe</formula>',
-                '    </query>',
-                
+                    '    <query>',
+                    f'       <formula>A&lt;&gt; (temp &gt;= peak_threshold) under Safe</formula>',
+                    '    </query>',
+                    
 
-                '    <query>',
-                f'       <formula>A&lt;&gt; (cl_global &lt;= first_flat_window imply temp &lt;= flat_threshold) under Safe</formula>',
-                '    </query>',
-
-
-                '    <query>',
-                f'       <formula>A[] (cl_global &lt;= first_flat_window imply temp &lt;= flat_threshold) under Safe</formula>',
-                '    </query>',
+                    '    <query>',
+                    f'       <formula>A&lt;&gt; (cl_global &lt;= first_flat_window imply temp &lt;= flat_threshold) under Safe</formula>',
+                    '    </query>',
 
 
-                '    <query>',
-                f'       <formula>A&lt;&gt; (cl_global &gt;= second_flat_window imply temp &lt;= flat_threshold) under Safe </formula>',
-                '    </query>',
-
-                '    <query>',
-                f'       <formula>A[](cl_global &gt;= second_flat_window imply temp &lt;= flat_threshold) under Safe </formula>',
-                '    </query>',
-
-                '  </queries>',
+                    '    <query>',
+                    f'       <formula>A[] (cl_global &lt;= first_flat_window imply temp &lt;= flat_threshold) under Safe</formula>',
+                    '    </query>',
 
 
-                '</nta>',
-            ]
+                    '    <query>',
+                    f'       <formula>A&lt;&gt; (cl_global &gt;= second_flat_window imply temp &lt;= flat_threshold) under Safe </formula>',
+                    '    </query>',
+
+                    '    <query>',
+                    f'       <formula>A[](cl_global &gt;= second_flat_window imply temp &lt;= flat_threshold) under Safe </formula>',
+                    '    </query>',
+
+                    '  </queries>',
+
+
+                    '</nta>',
+                ]
 
         os.makedirs(os.path.dirname(path), exist_ok=True)
 
