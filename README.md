@@ -134,7 +134,7 @@ learner.ta.export_ta(...) — saves an XML representation with real temperature 
 via symbol_map
 
 
-Visualisation (GraphGeneration/graphs.py)
+Visualisation (0-GraphGeneration/graphs.py)
 
 Function:
 plot_traces(trace_folder, output_folder)
