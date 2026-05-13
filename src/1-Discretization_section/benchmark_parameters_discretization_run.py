@@ -239,7 +239,7 @@ if __name__ == "__main__":
     log_path  = str(run_dir / "benchmark_log.json")
     print(f"Run folder: {run_dir}")
 
-    base = BASE_DIR / "Data" / "synthetic_data-absolute" / "noisy_test"
+    base = BASE_DIR / "Data" / "synthetic_data" / "noisy_test"
     trace_files = [
         str(base / f"noisy_test_tid{i}.csv")
         for i in range(1, 21)
