@@ -477,6 +477,12 @@ class Automaton:
         # ----------------------------
         # Final XML
         # ----------------------------
+        min_temp = min(symbol_values.values())
+        max_temp = max(symbol_values.values())
+
+        temp_bounds_expr = f"temp &gt;= {min_temp} &amp;&amp; temp &lt;= {max_temp}"
+
+        max_time = 300
 
         accepting_states = [s.name for s in self.states if s.accepting]
 
@@ -515,19 +521,14 @@ class Automaton:
                 f'      <formula>A&lt;&gt; {final_expr}</formula>',
                 '    </query>',
 
-                # Statistical probability of reaching accepting states
+                # Checks that temperature remains within learned symbolic bounds.
                 '    <query>',
-                f'      <formula>Pr[&lt;={time}] (&lt;&gt; {final_expr})</formula>',
-                '    </query>',
-
-                # Expected value of temperature
-                '    <query>',
-                f'      <formula>E[&lt;={time};100] (max: temp)</formula>',
+                f'      <formula> A[] ({temp_bounds_expr})</formula>',
                 '    </query>',
 
                 # Expected global clock evolution
                 '    <query>',
-                f'      <formula>simulate [&lt;={time}; {sim_nr}] {{ cl_global }}</formula>',
+                f'      <formula>A[] cl_local &lt;= {max_time}</formula>',
                 '    </query>',
 
                 '    <query>',
