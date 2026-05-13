@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'
+  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+  <declaration>clock cl_local, cl_global;
+const int a = 1726;
+ const int b = 1843;
+ const int c = 1959;
+ const int d = 2075;
+ const int e = 2192;
+ const int f = 2308;
+ const int g = 2425;
+ const int h = 2541;
+ const int i = 2658;
+ const int j = 2774;
+ const int k = 2890;
+ const int l = 3007;
+ 
+int temp = e;
+const int spike_threshold = 8000;
+const int stable_threshold = 4000; 
+int prev_temp;
+bool spike = false;
+bool stable = true;
+const int temp_min = 1800; 
+const int temp_max = 2800;
+</declaration>
+  <template>
+    <name>TagModel</name>
+    <declaration></declaration>
+    <location id="id0" x="1007" y="-4781">
+      <name x="1007" y="-4801">S0</name>
+      <label kind="invariant" x="1007" y="-4761">cl_local &lt;= 17700</label>
+    </location>
+    <location id="id1" x="568" y="-4235">
+      <name x="568" y="-4255">S1</name>
+      <label kind="invariant" x="568" y="-4215">cl_local &lt;= 300</label>
+    </location>
+    <location id="id2" x="1279" y="-4235">
+      <name x="1279" y="-4255">S2</name>
+      <label kind="invariant" x="1279" y="-4215">cl_local &lt;= 5100</label>
+    </location>
+    <location id="id3" x="924" y="-4235">
+      <name x="924" y="-4255">S30</name>
+      <label kind="invariant" x="924" y="-4215">cl_local &lt;= 24000</label>
+    </location>
+    <location id="id4" x="1051" y="-3662">
+      <name x="1051" y="-3682">S31</name>
+      <label kind="invariant" x="1051" y="-3642">cl_local &lt;= 24000</label>
+    </location>
+    <location id="id5" x="640" y="-3662">
+      <name x="640" y="-3682">S18</name>
+      <label kind="invariant" x="640" y="-3642">cl_local &lt;= 4500</label>
+    </location>
+    <location id="id6" x="496" y="-3090">
+      <name x="496" y="-3110">S19</name>
+      <label kind="invariant" x="496" y="-3070">cl_local &lt;= 1500</label>
+    </location>
+    <location id="id7" x="496" y="-2518">
+      <name x="496" y="-2538">S20</name>
+      <label kind="invariant" x="496" y="-2498">cl_local &lt;= 1800</label>
+    </location>
+    <location id="id8" x="496" y="-1946">
+      <name x="496" y="-1966">S21</name>
+      <label kind="invariant" x="496" y="-1926">cl_local &lt;= 8400</label>
+    </location>
+    <location id="id9" x="162" y="-1374">
+      <name x="162" y="-1394">S22</name>
+      <label kind="invariant" x="162" y="-1354">cl_local &lt;= 13200</label>
+    </location>
+    <location id="id10" x="518" y="-1374">
+      <name x="518" y="-1394">S3</name>
+      <label kind="invariant" x="518" y="-1354">cl_local &lt;= 300</label>
+    </location>
+    <location id="id11" x="690" y="-779">
+      <name x="690" y="-799">S23</name>
+      <label kind="invariant" x="690" y="-759">cl_local &lt;= 10500</label>
+    </location>
+    <location id="id12" x="162" y="-779">
+      <name x="162" y="-799">S29</name>
+      <label kind="invariant" x="162" y="-759">cl_local &lt;= 7500</label>
+    </location>
+    <location id="id13" x="162" y="-162">
+      <name x="162" y="-182">S45</name>
+      <label kind="invariant" x="162" y="-142">cl_local &lt;= 600</label>
+    </location>
+    <init ref="id0"/>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id1"/>
+      <label kind="guard">cl_local &gt;= 17700 &amp;&amp; cl_local &lt;= 17700 &amp;&amp; cl_global &gt;= 46200 &amp;&amp; cl_global &lt;= 46200</label>
+      <label kind="assignment">temp = e,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id3"/>
+      <label kind="guard">cl_local &gt;= 300 &amp;&amp; cl_local &lt;= 300 &amp;&amp; cl_global &gt;= 4800 &amp;&amp; cl_global &lt;= 4800</label>
+      <label kind="assignment">temp = f,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id0"/>
+      <target ref="id2"/>
+      <label kind="guard">cl_local &gt;= 300 &amp;&amp; cl_local &lt;= 9300 &amp;&amp; cl_global &gt;= 600 &amp;&amp; cl_global &lt;= 23400</label>
+      <label kind="assignment">temp = e,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id1"/>
+      <target ref="id5"/>
+      <label kind="guard">cl_local &gt;= 300 &amp;&amp; cl_local &lt;= 300 &amp;&amp; cl_global &gt;= 46500 &amp;&amp; cl_global &lt;= 46500</label>
+      <label kind="assignment">temp = f,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id2"/>
+      <target ref="id0"/>
+      <label kind="guard">cl_local &gt;= 300 &amp;&amp; cl_local &lt;= 5100 &amp;&amp; cl_global &gt;= 900 &amp;&amp; cl_global &lt;= 28500</label>
+      <label kind="assignment">temp = d,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id4"/>
+      <label kind="guard">cl_local &gt;= 300 &amp;&amp; cl_local &lt;= 24000 &amp;&amp; cl_global &gt;= 28800 &amp;&amp; cl_global &lt;= 34500</label>
+      <label kind="assignment">temp = d,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id3"/>
+      <target ref="id5"/>
+      <label kind="guard">cl_local &gt;= 600 &amp;&amp; cl_local &lt;= 600 &amp;&amp; cl_global &gt;= 59100 &amp;&amp; cl_global &lt;= 59100</label>
+      <label kind="assignment">temp = f,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id4"/>
+      <target ref="id3"/>
+      <label kind="guard">cl_local &gt;= 300 &amp;&amp; cl_local &lt;= 24000 &amp;&amp; cl_global &gt;= 31200 &amp;&amp; cl_global &lt;= 58500</label>
+      <label kind="assignment">temp = e,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id5"/>
+      <target ref="id6"/>
+      <label kind="guard">cl_local &gt;= 300 &amp;&amp; cl_local &lt;= 4500 &amp;&amp; cl_global &gt;= 51000 &amp;&amp; cl_global &lt;= 71400</label>
+      <label kind="assignment">temp = e,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id6"/>
+      <target ref="id7"/>
+      <label kind="guard">cl_local &gt;= 300 &amp;&amp; cl_local &lt;= 1500 &amp;&amp; cl_global &gt;= 51300 &amp;&amp; cl_global &lt;= 72300</label>
+      <label kind="assignment">temp = f,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id7"/>
+      <target ref="id8"/>
+      <label kind="guard">cl_local &gt;= 300 &amp;&amp; cl_local &lt;= 1800 &amp;&amp; cl_global &gt;= 51900 &amp;&amp; cl_global &lt;= 72600</label>
+      <label kind="assignment">temp = e,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id8"/>
+      <target ref="id9"/>
+      <label kind="guard">cl_local &gt;= 300 &amp;&amp; cl_local &lt;= 1800 &amp;&amp; cl_global &gt;= 64500 &amp;&amp; cl_global &lt;= 72900</label>
+      <label kind="assignment">temp = f,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id8"/>
+      <target ref="id10"/>
+      <label kind="guard">cl_local &gt;= 8400 &amp;&amp; cl_local &lt;= 8400 &amp;&amp; cl_global &gt;= 60300 &amp;&amp; cl_global &lt;= 60300</label>
+      <label kind="assignment">temp = f,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id9"/>
+      <target ref="id12"/>
+      <label kind="guard">cl_local &gt;= 9600 &amp;&amp; cl_local &lt;= 13200 &amp;&amp; cl_global &gt;= 74100 &amp;&amp; cl_global &lt;= 86100</label>
+      <label kind="assignment">temp = e,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id10"/>
+      <target ref="id11"/>
+      <label kind="guard">cl_local &gt;= 300 &amp;&amp; cl_local &lt;= 300 &amp;&amp; cl_global &gt;= 60600 &amp;&amp; cl_global &lt;= 60600</label>
+      <label kind="assignment">temp = g,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id11"/>
+      <target ref="id5"/>
+      <label kind="guard">cl_local &gt;= 10500 &amp;&amp; cl_local &lt;= 10500 &amp;&amp; cl_global &gt;= 71100 &amp;&amp; cl_global &lt;= 71100</label>
+      <label kind="assignment">temp = f,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id12"/>
+      <target ref="id13"/>
+      <label kind="guard">cl_local &gt;= 300 &amp;&amp; cl_local &lt;= 7500 &amp;&amp; cl_global &gt;= 74400 &amp;&amp; cl_global &lt;= 86100</label>
+      <label kind="assignment">temp = d,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+    <transition>
+      <source ref="id13"/>
+      <target ref="id12"/>
+      <label kind="guard">cl_local &gt;= 300 &amp;&amp; cl_local &lt;= 600 &amp;&amp; cl_global &gt;= 75000 &amp;&amp; cl_global &lt;= 78600</label>
+      <label kind="assignment">temp = e,
+spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),
+stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),
+prev_temp = temp,cl_local = 0</label>
+    </transition>
+  </template>
+  <system>Process = TagModel(); system Process;</system>
+  <queries>
+    <query>
+      <formula>strategy Safe = control: A&lt;&gt; Process.S29 || Process.S45</formula>
+    </query>
+    <query>
+      <formula>simulate [&lt;=86400; 1] { temp } under Safe</formula>
+    </query>
+    <query>
+      <formula>E&lt;&gt; Process.S29 || Process.S45</formula>
+    </query>
+    <query>
+      <formula>A[] not deadlock</formula>
+    </query>
+    <query>
+      <formula>A&lt;&gt; Process.S29 || Process.S45</formula>
+    </query>
+    <query>
+      <formula>Pr[&lt;=86400] (&lt;&gt; Process.S29 || Process.S45)</formula>
+    </query>
+    <query>
+      <formula>E[&lt;=86400;100] (max: temp)</formula>
+    </query>
+    <query>
+      <formula>simulate [&lt;=86400; 1] { cl_global }</formula>
+    </query>
+    <query>
+       <formula>A&lt;&gt; stable </formula>
+    </query>
+    <query>
+       <formula>A[] not spike</formula>
+    </query>
+  </queries>
+</nta>

@@ -373,13 +373,12 @@ class Automaton:
                 f'  <declaration>clock cl_local, cl_global;\n'
                 f'{const_decls} \n'
                 f'int temp = {initial_temp_value};\n'
-                'const int spike_threshold = 8000;\n'
-                'const int stable_threshold = 4000; \n'
+                'const int spike_threshold = 4000;\n'
                 'int prev_temp;\n'
                 'bool spike = false;\n'
                 'bool stable = true;\n'
                 'const int temp_min = 1800; \n'
-                'const int temp_max = 2800;\n'
+                'const int temp_max = 2700;\n'
                 '</declaration>',
                 '  <template>',
                 '    <name>TagModel</name>',
@@ -396,8 +395,8 @@ class Automaton:
                 f'int temp = {initial_temp_value};\n'
                 'const int flat_threshold = -10; \n'
                 'const int peak_threshold = 50;\n'
-                'const int first_flat_window = 90;\n'
-                'const int second_flat_window = 180;\n'
+                'const int first_flat_window = 95;\n'
+                'const int second_flat_window = 185;\n'
                 '</declaration>',
                 '  <template>',
                 '    <name>TagModel</name>',
@@ -460,8 +459,8 @@ class Automaton:
                     lines.append(
                         '      <label kind="assignment">'
                         f'temp = {symbol_var},\n'
-                        'spike = ((temp - prev_temp &gt; spike_threshold) || (prev_temp - temp &gt; spike_threshold)),\n'
-                        'stable = ((temp - prev_temp &lt;= stable_threshold) || (prev_temp - temp &lt;= stable_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),\n'
+                        'spike = ((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold)),\n'
+                        'stable = ((temp - prev_temp &lt; spike_threshold) || (prev_temp - temp &lt; spike_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),\n'
                         f'prev_temp = temp,'
                         'cl_local = 0'
                         '</label>'
@@ -532,11 +531,11 @@ class Automaton:
                 '    </query>',
 
                 '    <query>',
-                f'       <formula>A&lt;&gt; stable </formula>',
+                f'       <formula>A&lt;&gt; stable under Safe</formula>',
                 '    </query>',
 
                 '    <query>',
-                f'       <formula>A[] not spike</formula>',
+                f'       <formula>A[] not spike under Safe</formula>',
                 '    </query>',
                 '  </queries>',
 
@@ -569,36 +568,32 @@ class Automaton:
 
                 # Eventually reach accepting state
                 '    <query>',
-                f'      <formula>A&lt;&gt; {final_expr}</formula>',
-                '    </query>',
-
-                # Statistical probability of reaching accepting states
-                '    <query>',
-                f'      <formula>Pr[&lt;={time}] (&lt;&gt; {final_expr})</formula>',
-                '    </query>',
-
-                # Expected value of temperature
-                '    <query>',
-                f'      <formula>E[&lt;={time};100] (max: temp)</formula>',
-                '    </query>',
-
-                # Expected global clock evolution
-                '    <query>',
-                f'      <formula>simulate [&lt;={time}; {sim_nr}] {{ cl_global }}</formula>',
+                f'      <formula>A&lt;&gt; {final_expr} under Safe</formula>',
                 '    </query>',
 
                 '    <query>',
-                f'       <formula>E&lt;&gt; (temp &gt;= peak_threshold) </formula>',
+                f'       <formula>A&lt;&gt; (temp &gt;= peak_threshold) under Safe</formula>',
                 '    </query>',
+                
 
                 '    <query>',
-                f'       <formula>A[] (cl_global &lt;= first_flat_window imply temp &lt;= flat_threshold) </formula>',
+                f'       <formula>A&lt;&gt; (cl_global &lt;= first_flat_window imply temp &lt;= flat_threshold) under Safe</formula>',
                 '    </query>',
 
 
                 '    <query>',
-                f'       <formula>A[] (cl_global &gt;= second_flat_window imply temp &lt;= flat_threshold) </formula>',
+                f'       <formula>A[] (cl_global &lt;= first_flat_window imply temp &lt;= flat_threshold) under Safe</formula>',
                 '    </query>',
+
+
+                '    <query>',
+                f'       <formula>A&lt;&gt; (cl_global &gt;= second_flat_window imply temp &lt;= flat_threshold) under Safe </formula>',
+                '    </query>',
+
+                '    <query>',
+                f'       <formula>A[](cl_global &gt;= second_flat_window imply temp &lt;= flat_threshold) under Safe </formula>',
+                '    </query>',
+
                 '  </queries>',
 
 

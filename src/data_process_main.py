@@ -64,20 +64,16 @@ output_egg_formated = BASE_DIR / "Data" / "2-FormatedRawData" / "patient_100_ecg
 # convert_ns_to_ms(input_file=ecg_formatted, output_file=output_egg_formated)
 
 #Extract traces
-min_distance = 100
-beats = 3
-pre_peak = 120
-post_peak = 200
+
+beats = 1
+
 egg_output_folder = BASE_DIR / "Data" /"3-ExtractInterval" /"ecg" / f"{beats}beat"
 ecg_output_prefix = f"{beats}beat"
-
-# extract_fixed_beats_traces(
-#     input_file=output_egg_formated, output_folder=egg_output_folder,
-#     n_beats = beats,
-#     output_prefix = ecg_output_prefix ,
-#     pre_peak = pre_peak,
-#     post_peak = post_peak,
-#     min_distance = min_distance)
+#
+extract_fixed_beats_traces(
+    input_file=output_egg_formated, output_folder=egg_output_folder,
+    n_beats = beats,
+    output_prefix = ecg_output_prefix)
 
 # Step 2a: Extract traces by fixed number of samples (e.g., 500 samples = 1 trace)
 # Good for: consistent chunk sizes, simple analysis

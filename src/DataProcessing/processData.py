@@ -204,6 +204,7 @@ import numpy as np
 from scipy.signal import find_peaks
 
 
+
 def extract_fixed_beats_traces(
         input_file,
         output_folder,
@@ -244,11 +245,36 @@ def extract_fixed_beats_traces(
 
         selected_peaks = peaks[i:i + n_beats]
 
-        start = max(0, selected_peaks[0] - pre_peak)
-        end = min(len(values), selected_peaks[-1] + post_peak)
+        # start = max(0, selected_peaks[0] - pre_peak)
+        # end = min(len(values), selected_peaks[-1] + post_peak)
+
+        # center the window on the middle beat
+        center_peak = selected_peaks[n_beats // 2]
+
+        window_before = 300
+        window_after = 300
+
+        # skip incomplete edge windows
+        if center_peak - window_before < 0:
+            i += stride
+            continue
+
+        if center_peak + window_after >= len(values):
+            i += stride
+            continue
+
+        start = center_peak - window_before
+        end = center_peak + window_after
+
+        # start = max(0, center_peak - window_before)
+        # end = min(len(values), center_peak + window_after)
 
         segment_t = times[start:end]
         segment_x = values[start:end]
+
+        if len(segment_x) != (window_before + window_after):
+            i += stride
+            continue
 
         # reset time
         t0 = segment_t[0]
@@ -256,10 +282,21 @@ def extract_fixed_beats_traces(
 
         out = np.column_stack((rel_time, segment_x))
 
+        # --- VALIDATION: check peak alignment in window ---
+        # R-peak should always land at index = window_before
+
+        true_center_index = center_peak - start  # position inside window
+
+        if true_center_index != window_before:
+            print(f"[WARNING] misaligned trace at i={i}, trace={trace_idx}")
+            print(f"  expected center index: {window_before}")
+            print(f"  actual center index:   {true_center_index}")
+
         out_path = os.path.join(
             output_folder,
             f"{output_prefix}-tid{trace_idx}.csv"
         )
+
 
         np.savetxt(
             out_path,
