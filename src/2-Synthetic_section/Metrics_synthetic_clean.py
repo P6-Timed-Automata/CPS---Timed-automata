@@ -7,7 +7,7 @@ Experiment 5.2 — Same pipeline but train on NOISY synthetic data.
 
 Requires: run generate_all_data.py first.
 
-Output (timestamped folder under Graphs/exp_51_52/):
+Output (timestamped folder under Graphs/Metrics_clean/):
   results.json               — all metrics
   comparison.png             — precision / recall / F1 per method per condition
   per_mode_heatmap.png       — rejection rate per method x negative mode
@@ -15,6 +15,9 @@ Output (timestamped folder under Graphs/exp_51_52/):
   table_per_mode_clean.csv   — per-mode rejection rates, clean training
   table_per_mode_noisy.csv   — per-mode rejection rates, noisy training
   tables.txt                 — all tables formatted for easy copy-paste
+  table_overall.png          — rendered table image
+  table_per_mode_clean.png   — rendered table image, color coded by rejection rate
+  table_per_mode_noisy.png   — rendered table image, color coded by rejection rate
 """
 
 import csv
@@ -44,7 +47,7 @@ TAG_K = 2
 METHODS = [
     ("naive",   {"bins": 15}),
     ("sax",     {"w": 288, "bins": 15}),
-    ("persist", {"bins": 15}),
+    ("persist", {"bins": 16}),
 ]
 
 
@@ -119,7 +122,7 @@ def build_tables(all_results):
     mode_names = list(NEG_MODE_NAMES.values())
 
     # ------------------------------------------------------------------
-    # Table 1 — Overall metrics
+    # Table 1 - Overall metrics
     # ------------------------------------------------------------------
     t1_headers = ["Condition", "Method", "Precision", "Recall",
                   "F1", "States", "Edges"]
@@ -137,7 +140,7 @@ def build_tables(all_results):
         ])
 
     # ------------------------------------------------------------------
-    # Tables 2 & 3 — Per-mode rejection rate (%) per condition
+    # Tables 2 & 3 - Per-mode rejection rate (%) per condition
     # ------------------------------------------------------------------
     def per_mode_rows(condition):
         rows = []
@@ -156,17 +159,17 @@ def build_tables(all_results):
 
     return {
         "overall": {
-            "title":   "Table 1 — Overall metrics (Exp 5.1 clean / Exp 5.2 noisy)",
+            "title":   "Overall metrics (clean / Noisy)",
             "headers": t1_headers,
             "rows":    t1_rows,
         },
         "per_mode_clean": {
-            "title":   "Table 2 — Per-mode rejection rate (%) — clean training (Exp 5.1)",
+            "title":   "Per-mode rejection rate (%) - clean training",
             "headers": t2_headers,
             "rows":    per_mode_rows("clean"),
         },
         "per_mode_noisy": {
-            "title":   "Table 3 — Per-mode rejection rate (%) — noisy training (Exp 5.2)",
+            "title":   "Per-mode rejection rate (%) - noisy training",
             "headers": t3_headers,
             "rows":    per_mode_rows("noisy"),
         },
@@ -193,7 +196,6 @@ def save_tables(tables, out_dir):
     txt_lines = []
 
     for key, tbl in tables.items():
-        # CSV
         csv_path = out_dir / filename_map[key]
         with open(csv_path, "w", newline="") as f:
             writer = csv.writer(f)
@@ -201,17 +203,158 @@ def save_tables(tables, out_dir):
             writer.writerows(tbl["rows"])
         print(f"  Saved: {csv_path}")
 
-        # Collect for combined txt
         table_str, _ = _make_table(tbl["headers"], tbl["rows"])
         txt_lines.append(tbl["title"])
         txt_lines.append(table_str)
         txt_lines.append("")
 
-    # Combined plain-text file
     txt_path = out_dir / "tables.txt"
     with open(txt_path, "w") as f:
         f.write("\n".join(txt_lines))
     print(f"  Saved: {txt_path}")
+
+
+def save_config(out_dir, tag_k, methods, data):
+    """
+    Save a plain-text summary of all configuration parameters used in this run.
+    """
+    lines = [
+        "=" * 55,
+        "Run configuration",
+        "=" * 55,
+        "",
+        f"Timestamp   : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        f"TAG k-future: {tag_k}",
+        "",
+        "--- Methods ---",
+        ]
+
+    for method, params in methods:
+        param_str = ", ".join(f"{k}={v}" for k, v in params.items())
+        lines.append(f"  {method:8s}: {param_str}")
+
+    lines += [
+        "",
+        "--- Dataset sizes ---",
+        f"  clean_train : {len(data['clean_train'])} traces",
+        f"  clean_test  : {len(data['clean_test'])} traces",
+        f"  noisy_train : {len(data['noisy_train'])} traces",
+        f"  noisy_test  : {len(data['noisy_test'])} traces",
+        f"  negatives   : {len(data['neg_traces'])} traces "
+        f"({len(set(data['neg_modes']))} modes)",
+        "",
+        "--- Negative modes ---",
+    ]
+
+    from collections import Counter
+    mode_counts = Counter(data["neg_modes"])
+    for mode_int, count in sorted(mode_counts.items()):
+        lines.append(f"  {NEG_MODE_NAMES[mode_int]:10s}: {count} traces")
+
+    lines += [
+        "",
+        "--- Output folder ---",
+        f"  {out_dir}",
+        "",
+        "=" * 55,
+        ]
+
+    config_path = out_dir / "config.txt"
+    with open(config_path, "w") as f:
+        f.write("\n".join(lines))
+    print(f"  Saved: {config_path}")
+
+
+def save_tables_as_images(tables, out_dir):
+    """
+    Render each table as a PNG image using matplotlib.
+    Per-mode tables are color coded by rejection rate:
+      >= 80%  -> green
+      50-80%  -> amber
+      < 50%   -> red
+    """
+    filename_map = {
+        "overall":        "table_overall.png",
+        "per_mode_clean": "table_per_mode_clean.png",
+        "per_mode_noisy": "table_per_mode_noisy.png",
+    }
+
+    HEADER_COLOR        = "#2c3e50"
+    ROW_EVEN            = "#f2f4f6"
+    ROW_ODD             = "#ffffff"
+    COLORED_BACKGROUNDS = {"#27ae60", "#e74c3c", "#f39c12", HEADER_COLOR}
+
+    def _cell_color(value_str, is_header, row_idx, is_mode_table):
+        if is_header:
+            return HEADER_COLOR
+        if is_mode_table:
+            try:
+                pct = float(value_str.strip("%"))
+                if pct >= 80:
+                    return "#27ae60"   # green
+                elif pct >= 50:
+                    return "#f39c12"   # amber
+                else:
+                    return "#e74c3c"   # red
+            except ValueError:
+                pass
+        return ROW_EVEN if row_idx % 2 == 0 else ROW_ODD
+
+    for key, tbl in tables.items():
+        headers       = tbl["headers"]
+        rows          = tbl["rows"]
+        title         = tbl["title"]
+        is_mode_table = "per_mode" in key
+
+        n_cols = len(headers)
+        n_rows = len(rows) + 1   # +1 for header row
+
+        fig_w = max(8, n_cols * 1.6)
+        fig_h = max(2, n_rows * 0.55 + 0.8)
+
+        fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+        ax.axis("off")
+
+        cell_text   = [headers] + [[str(c) for c in r] for r in rows]
+        cell_colors = []
+
+        for ri, row in enumerate(cell_text):
+            is_header  = (ri == 0)
+            row_colors = [
+                _cell_color(val, is_header, ri - 1, is_mode_table)
+                for val in row
+            ]
+            cell_colors.append(row_colors)
+
+        tbl_obj = ax.table(
+            cellText    = cell_text,
+            cellColours = cell_colors,
+            cellLoc     = "center",
+            loc         = "center",
+        )
+        tbl_obj.auto_set_font_size(False)
+        tbl_obj.set_fontsize(10)
+        tbl_obj.scale(1, 1.6)
+
+        for (ri, ci), cell in tbl_obj.get_celld().items():
+            cell.set_edgecolor("white")
+            cell.set_linewidth(1.5)
+            bg = cell_colors[ri][ci]
+            if bg in COLORED_BACKGROUNDS:
+                cell.set_text_props(
+                    color="white",
+                    fontweight="bold" if ri == 0 else "normal",
+                )
+            else:
+                cell.set_text_props(color="#2c3e50")
+
+        fig.suptitle(title, fontsize=11, fontweight="bold",
+                     y=0.97, color="#2c3e50")
+
+        out_path = out_dir / filename_map[key]
+        fig.savefig(out_path, dpi=200, bbox_inches="tight", facecolor="white")
+        plt.close(fig)
+        print(f"  Saved: {out_path}")
 
 
 # =============================================================================
@@ -245,7 +388,7 @@ def plot_comparison(all_results, out_path):
         ax.legend(fontsize=9)
         ax.grid(True, linestyle="--", alpha=0.4, axis="y")
 
-    fig.suptitle("Exp 5.1 / 5.2 — Classifier metrics: clean vs noisy training",
+    fig.suptitle("Exp 5.1 / 5.2 - Classifier metrics: clean vs noisy training",
                  fontsize=12)
     fig.tight_layout()
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
@@ -273,7 +416,7 @@ def plot_per_mode_heatmap(all_results, out_path):
         ax.set_xticklabels(mode_names)
         ax.set_yticks(range(len(methods)))
         ax.set_yticklabels(methods)
-        ax.set_title(f"Rejection rate (%) — {cond} training")
+        ax.set_title(f"Rejection rate (%) - {cond} training")
 
         for i in range(len(methods)):
             for j in range(len(mode_names)):
@@ -310,8 +453,10 @@ if __name__ == "__main__":
         "results":   [],
     }
 
-    # --- Exp 5.1 — clean training --------------------------------------------
-    print("\n=== Experiment 5.1 — Clean training ===")
+    save_config(out_dir, TAG_K, METHODS, data)
+
+    # --- Exp 5.1 - clean training --------------------------------------------
+    print("\n=== Experiment 5.1 - Clean training ===")
     log["results"] += _run_condition(
         "clean",
         data["clean_train"], data["clean_test"],
@@ -319,8 +464,8 @@ if __name__ == "__main__":
         out_dir, METHODS, TAG_K,
     )
 
-    # --- Exp 5.2 — noisy training --------------------------------------------
-    print("\n=== Experiment 5.2 — Noisy training ===")
+    # --- Exp 5.2 - noisy training --------------------------------------------
+    print("\n=== Experiment 5.2 - Noisy training ===")
     log["results"] += _run_condition(
         "noisy",
         data["noisy_train"], data["noisy_test"],
@@ -334,6 +479,7 @@ if __name__ == "__main__":
     print_tables(tables)
     print()
     save_tables(tables, out_dir)
+    save_tables_as_images(tables, out_dir)
 
     # --- Plots ---------------------------------------------------------------
     print("\n=== Plots ===")
