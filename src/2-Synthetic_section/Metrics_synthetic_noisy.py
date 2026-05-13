@@ -60,9 +60,9 @@ F1_THRESHOLD = 0.7
 TAG_K = 2
 
 METHODS = [
-    ("naive",   {"bins": 5}),
-    ("sax",     {"w": 288, "bins": 5}),
-    ("persist", {"bins": 5}),
+    ("naive",   {"bins": 15}),
+    ("sax",     {"w": 288, "bins": 15}),
+    ("persist", {"bins": 15}),
 ]
 
 METHOD_COLORS = {
