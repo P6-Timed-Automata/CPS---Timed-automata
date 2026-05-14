@@ -80,9 +80,9 @@ echo "Benchmark run complete."
 # ---------------------------------------------------------------------------
 # 2. Benchmark plots
 # ---------------------------------------------------------------------------
-banner "Benchmark: generating plots"
-python Benchmarks_plot.py
-echo "Benchmark plots complete."
+#banner "Benchmark: generating plots"
+#python Benchmarks_plot.py
+#echo "Benchmark plots complete."
 
 # ---------------------------------------------------------------------------
 # 3. Scaling experiment
