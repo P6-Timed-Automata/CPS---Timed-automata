@@ -26,7 +26,7 @@ import numpy as np
 
 class Persist():
     def __init__(self, x, break_min=2, break_max=10, divergence="w", skip=np.array([4, 4]), candidates="EW"):
-        self.x = x = x
+        self.x = x
         self.break_min = break_min
         self.break_max = break_max
         self.divergence = divergence # kl: Kullback-Leibler divergence / w: Wasserstein distance
