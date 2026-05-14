@@ -33,7 +33,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # PARAMETERS SETTINGS
-data_type ="ecg"
+data_type ="temp"
 room = "A"
 discretization_method = "naiv"
 period_nr = 1
@@ -114,7 +114,7 @@ elif(data_type == "ecg"):
 # Parameter for nr of Traces
 len_traces = len(train_raw_traces)  + 1
 start_traces = 1
-len_traces = 8
+len_traces = 2
 
 
 for trace_nr in range(start_traces, len_traces):
@@ -147,7 +147,7 @@ for trace_nr in range(start_traces, len_traces):
         # Tranform to TA
         learner = TALearner(tss_path=discretinize_data_path,display=False,k=k )
         learner.ta.show(title=title,savePng=True,output_path=TA_output_path)
-        learner.ta.export_ta(path=xml_path, symbol_map=symbol_map, data_type = data_type, time = time )
+        learner.ta.export_ta(ta = learner.ta, path=xml_path, symbol_map=symbol_map, data_type = data_type, time = time )
 
         # Compute metrics
         metrics = learner.ta.evaluate_classifier(positive_tss = test_positive_traces_lists, negative_tss = test_negative_traces_lists,  save_path = log_data_path, run_id= run_id, timed=True)
