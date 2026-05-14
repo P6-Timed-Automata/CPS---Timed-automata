@@ -969,15 +969,20 @@ class Automaton:
         )
 
         initial_temp_value = initial_symbol if initial_symbol is not None else "0"
-
-        return (
+        declarations_xml = (
             '<declaration>\n'
             'clock cl_local, cl_global;\n'
             f'{const_decls} \n'
             f'int temp = {initial_temp_value};\n'
             'int prev_temp;\n'
+            'const int spike_threshold = 4000;\n'
+            'const int temp_min = 1800; \n'
+            'const int temp_max = 2700;\n'
+            'const int stabilization_time = 1200;\n'
             '</declaration>'
         )
+
+        return declarations_xml
 
     def compute_graphviz_positions(self):
         dot = 'digraph G {\n'
@@ -1201,10 +1206,73 @@ class Automaton:
 
         xml += "\t</template>"
 
+        # Observer
+
+        # --- Auxiliary automaton for verification ---
+        xml += "\t<template>\n"
+        xml += "\t\t<name>TagObserver</name>\n"
+        xml += "\t\t<declaration>\n"
+        xml += "\t\t\tclock cl_observer;\n"
+        xml += "\t\t</declaration>\n"
+
+        # States
+        xml += create_location(s_id, (0,0), "START")
+        d_s_id["START"] = "id" + str(s_id)
+        s_id += 1
+
+        xml += create_location(s_id, (200,0), "SPIKE")
+        d_s_id["SPIKE"] = "id" + str(s_id)
+        s_id += 1
+
+        xml += create_location(s_id, (400,0), "STABLE")
+        d_s_id["STABLE"] = "id" + str(s_id)
+        s_id += 1
+
+        xml += create_location(s_id, (600,0), "STABILIZED")
+        d_s_id["STABILIZED"] = "id" + str(s_id)
+        s_id += 1
+
+        # Initial state
+        xml += f'\t\t<init ref="{d_s_id["START"]}"/>\n'
+
+        # Transitions
+        # INIT -> SPIKE
+        xml += "\t\t<transition>\n"
+        xml += f'\t\t\t<source ref="{d_s_id["START"]}"/>\n'
+        xml += f'\t\t\t<target ref="{d_s_id["SPIKE"]}"/>\n'
+        xml += '\t\t\t<label kind="guard">((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold))</label>\n'
+        xml += '\t\t\t<label kind="assignment">cl_observer = 0</label>\n'
+        xml += "\t\t</transition>\n"
+
+        # SPIKE -> STABLE
+        xml += "\t\t<transition>\n"
+        xml += f'\t\t\t<source ref="{d_s_id["SPIKE"]}"/>\n'
+        xml += f'\t\t\t<target ref="{d_s_id["STABLE"]}"/>\n'
+        xml += '\t\t\t<label kind="guard">((temp - prev_temp &lt; spike_threshold) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max))</label>\n'
+        xml += '\t\t\t<label kind="assignment">cl_observer = 0</label>\n'
+        xml += "\t\t</transition>\n"
+
+        # STABLE -> STABILIZED (after some time)
+        xml += "\t\t<transition>\n"
+        xml += f'\t\t\t<source ref="{d_s_id["STABLE"]}"/>\n'
+        xml += f'\t\t\t<target ref="{d_s_id["STABILIZED"]}"/>\n'
+        xml += '\t\t\t<label kind="guard">cl_observer &gt;= stabilization_time</label>\n'
+        xml += "\t\t</transition>\n"
+
+        # STABLE -> SPIKE (allow another spike before stabilization)
+        xml += "\t\t<transition>\n"
+        xml += f'\t\t\t<source ref="{d_s_id["STABLE"]}"/>\n'
+        xml += f'\t\t\t<target ref="{d_s_id["SPIKE"]}"/>\n'
+        xml += '\t\t\t<label kind="guard">((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold))</label>\n'
+        xml += '\t\t\t<label kind="assignment">cl_observer = 0</label>\n'
+        xml += "\t\t</transition>\n"
+
+        xml += "\t</template>\n"
 
         xml += '\t<system>' + "\n"
         xml += 'Automaton = TagModel();' + "\n"
-        xml += 'system Automaton;' + "\n"
+        xml += 'Observer = TagObserver();' + "\n"
+        xml += 'system Automaton, Observer;' + "\n"
         xml += '\t</system>' + "\n"
 
         # --- queries ---
