@@ -1,0 +1,23 @@
+Overall metrics (clean / Noisy)
+Condition  Method   Precision  Recall  F1     States  Edges
+---------  -------  ---------  ------  -----  ------  -----
+clean      naive    1.000      0.783   0.879  33      54   
+clean      sax      0.982      0.917   0.948  26      41   
+clean      persist  0.956      0.717   0.819  25      49   
+noisy      naive    0.981      0.883   0.930  12      30   
+noisy      sax      0.704      0.633   0.667  35      84   
+noisy      persist  0.573      0.717   0.637  40      94   
+
+Per-mode rejection rate (%) - clean training
+Method   Spikes  Shifted  Stuck   Offset
+-------  ------  -------  ------  ------
+naive    100.0%  100.0%   100.0%  100.0%
+sax      93.3%   100.0%   100.0%  100.0%
+persist  86.7%   100.0%   100.0%  100.0%
+
+Per-mode rejection rate (%) - noisy training
+Method   Spikes  Shifted  Stuck   Offset
+-------  ------  -------  ------  ------
+naive    100.0%  93.3%    100.0%  100.0%
+sax      93.3%   100.0%   100.0%  0.0%  
+persist  100.0%  86.7%    0.0%    0.0%  

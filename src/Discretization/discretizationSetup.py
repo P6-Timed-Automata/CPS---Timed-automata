@@ -1,331 +1,216 @@
-import numpy as np
-import string
-import json
+"""
+Discretization setup utilities.
+
+Trace format conventions:
+- Raw trace: [(value, time_seconds), ...] where time is absolute, integer seconds.
+- Discretized trace: [(bin_label_int, time_seconds), ...]
+- Symbolic trace: [(letter, time_seconds), ...]
+- TAG trace string: "a:0 b:300 c:600 ..." where each number is dwell time
+  (seconds the symbol persisted before the next different symbol occurred).
+"""
+
 import os
+import string
+
+import numpy as np
 
 
-def csv_to_temp_time_list(input_files):
+# -----------------------------------------------------------------------------
+# CSV loading
+# -----------------------------------------------------------------------------
 
+def csv_to_temp_time_list(input_files, time_dtype=int):
+    """
+    Load CSVs into [(value, time), ...] traces.
+
+    Parameters
+    ----------
+    input_files : iterable of paths
+    time_dtype  : int (default) for temperature data with integer seconds,
+                  float for ECG or sub-second sampling.
+
+    Returns
+    -------
+    list of traces; each trace is a list of (value: float, time: time_dtype).
+
+    Load CSVs into [(value, time), ...] traces.
+
+    Note: the CSV column order is `time;value`, but this function returns
+    (value, time) tuples to match the (value, time) convention used by
+    downstream discretization and TAG code. The swap is intentional.
+    """
     all_results = []
     for input_file in input_files:
-        # Load data
-        data = np.genfromtxt(
-            input_file,
-            delimiter=';',
-            dtype=str,
-            skip_header=1
-        )
-
-        # Extract columns
-        times = data[:, 0].astype(int)
-        temps = data[:, 1].astype(float)
-
-        # Build list of (temperature, time)
-        result = [(float(temp), int(time)) for temp, time in zip(temps, times)]
-
-        all_results.append(result)
-
-
-    print("tranformed data to a list")
-
+        data = np.genfromtxt(input_file, delimiter=';', dtype=str, skip_header=1)
+        # genfromtxt returns 1D for single-row files; force 2D so indexing works.
+        data = np.atleast_2d(data)
+        times = data[:, 0].astype(float).astype(time_dtype)
+        values = data[:, 1].astype(float)
+        all_results.append(list(zip(values.tolist(), times.tolist())))
     return all_results
 
 
-# def format_output(symbolic_res_list,output_path):
-#     lines = []
-#
-#     for symbolic_res in symbolic_res_list:
-#         line = " ".join(f"{s}:{v}" for s, v in symbolic_res)
-#         lines.append(line)
-#
-#     output = "\n".join(lines)
-#
-#     # Ensure the directory exists
-#     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-#
-#     with open(output_path, "w") as f:
-#         f.write(output)
-#
-#     print(f"File saved to {output_path}")
+# -----------------------------------------------------------------------------
+# Symbol alphabet and mapping
+# -----------------------------------------------------------------------------
+
+_ALPHABET = list(string.ascii_lowercase)
 
 
-def format_output(symbolic_res_list, output_path):
-
-    lines = []
-
-    for trace in symbolic_res_list:
-
-        formatted = []
-        prev_time = None
-
-        for i, (symbol, value) in enumerate(trace):
-
-            if i == 0:
-                delay = 0
-            else:
-                delay = int(float(value) - float(prev_time))
-                if delay < 0:
-                    delay = 0
-
-            prev_time = value
-
-            formatted.append(f"{symbol}:{delay}")
-
-        lines.append(" ".join(formatted))
-
-    output = "\n".join(lines)
-
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    with open(output_path, "w") as f:
-        f.write(output)
-
-    print(f"File saved to {output_path}")
-
-def map_bins_to_symbols(result, s, bins):
-    # Create symbols: a, b, c, ...
-    symbols = list(string.ascii_lowercase)
-
-    if s > len(symbols):
-        raise ValueError("s too large (max 26 supported with simple letters)")
-
-    # Create mapping: 0->'a', 1->'b', ...
-    mapping = {i: symbols[i] for i in range(s)}
-
-    #Midpoint symbol map
-    symbol_map = None
-    if bins is not None:
-        symbol_map = {
-            symbols[i]: round(((bins[i] + bins[i + 1]) / 2) * 100)
-            for i in range(s)
-        }
-
-    # Apply mapping to traces
-    symbolic_results = []
-    for trace in result:
-        symbolic_trace = [(mapping[int(label)], int(time)) for label, time in trace]
-        symbolic_results.append(symbolic_trace)
+def _alphabet(n_symbols):
+    if n_symbols > len(_ALPHABET):
+        raise ValueError(
+            f"n_symbols={n_symbols} exceeds available alphabet of "
+            f"{len(_ALPHABET)} letters."
+        )
+    return _ALPHABET[:n_symbols]
 
 
-    return symbolic_results, symbol_map, mapping
-
-#
-#
-# def preprocess_test_traces(test_traces, bins, s):
-#     """
-#     Convert raw test traces into TAG format using:
-#     - training bins
-#     - s = number of symbols (int)
-#     """
-#
-#     # --------------------------
-#     # 1. Create alphabet
-#     # --------------------------
-#     symbols = list(string.ascii_lowercase)
-#
-#     if s > len(symbols):
-#         raise ValueError("s too large (max 26 supported)")
-#
-#     symbols = symbols[:s]
-#     k = len(bins) - 1
-#
-#
-#
-#     # --------------------------
-#     # 2. Build mapping (bin -> letter)
-#     # --------------------------
-#     mapping = {i: symbols[i] for i in range(s)}
-#
-#     # --------------------------
-#     # 3. Discretize using TRAIN bins
-#     # --------------------------
-#     discretized = []
-#
-#     for trace in test_traces:
-#         values = np.array([v for v, t in trace])
-#         times = np.array([t for v, t in trace])
-#
-#         labels = np.digitize(values, bins) - 1
-#         labels = np.clip(labels, 0, k - 1)
-#
-#         discretized.append([(int(l), int(t)) for l, t in zip(labels, times)])
-#
-#
-#     # --------------------------
-#     # 4. Convert to TAG format
-#     # --------------------------
-#     symbolic_traces = [
-#         [f"{mapping[label]}:{t}" for (label, t) in trace]
-#         for trace in discretized
-#     ]
-#
-#
-#     return symbolic_traces
-
-
-#
-# def preprocess_test_traces(test_traces, bins, s):
-#
-#     symbols = list(string.ascii_lowercase)[:s]
-#     mapping = {i: symbols[i] for i in range(s)}
-#
-#     k = len(bins) - 1
-#
-#     symbolic_traces = []
-#
-#     for trace in test_traces:
-#
-#         values = np.array([v for v, t in trace])
-#         times  = np.array([t for v, t in trace])
-#
-#         labels = np.digitize(values, bins) - 1
-#         labels = np.clip(labels, 0, k - 1)
-#
-#         symbolic_trace = []
-#
-#         prev_time = None
-#
-#         for i, label in enumerate(labels):
-#
-#             if i == 0:
-#                 delay = 0
-#             else:
-#                 delay = int(float(times[i]) - float(prev_time))
-#                 if delay < 0:
-#                     delay = 0
-#
-#             prev_time = times[i]
-#
-#             symbolic_trace.append(f"{mapping[label]}:{delay}")
-#
-#         symbolic_traces.append(symbolic_trace)
-#
-#     return symbolic_traces
-
-
-
-
-def collapse_trace(trace):
+def map_bins_to_symbols(discretized_traces, bins, value_scale=100):
     """
-    Input:
-        [('a', 0), ('a', 300), ('a', 300), ('c', 300)]
+    Convert integer-labeled traces to letter-labeled traces and produce
+    a symbol -> scaled bin midpoint mapping for UPPAAL.
 
-    Output:
-        [('a', 900), ('c', 300)]
+    Parameters
+    ----------
+    discretized_traces : list of [(label_int, time), ...]
+    bins               : array of bin edges, length n_symbols + 1
+    value_scale        : multiplier for the bin midpoints in symbol_map.
+                         Default 100 converts e.g. 22.41 °C to 2241 for
+                         use as an integer in UPPAAL declarations.
+
+    Returns
+    -------
+    symbolic_traces : list of [(letter, time), ...]
+    symbol_map      : dict letter -> scaled midpoint int
+    label_to_letter : dict int label -> letter
     """
+    n_symbols = len(bins) - 1
+    letters = _alphabet(n_symbols)
+    label_to_letter = {i: letters[i] for i in range(n_symbols)}
 
-    collapsed = []
+    symbol_map = {
+        letters[i]: round(((bins[i] + bins[i + 1]) / 2) * value_scale)
+        for i in range(n_symbols)
+    }
 
-    for symbol, delay in trace:
+    symbolic_traces = [
+        [(label_to_letter[int(label)], int(time)) for label, time in trace]
+        for trace in discretized_traces
+    ]
 
-        if not collapsed:
-            collapsed.append([symbol, delay])
-
-        elif collapsed[-1][0] == symbol:
-            collapsed[-1][1] += delay
-
-        else:
-            collapsed.append([symbol, delay])
-
-    return [(s, d) for s, d in collapsed]
+    return symbolic_traces, symbol_map, label_to_letter
 
 
-def timestamps_to_relative(trace):
+# -----------------------------------------------------------------------------
+# Test-time discretization (uses TRAINING bins, no leakage)
+# -----------------------------------------------------------------------------
+
+# Sentinel label for out-of-training-range values. Maps to a symbol that
+# no training trace contains, so any test trace touching it is guaranteed
+# to fail with an alphabet inconsistency (Cornanguer thesis §4.3.2).
+OUT_OF_RANGE_LABEL = -1
+OUT_OF_RANGE_SYMBOL = '?'
+
+
+def preprocess_test_traces(test_traces, bins, mark_out_of_range=True):
     """
-    Input:
-        [('a', 0), ('a', 300), ('c', 600)]
+    Discretize test traces using training bins.
 
-    Output:
-        [('a', 0), ('a', 300), ('c', 300)]
+    Parameters
+    ----------
+    test_traces        : list of [(value, time), ...]
+    bins               : training bin edges
+    mark_out_of_range  : if True, values outside [bins[0], bins[-1]] become
+                         OUT_OF_RANGE_SYMBOL; if False, they get clipped into
+                         the nearest training bin (Cornanguer's clip behavior).
+                         For anomaly detection, keep True.
+
+    Returns
+    -------
+    list of TAG-format strings, e.g. ["a:600 b:300 c:120", ...]
     """
+    n_symbols = len(bins) - 1
+    letters = _alphabet(n_symbols)
 
-    relative_trace = []
-
-    prev_time = None
-
-    for i, (symbol, time_value) in enumerate(trace):
-
-        if i == 0:
-            delay = 0
-        else:
-            delay = int(float(time_value) - float(prev_time))
-
-            if delay < 0:
-                delay = 0
-
-        prev_time = time_value
-
-        relative_trace.append((symbol, delay))
-
-    return relative_trace
-
-
-def preprocess_test_traces(test_traces, bins, s):
-
-    symbols = list(string.ascii_lowercase)[:s]
-    mapping = {i: symbols[i] for i in range(s)}
-
-    k = len(bins) - 1
-
-    symbolic_traces = []
-
+    formatted_traces = []
     for trace in test_traces:
+        values = np.array([v for v, _ in trace])
+        times = np.array([t for _, t in trace])
 
-        values = np.array([v for v, t in trace])
-        times = np.array([t for v, t in trace])
-
+        # np.digitize returns 0 for v < bins[0], i for bins[i-1] <= v < bins[i],
+        # n_symbols + 1 for v >= bins[-1]. Subtract 1 to get bin index in [0, n_symbols-1]
+        # for in-range values; out-of-range become -1 or n_symbols.
         labels = np.digitize(values, bins) - 1
-        labels = np.clip(labels, 0, k - 1)
 
-        # Step 1: symbolic timestamps
-        symbolic_timestamp_trace = [
-            (mapping[label], times[i])
-            for i, label in enumerate(labels)
-        ]
+        # In-range: clamp v == bins[-1] (which gives label n_symbols) down by 1
+        # since the top bin should include its right edge.
+        labels = np.where(values == bins[-1], n_symbols - 1, labels)
 
-        # Step 2: relative delays
-        relative_trace = timestamps_to_relative(symbolic_timestamp_trace)
+        if mark_out_of_range:
+            # Anything still outside [0, n_symbols-1] becomes the sentinel.
+            in_range = (labels >= 0) & (labels < n_symbols)
+            symbols = np.where(
+                in_range,
+                [letters[lbl] if 0 <= lbl < n_symbols else OUT_OF_RANGE_SYMBOL
+                 for lbl in labels],
+                OUT_OF_RANGE_SYMBOL,
+            )
+        else:
+            labels = np.clip(labels, 0, n_symbols - 1)
+            symbols = [letters[lbl] for lbl in labels]
 
-        # Step 3: collapse repeated symbols
-        collapsed_trace = collapse_trace(relative_trace)
+        symbol_time_pairs = list(zip(symbols, times.tolist()))
+        formatted_traces.append(_format_trace(symbol_time_pairs))
 
-        # Step 4: format for TAG
-        formatted_trace = [
-            f"{symbol}:{delay}"
-            for symbol, delay in collapsed_trace
-        ]
-
-        symbolic_traces.append(formatted_trace)
-
-    return symbolic_traces
-
+    return formatted_traces
 
 
-def format_output(symbolic_res_list, output_path):
+# -----------------------------------------------------------------------------
+# TAG trace formatting
+# -----------------------------------------------------------------------------
 
-    lines = []
+def _format_trace(symbol_time_pairs):
+    """
+    Convert [(symbol, absolute_time), ...] into a TAG trace string
+    "a:dwell_time b:dwell_time c:dwell_time" where dwell_time is the number
+    of seconds the symbol persisted before the next different symbol.
 
-    for trace in symbolic_res_list:
+    The last symbol's dwell time is the gap to the final timestamp.
+    """
+    if not symbol_time_pairs:
+        return ""
 
-        # 1. convert absolute time → relative delay
-        relative_trace = timestamps_to_relative(trace)
+    parts = []
+    run_start_idx = 0
+    run_symbol = symbol_time_pairs[0][0]
 
-        # 2. collapse consecutive identical symbols
-        collapsed_trace = collapse_trace(relative_trace)
+    for i in range(1, len(symbol_time_pairs)):
+        sym, t = symbol_time_pairs[i]
+        if sym != run_symbol:
+            # End of the previous run. Dwell time = how long we stayed in run_symbol.
+            run_start_time = symbol_time_pairs[run_start_idx][1]
+            dwell = max(0, int(t - run_start_time))
+            parts.append(f"{run_symbol}:{dwell}")
+            run_symbol = sym
+            run_start_idx = i
 
-        # 3. format
-        formatted = [
-            f"{symbol}:{delay}"
-            for symbol, delay in collapsed_trace
-        ]
+    # Last run: its dwell time is from its start to the final timestamp.
+    last_time = symbol_time_pairs[-1][1]
+    run_start_time = symbol_time_pairs[run_start_idx][1]
+    final_dwell = max(0, int(last_time - run_start_time))
+    parts.append(f"{run_symbol}:{final_dwell}")
 
-        lines.append(" ".join(formatted))
+    return " ".join(parts)
 
-    output = "\n".join(lines)
+
+def format_output(symbolic_traces, output_path):
+    """
+    Write a list of [(symbol, absolute_time), ...] traces to disk in
+    TAG format, one trace per line.
+    """
+    lines = [_format_trace(trace) for trace in symbolic_traces]
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
     with open(output_path, "w") as f:
-        f.write(output)
-
-    print(f"File saved to {output_path}")
+        f.write("\n".join(lines))

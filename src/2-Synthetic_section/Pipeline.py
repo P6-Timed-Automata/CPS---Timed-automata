@@ -195,7 +195,7 @@ def run_pipeline(
     if method == "naive":
         traces_disc, bins = equal_width_discretization(train_list, k=params["bins"])
         n_symbols         = len(bins) - 1
-        sym_train, _, _   = map_bins_to_symbols(traces_disc, n_symbols, bins)
+        sym_train, _, _   = map_bins_to_symbols(traces_disc, bins)
         _write_collapsed(sym_train, tmp_path)
 
         pos_strings = _preprocess_test(pos_list, bins, n_symbols)
@@ -216,7 +216,7 @@ def run_pipeline(
         )
         bins      = np.sort(bins_z) * global_std + global_mean
         n_symbols = k
-        sym_train, _, _ = map_bins_to_symbols(traces_disc, n_symbols,
+        sym_train, _, _ = map_bins_to_symbols(traces_disc,
                                               np.sort(bins_z))
         _write_collapsed(sym_train, tmp_path)
 
@@ -233,7 +233,7 @@ def run_pipeline(
         n_symbols    = len(bins) - 1
 
         traces_disc  = discretize_traces_with_bins(train_list, bins)
-        sym_train, _, _ = map_bins_to_symbols(traces_disc, n_symbols, bins)
+        sym_train, _, _ = map_bins_to_symbols(traces_disc, bins)
         _write_collapsed(sym_train, tmp_path)
 
         pos_strings  = _preprocess_test(pos_list, bins, n_symbols)

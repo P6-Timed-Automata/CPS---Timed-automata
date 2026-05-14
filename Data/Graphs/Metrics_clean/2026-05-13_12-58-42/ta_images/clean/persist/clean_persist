@@ -1,0 +1,25 @@
+digraph G {
+START [style=invisible]
+graph [fontname = "helvetica"]
+node [fontname = "helvetica"]
+edge [fontname = "helvetica"]
+labelloc="t"
+label="clean_persist"
+S19 [shape="doublecircle"]
+S18 [shape="circle"]
+S0 [shape="circle"]
+S62 [shape="circle"]
+S61 [shape="circle"]
+START -> S0
+S0 -> S0 [label="d [300, 12900] t[3900, 34800] p=0.23"]
+S0 -> S0 [label="b [300, 9300] t[5700, 22500] p=0.27"]
+S0 -> S61 [label="a [300, 1200] t[10500, 18600] p=0.02"]
+S0 -> S0 [label="c [300, 6900] t[4200, 24900] p=0.43"]
+S0 -> S18 [label="e [300, 48600] t[31800, 82200] p=0.05"]
+S61 -> S62 [label="b [300, 6300] t[10800, 20700] p=0.98"]
+S61 -> S61 [label="c [300, 300] t[16800, 17700] p=0.02"]
+S62 -> S61 [label="a [300, 2100] t[11100, 19200] p=0.56"]
+S62 -> S0 [label="c [300, 3600] t[13800, 22800] p=0.44"]
+S18 -> S19 [label="d [300, 5700] t[32400, 86100] p=1.0"]
+S19 -> S18 [label="e [300, 48600] t[33300, 82800] p=1.0"]
+}
