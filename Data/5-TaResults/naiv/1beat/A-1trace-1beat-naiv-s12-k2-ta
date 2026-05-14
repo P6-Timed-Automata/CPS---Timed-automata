@@ -1,0 +1,33 @@
+digraph G {
+START [style=invisible]
+graph [fontname = "helvetica"]
+node [fontname = "helvetica"]
+edge [fontname = "helvetica"]
+labelloc="t"
+label="A-1trace-1beat-naiv-s12-k2-ta"
+S10 [shape="circle"]
+S1 [shape="circle"]
+S11 [shape="circle"]
+S13 [shape="circle"]
+S8 [shape="circle"]
+S9 [shape="circle"]
+S14 [shape="circle"]
+S2 [shape="circle"]
+S16 [shape="doublecircle"]
+S15 [shape="circle"]
+S0 [shape="circle"]
+S12 [shape="circle"]
+START -> S0
+S0 -> S1 [label="e [3, 3] t[122, 122] p=0.25"]
+S0 -> S2 [label="e [6, 31] t[31, 75] p=0.75"]
+S1 -> S8 [label="f [3, 3] t[125, 125] p=1.0"]
+S2 -> S0 [label="d [5, 44] t[36, 119] p=1.0"]
+S8 -> S9 [label="g [3, 3] t[128, 128] p=1.0"]
+S9 -> S10 [label="h [3, 3] t[131, 131] p=1.0"]
+S10 -> S11 [label="i [2, 2] t[133, 133] p=1.0"]
+S11 -> S12 [label="j [9, 9] t[142, 142] p=1.0"]
+S12 -> S13 [label="i [2, 2] t[144, 144] p=1.0"]
+S13 -> S14 [label="g [3, 3] t[147, 147] p=1.0"]
+S14 -> S15 [label="e [3, 3] t[150, 150] p=1.0"]
+S15 -> S16 [label="d [125, 125] t[275, 275] p=1.0"]
+}

@@ -188,7 +188,7 @@ def generate_negative_trace_set(n_traces=20, seed=99):
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    out_root = Path("../../0-old_scripts-Data/synthetic_data")
+    out_root = Path("../../../Old_scripts_Data/synthetic_data")
 
     # 1. Clean Positive Set
     clean_traces = generate_trace_set(n_traces=400, noise_std=0.05)

@@ -35,14 +35,13 @@ from TAG.TALearner import TALearner
 
 
 # =============================================================================
-# FORMAT OUTPUT (collapsed — consecutive same-symbol events merged)
+# FORMAT OUTPUT (collapsed)
 # =============================================================================
 
 def format_output_collapsed(symbolic_res_list: list, output_path: str) -> None:
     """
     Write timed strings to file, collapsing consecutive same-symbol events.
     e.g. [a:0, a:300, a:300, c:300] -> "a:600 c:300"
-    This ensures TAG guards represent thermal dwell times, not sampling intervals.
     """
     lines = []
     for trace in symbolic_res_list:
@@ -74,6 +73,40 @@ def format_output_collapsed(symbolic_res_list: list, output_path: str) -> None:
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, "w") as f:
         f.write("\n".join(lines))
+
+
+# =============================================================================
+# CONFIG FILE
+# =============================================================================
+
+def save_config(out_dir, tag_k, max_traces, repeats, datasets, experiments):
+    """Save a plain-text summary of all scaling experiment parameters."""
+    lines = [
+        "=" * 60,
+        "Run configuration -- Scaling Experiment",
+        "=" * 60,
+        "",
+        f"Timestamp    : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        f"TAG k-future : {tag_k}",
+        f"Max traces   : {max_traces}",
+        f"Repeats      : {repeats}",
+        "",
+        "--- Datasets ---",
+        ]
+    for name, folder in datasets:
+        lines.append(f"  {name:12s}: {folder}")
+
+    lines += ["", "--- Methods ---"]
+    for method_type, params in experiments:
+        param_str = ", ".join(f"{k}={v}" for k, v in params.items())
+        lines.append(f"  {method_type:10s}: {param_str}")
+
+    lines += ["", "--- Output folder ---", f"  {out_dir}", "", "=" * 60]
+
+    config_path = out_dir / "config.txt"
+    with open(config_path, "w") as f:
+        f.write("\n".join(lines))
+    print(f"  Config saved: {config_path}")
 
 
 # =============================================================================
@@ -116,26 +149,18 @@ def check_traces(folder: Path, required: int) -> list:
 
 
 def _param_label(method_type: str, params: dict) -> str:
-    """Human-readable parameter string, consistent with run_benchmark.py naming."""
     if method_type == "persist":
         return f"break_max={params['bins']}"
     return "_".join(f"{k}{v}" for k, v in params.items())
 
 
 # =============================================================================
-# CSV LOGGING (raw per-repeat data)
+# CSV LOGGING
 # =============================================================================
 
 def append_scaling_log(
-        log_path: str,
-        dataset_name: str,
-        method_type: str,
-        params: dict,
-        trace_count: int,
-        repeat_id: int,
-        runtime: float,
-        actual_bins: int,
-        tag_k: int,
+        log_path, dataset_name, method_type, params,
+        trace_count, repeat_id, runtime, actual_bins, tag_k,
 ) -> None:
     file_exists = os.path.exists(log_path)
     with open(log_path, "a", newline="") as f:
@@ -148,14 +173,8 @@ def append_scaling_log(
             ])
         writer.writerow([
             datetime.now().isoformat(),
-            dataset_name,
-            method_type,
-            str(params),
-            trace_count,
-            repeat_id,
-            runtime,
-            actual_bins,
-            tag_k,
+            dataset_name, method_type, str(params),
+            trace_count, repeat_id, runtime, actual_bins, tag_k,
         ])
 
 
@@ -164,18 +183,12 @@ def append_scaling_log(
 # =============================================================================
 
 def run_scaling_experiment(
-        dataset_name: str,
-        all_data: list,
-        method_type: str,
-        params: dict,
-        output_folder: str,
-        csv_log_path: str,
-        max_traces: int = 20,
-        repeats: int = 5,
-        tag_k: int = 2,
+        dataset_name, all_data, method_type, params,
+        output_folder, csv_log_path,
+        max_traces=20, repeats=5, tag_k=2,
 ) -> dict:
 
-    tmp_file = os.path.join(os.getcwd(), "_tmp_scaling_input.txt")
+    tmp_file    = os.path.join(os.getcwd(), "_tmp_scaling_input.txt")
     trace_counts = list(range(1, max_traces + 1))
 
     means = []
@@ -186,7 +199,6 @@ def run_scaling_experiment(
 
         traces, bins_c = _discretize(method_type, params, subset)
 
-        # Persist overcounts by 1 — correct for logging
         actual_bins = len(bins_c) - 1
         if method_type == "persist":
             actual_bins -= 1
@@ -201,15 +213,10 @@ def run_scaling_experiment(
             runtime = time.perf_counter() - t0
             run_times.append(runtime)
             append_scaling_log(
-                log_path     = csv_log_path,
-                dataset_name = dataset_name,
-                method_type  = method_type,
-                params       = params,
-                trace_count  = n,
-                repeat_id    = repeat_id,
-                runtime      = runtime,
-                actual_bins  = actual_bins,
-                tag_k        = tag_k,
+                log_path=csv_log_path, dataset_name=dataset_name,
+                method_type=method_type, params=params,
+                trace_count=n, repeat_id=repeat_id,
+                runtime=runtime, actual_bins=actual_bins, tag_k=tag_k,
             )
 
         m = float(np.mean(run_times))
@@ -225,7 +232,7 @@ def run_scaling_experiment(
         "dataset":      dataset_name,
         "method":       method_type,
         "params":       params,
-        "label":        f"{dataset_name} — {method_type.upper()} ({_param_label(method_type, params)})",
+        "label":        f"{dataset_name} -- {method_type.upper()} ({_param_label(method_type, params)})",
         "trace_counts": trace_counts,
         "means":        means,
         "stds":         stds,
@@ -240,7 +247,6 @@ if __name__ == "__main__":
 
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-    # ---- Timestamped output folder -----------------------------------------
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     OUT_DIR   = BASE_DIR / "Data" / "Graphs" / "ScalingExperiments" / timestamp
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -254,21 +260,22 @@ if __name__ == "__main__":
     REPEATS    = 3
     TAG_K      = 2
 
-    # ---- Datasets ----------------------------------------------------------
     DATASETS = [
         ("clean", BASE_DIR / "Data" / "synthetic_data-absolute" / "clean_train"),
         ("noisy", BASE_DIR / "Data" / "synthetic_data-absolute" / "noisy_train"),
-        # ("negative", BASE_DIR / "Data" / "synthetic_data" / "negative"),
     ]
 
-    # ---- Experiments -------------------------------------------------------
     EXPERIMENTS = [
         ("naive",   {"bins": 15}),
         ("sax",     {"w": 144, "bins": 15}),
         # ("persist", {"bins": 5}),
     ]
 
-    # ---- Run ---------------------------------------------------------------
+    # Save config immediately before anything runs
+    print("=== Config ===")
+    save_config(OUT_DIR, TAG_K, MAX_TRACES, REPEATS, DATASETS, EXPERIMENTS)
+    print()
+
     log = {
         "timestamp":  timestamp,
         "tag_k":      TAG_K,
@@ -305,7 +312,6 @@ if __name__ == "__main__":
 
             log["results"].append(result)
 
-            # Save after every experiment so partial runs are recoverable
             with open(JSON_LOG, "w") as f:
                 json.dump(log, f, indent=2)
 

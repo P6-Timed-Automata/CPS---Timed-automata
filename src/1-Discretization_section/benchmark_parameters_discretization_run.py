@@ -61,6 +61,51 @@ def compute_errors(t_disc, v_disc, t_raw, v_raw):
 
 
 # ---------------------------------------------------------------------------
+# Config file
+# ---------------------------------------------------------------------------
+
+def save_config(run_dir, tag_k, trace_files, naive_vars, sax_vars, persist_vars):
+    """Save a plain-text summary of all benchmark parameters."""
+
+    def _variant_lines(variants):
+        lines = []
+        for label, (method_type, params) in variants.items():
+            param_str = ", ".join(f"{k}={v}" for k, v in params.items())
+            lines.append(f"    {label:30s} -> {param_str}")
+        return lines
+
+    lines = [
+        "=" * 60,
+        "Run configuration -- Benchmark",
+        "=" * 60,
+        "",
+        f"Timestamp    : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        f"TAG k-future : {tag_k}",
+        f"Num traces   : {len(trace_files)}",
+        "",
+        "--- Trace files ---",
+        ]
+    for p in trace_files:
+        lines.append(f"  {p}")
+
+    lines += ["", "--- Naive variants ---"]
+    lines += _variant_lines(naive_vars)
+
+    lines += ["", "--- SAX variants ---"]
+    lines += _variant_lines(sax_vars)
+
+    lines += ["", "--- Persist variants ---"]
+    lines += _variant_lines(persist_vars)
+
+    lines += ["", "--- Output folder ---", f"  {run_dir}", "", "=" * 60]
+
+    config_path = run_dir / "config.txt"
+    with open(config_path, "w") as f:
+        f.write("\n".join(lines))
+    print(f"  Config saved: {config_path}")
+
+
+# ---------------------------------------------------------------------------
 # Pipeline
 # ---------------------------------------------------------------------------
 
@@ -169,8 +214,8 @@ def run_experiment(method_name, t_raw, v_raw, variants_dict, data_lists, trace_f
         }
 
         print(
-            f"    MAE={result['mae_mean']:.3f}±{result['mae_std']:.3f} | "
-            f"time={result['time_mean']:.3f}±{result['time_std']:.3f}s | "
+            f"    MAE={result['mae_mean']:.3f}+/-{result['mae_std']:.3f} | "
+            f"time={result['time_mean']:.3f}+/-{result['time_std']:.3f}s | "
             f"states={result['n_states_mean']:.1f} | "
             f"edges={result['n_edges_mean']:.1f}"
         )
@@ -194,7 +239,7 @@ if __name__ == "__main__":
     log_path  = str(run_dir / "benchmark_log.json")
     print(f"Run folder: {run_dir}")
 
-    base = BASE_DIR / "Data" / "synthetic_data-absolute" / "noisy_test"
+    base = BASE_DIR / "Data" / "synthetic_data" / "noisy_test"
     trace_files = [
         str(base / f"noisy_test_tid{i}.csv")
         for i in range(1, 21)
@@ -205,6 +250,25 @@ if __name__ == "__main__":
     t_raw, v_raw = load_trace(trace_files[0])
     data_lists   = csv_to_temp_time_list(input_files=trace_files)
     print(f"Loaded {len(data_lists)} traces.")
+
+    # Define variants before saving config so config captures them
+    naive_vars = {
+        f"bins={b}": ("naive", {"bins": b})
+        for b in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    }
+    sax_vars = {
+        f"w={w}, bins={b}": ("sax", {"w": w, "bins": b})
+        for w in [24, 72, 96, 144, 288]
+        for b in [4, 8, 16]
+    }
+    persist_vars = {
+        f"break_max={b}": ("persist", {"bins": b})
+        for b in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+    }
+
+    # Save config immediately
+    print("\n=== Config ===")
+    save_config(run_dir, TAG_K, trace_files, naive_vars, sax_vars, persist_vars)
 
     log = {
         "timestamp":   timestamp,
@@ -221,31 +285,18 @@ if __name__ == "__main__":
         print(f"  Log updated: {log_path}")
 
     print("\n=== Naive ===")
-    naive_vars = {
-        f"bins={b}": ("naive", {"bins": b})
-        for b in [2,3,4, 5,6, 7,8, 9,10, 11,12, 13,14, 15,16,]
-    }
     log["methods"]["Naive"] = run_experiment(
         "Naive", t_raw, v_raw, naive_vars, data_lists, trace_files, TAG_K
     )
     _save_log()
 
     print("\n=== SAX ===")
-    sax_vars = {
-        f"w={w}, bins={b}": ("sax", {"w": w, "bins": b})
-        for w in [24, 72,96, 144, 288]
-        for b in [4, 8, 16]
-    }
     log["methods"]["SAX"] = run_experiment(
         "SAX", t_raw, v_raw, sax_vars, data_lists, trace_files, TAG_K
     )
     _save_log()
 
     print("\n=== Persist ===")
-    persist_vars = {
-        f"break_max={b}": ("persist", {"bins": b})
-        for b in [2,3,4, 5,6, 7,8, 9,10, 11,12, 13,14, 15,16, 17]
-    }
     log["methods"]["Persist"] = run_experiment(
         "Persist", t_raw, v_raw, persist_vars, data_lists, trace_files, TAG_K
     )

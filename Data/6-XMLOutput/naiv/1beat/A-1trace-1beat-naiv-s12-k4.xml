@@ -19,8 +19,8 @@ const int a = -117;
 int temp = e;
 const int flat_threshold = -10; 
 const int peak_threshold = 50;
-const int first_flat_window = 90;
-const int second_flat_window = 180;
+const int first_flat_window = 95;
+const int second_flat_window = 185;
 </declaration>
   <template>
     <name>TagModel</name>
@@ -152,7 +152,7 @@ const int second_flat_window = 180;
       <formula>strategy Safe = control: A&lt;&gt; Process.S16</formula>
     </query>
     <query>
-      <formula>simulate [&lt;=86400; 1] { temp } under Safe</formula>
+      <formula>simulate [&lt;=250; 1] { temp } under Safe</formula>
     </query>
     <query>
       <formula>E&lt;&gt; Process.S16</formula>
@@ -161,25 +161,22 @@ const int second_flat_window = 180;
       <formula>A[] not deadlock</formula>
     </query>
     <query>
-      <formula>A&lt;&gt; Process.S16</formula>
+      <formula>A&lt;&gt; Process.S16 under Safe</formula>
     </query>
     <query>
-      <formula>Pr[&lt;=86400] (&lt;&gt; Process.S16)</formula>
+       <formula>A&lt;&gt; (temp &gt;= peak_threshold) under Safe</formula>
     </query>
     <query>
-      <formula>E[&lt;=86400;100] (max: temp)</formula>
+       <formula>A&lt;&gt; (cl_global &lt;= first_flat_window imply temp &lt;= flat_threshold) under Safe</formula>
     </query>
     <query>
-      <formula>simulate [&lt;=86400; 1] { cl_global }</formula>
+       <formula>A[] (cl_global &lt;= first_flat_window imply temp &lt;= flat_threshold) under Safe</formula>
     </query>
     <query>
-       <formula>E&lt;&gt; (temp &gt;= peak_threshold) </formula>
+       <formula>A&lt;&gt; (cl_global &gt;= second_flat_window imply temp &lt;= flat_threshold) under Safe </formula>
     </query>
     <query>
-       <formula>A[] (cl_global &lt;= first_flat_window imply temp &lt;= flat_threshold) </formula>
-    </query>
-    <query>
-       <formula>A[] (cl_global &gt;= second_flat_window imply temp &lt;= flat_threshold) </formula>
+       <formula>A[](cl_global &gt;= second_flat_window imply temp &lt;= flat_threshold) under Safe </formula>
     </query>
   </queries>
 </nta>

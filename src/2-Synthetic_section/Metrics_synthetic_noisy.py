@@ -14,7 +14,8 @@ across all experiments.
 
 Requires: run generate_all_data.py first.
 
-Output (timestamped folder under Graphs/exp_53/):
+Output (timestamped folder under Graphs/Metrics_noisy_sweep/):
+  config.txt          — all parameters used in this run
   results.json        — all metrics per noise level per method
   f1_vs_noise.png
   recall_vs_noise.png
@@ -23,14 +24,13 @@ Output (timestamped folder under Graphs/exp_53/):
 
 import json
 import sys
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Script lives at src/2-Synthetic_section/exp_53_noise_sweep.py
-# ROOT = CPS---Timed-automata/
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -44,25 +44,18 @@ from Pipeline import run_pipeline
 # CONFIG
 # =============================================================================
 
-# Training set size for the sweep.
-# Keep consistent with generate_all_data.py CONFIG["n_train"] unless
-# you deliberately want a different training size here.
 N_TRAIN = CONFIG["n_train"]
 
-# Noise levels to sweep (noise_std in °C)
-# Starts below the clean level from generate_all_data.py and goes well
-# above the noisy level so the full degradation curve is visible.
-NOISE_LEVELS = [0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.7, 1.0]
+NOISE_LEVELS = [0.02, 0.05, 0.1, 0.15, 0.2, 0.25]
 
-# F1 below this is considered unacceptable — used for threshold annotation
 F1_THRESHOLD = 0.7
 
-TAG_K = 2
+TAG_K = 4
 
 METHODS = [
     ("naive",   {"bins": 5}),
     ("sax",     {"w": 288, "bins": 5}),
-    ("persist", {"bins": 5}),
+    ("persist", {"bins": 6}),
 ]
 
 METHOD_COLORS = {
@@ -70,6 +63,71 @@ METHOD_COLORS = {
     "sax":     "darkorange",
     "persist": "seagreen",
 }
+
+
+# =============================================================================
+# CONFIG FILE
+# =============================================================================
+
+def save_config(out_dir, data):
+    """
+    Save a plain-text summary of all configuration parameters used in this run.
+    """
+    lines = [
+        "=" * 55,
+        "Run configuration -- Noise Sweep",
+        "=" * 55,
+        "",
+        f"Timestamp      : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        f"TAG k-future   : {TAG_K}",
+        f"F1 threshold   : {F1_THRESHOLD}",
+        "",
+        "--- Noise levels swept ---",
+        f"  {NOISE_LEVELS}",
+        f"  Clean baseline: {CONFIG['clean']['noise_std']}",
+        f"  Noisy baseline: {CONFIG['noisy']['noise_std']}",
+        "",
+        "--- Base training parameters (noise_std overridden per level) ---",
+        f"  base_temp     : {CONFIG['clean']['base_temp']}",
+        f"  amplitude     : {CONFIG['clean']['amplitude']}",
+        f"  base_temp_std : {CONFIG['clean']['base_temp_std']}",
+        f"  amplitude_std : {CONFIG['clean']['amplitude_std']}",
+        f"  phase_std_h   : {CONFIG['clean']['phase_std_h']}",
+        f"  seed          : {CONFIG['seed_clean']}",
+        "",
+        "--- Methods ---",
+        ]
+
+    for method, params in METHODS:
+        param_str = ", ".join(f"{k}={v}" for k, v in params.items())
+        lines.append(f"  {method:8s}: {param_str}")
+
+    lines += [
+        "",
+        "--- Dataset sizes ---",
+        f"  train per level : {N_TRAIN} traces (regenerated at each noise level)",
+        f"  test positives  : {len(data['clean_test'])} traces (fixed, from disk)",
+        f"  negatives       : {len(data['neg_traces'])} traces (fixed, from disk)",
+        "",
+        "--- Negative modes ---",
+    ]
+
+    mode_counts = Counter(data["neg_modes"])
+    for mode_int, count in sorted(mode_counts.items()):
+        lines.append(f"  {NEG_MODE_NAMES[mode_int]:10s}: {count} traces")
+
+    lines += [
+        "",
+        "--- Output folder ---",
+        f"  {out_dir}",
+        "",
+        "=" * 55,
+        ]
+
+    config_path = out_dir / "config.txt"
+    with open(config_path, "w") as f:
+        f.write("\n".join(lines))
+    print(f"  Saved: {config_path}")
 
 
 # =============================================================================
@@ -89,18 +147,16 @@ def _plot_metric(results_by_method, noise_levels, metric, ylabel, title,
     ax.axhline(threshold, color="red", linewidth=1.2, linestyle="--",
                label=f"Threshold = {threshold}")
 
-    # Annotate the clean and noisy levels from generate_all_data.py
-    # so readers can see where Exp 5.1 and 5.2 sit on the curve
     clean_noise = CONFIG["clean"]["noise_std"]
     noisy_noise = CONFIG["noisy"]["noise_std"]
-    for level, label_text in [(clean_noise, "clean (Exp 5.1)"),
-                              (noisy_noise, "noisy (Exp 5.2)")]:
+    for level, label_text in [(clean_noise, "clean"),
+                              (noisy_noise, "noisy")]:
         ax.axvline(level, color="gray", linewidth=1.0, linestyle=":",
                    alpha=0.7)
         ax.text(level, 0.02, label_text, rotation=90,
                 fontsize=7, color="gray", va="bottom", ha="right")
 
-    ax.set_xlabel("Training noise std (°C)")
+    ax.set_xlabel("Training noise std (C)")
     ax.set_ylabel(ylabel)
     ax.set_title(title)
     ax.legend()
@@ -113,12 +169,8 @@ def _plot_metric(results_by_method, noise_levels, metric, ylabel, title,
 
 
 def _find_threshold_crossings(noise_levels, f1_vals, threshold):
-    """
-    Return the first noise level where F1 drops below threshold.
-    Also returns the last level where it was still above threshold.
-    """
-    crossing_at    = None
-    last_above     = None
+    crossing_at = None
+    last_above  = None
     for n, f in zip(noise_levels, f1_vals):
         if f >= threshold:
             last_above = n
@@ -137,13 +189,14 @@ if __name__ == "__main__":
     out_dir.mkdir(parents=True, exist_ok=True)
     print(f"Output folder: {out_dir}\n")
 
-    # --- Load fixed test set and negatives from disk -------------------------
-    # Using the centrally generated data ensures the test conditions are
-    # identical to Experiments 5.1 and 5.2, making results comparable.
     data = load_all_data()
     test_pos   = data["clean_test"]
     neg_traces = data["neg_traces"]
     neg_modes  = data["neg_modes"]
+
+    # Save config immediately so it exists even if the run fails partway through
+    print("=== Config ===")
+    save_config(out_dir, data)
 
     print(f"\nSweeping {len(NOISE_LEVELS)} noise levels x "
           f"{len(METHODS)} methods\n")
@@ -161,7 +214,6 @@ if __name__ == "__main__":
         "results":      [],
     }
 
-    # {method: {metric: [val_per_noise_level]}}
     results_by_method = {
         m: {"precision": [], "recall": [], "f1": []}
         for m, _ in METHODS
@@ -170,9 +222,6 @@ if __name__ == "__main__":
     for noise in NOISE_LEVELS:
         print(f"--- noise_std = {noise:.3f} ---")
 
-        # Training traces are generated fresh at each noise level.
-        # Base parameters match generate_all_data.py CONFIG["clean"] exactly
-        # except noise_std is overridden by the sweep.
         train_traces = generate_trace_set(
             n_traces      = N_TRAIN,
             seed          = CONFIG["seed_clean"],
@@ -181,7 +230,7 @@ if __name__ == "__main__":
             base_temp_std = CONFIG["clean"]["base_temp_std"],
             amplitude_std = CONFIG["clean"]["amplitude_std"],
             phase_std_h   = CONFIG["clean"]["phase_std_h"],
-            noise_std     = noise,                           # ← swept
+            noise_std     = noise,
         )
 
         for method, params in METHODS:
@@ -212,7 +261,6 @@ if __name__ == "__main__":
                 "per_mode":  result["per_mode"],
             })
 
-        # Save after every noise level so partial runs are recoverable
         with open(out_dir / "results.json", "w") as f:
             json.dump(log, f, indent=2)
         print()
@@ -244,9 +292,9 @@ if __name__ == "__main__":
 
     # --- Plots ---------------------------------------------------------------
     for metric, ylabel, title in [
-        ("f1",        "F1",        "F1 vs training noise (Exp 5.3)"),
-        ("recall",    "Recall",    "Recall vs training noise (Exp 5.3)"),
-        ("precision", "Precision", "Precision vs training noise (Exp 5.3)"),
+        ("f1",        "F1",        "F1 vs training noise"),
+        ("recall",    "Recall",    "Recall vs training noise"),
+        ("precision", "Precision", "Precision vs training noise"),
     ]:
         _plot_metric(
             results_by_method, NOISE_LEVELS,
