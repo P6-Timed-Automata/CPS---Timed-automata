@@ -1,16 +1,16 @@
 #!/bin/bash
 # =============================================================================
-# job_scalling5-50.sh
+# job_scaling5-25.sh
 # =============================================================================
 # Runs the discretization benchmark and scaling experiments in order:
 #   1. Scaling_run.py                              (scaling experiment)
 #   2. Scaling_plot.py                             (generate scaling figures)
 #
 # Submit with:
-#   sbatch slurm/job_scalling5-50.sh
+#   sbatch slurm/job_scaling5-25.sh
 # =============================================================================
 
-#SBATCH --job-name=ta_job_scalling5-50.sh
+#SBATCH --job-name=ta_job_scalling5-25.sh
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=jautze23@student.aau.dk
 #SBATCH --partition=naples
@@ -18,8 +18,8 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=16G
 #SBATCH --time=8:00:00
-#SBATCH --output=slurm/logs/job_scalling5-50.sh_%j.out
-#SBATCH --error=slurm/logs/job_scalling5-50.sh_%j.err
+#SBATCH --output=slurm/logs/job_scaling5-25.sh_%j.out
+#SBATCH --error=slurm/logs/job_scaling5-25.sh_%j.err
 
 # ---------------------------------------------------------------------------
 # Environment
