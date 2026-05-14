@@ -214,3 +214,26 @@ if __name__ == "__main__":
 
     # Updated to include output_path
     format_output(symbolic_res_list, output_path="sax_output_test/output.txt")
+
+def sax_bins_in_original_space(bins_z, global_mean, global_std):
+    """
+    Convert SAX bin edges from z-normalized space back to the original
+    (un-normalized) value space.
+
+    sax_discretization_multi returns bins in z-space because PAA segments
+    are compared against Gaussian quantiles after normalization. For
+    downstream code that operates in original space (MAE computation,
+    symbol_map midpoints for UPPAAL, plotting), the bins must be
+    converted back.
+
+    Parameters
+    ----------
+    bins_z       : array of bin edges in z-space (output of sax_discretization_multi)
+    global_mean  : mean used during normalization
+    global_std   : std used during normalization
+
+    Returns
+    -------
+    bins in original (un-normalized) value space, sorted ascending.
+    """
+    return np.sort(bins_z) * global_std + global_mean

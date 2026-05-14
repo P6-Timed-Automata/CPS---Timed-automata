@@ -524,47 +524,71 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--log", default=None,
-        help="Path to benchmark_log.json. Defaults to most recent run for the given --k.",
+        help="Path to a specific benchmark_log.json. If provided, --k is ignored.",
     )
     parser.add_argument(
-        "--k", type=int, default=2,
-        help="TAG k value to plot (selects <run>/k<n>/benchmark_log.json). Default: 2.",
+        "--k_list", type=int, nargs="+", default=[2, 3, 4],
+        help="Space-separated list of TAG k values to plot. Default: 2 3 4",
     )
     parser.add_argument(
         "--out", default=None,
-        help="Output folder. Defaults to the same folder as the log file.",
+        help="Base output folder. Results will be saved in k-specific subfolders.",
     )
     args = parser.parse_args()
 
-    if args.log is None:
-        args.log = find_latest_log(tag_k=args.k)
-        if args.log is None:
-            print(f"No benchmark_log.json found for k={args.k}. Run run_benchmark.py first.")
-            return
-        print(f"Auto-selected log: {args.log}")
+    # Determine which logs to process
+    logs_to_process = []
 
-    out_dir = args.out if args.out else os.path.dirname(os.path.abspath(args.log))
-    os.makedirs(out_dir, exist_ok=True)
+    if args.log:
+        # If a specific log path is given, just process that one
+        logs_to_process.append(args.log)
+    else:
+        # Otherwise, find the latest log for every k in the list
+        for k in args.k_list:
+            log_path = find_latest_log(tag_k=k)
+            if log_path:
+                logs_to_process.append(log_path)
+            else:
+                print(f"Warning: No benchmark_log.json found for k={k}. Skipping.")
 
-    log = load_log(args.log)
-    print(f"Plotting run from: {log.get('timestamp', 'unknown')} (k={log.get('tag_k', '?')})")
-    print(f"Output folder:     {out_dir}")
+    if not logs_to_process:
+        print("No logs found to process. Exiting.")
+        return
 
-    for method_name, results in log["methods"].items():
-        print(f"\n=== {method_name} ===")
-        plot_combined(method_name, results, out_dir)
-        plot_signal(method_name, results, out_dir)
-        plot_structure_table_full(method_name, results, out_dir)
-        plot_structure_table_compact(method_name, results, out_dir)
-        plot_structure_table_with_time(method_name, results, out_dir)
+    # Iterate through all found logs
+    for log_path in logs_to_process:
+        log = load_log(log_path)
+        current_k = log.get('tag_k', '?')
 
-    print("\n=== Summary ===")
-    plot_summary_table(log, out_dir)
+        print(f"\n" + "="*40)
+        print(f"Processing k={current_k}")
+        print(f"Log: {log_path}")
+        print("="*40)
 
-    print("\n=== Trade-off ===")
-    plot_tradeoff(log, out_dir)
+        # Determine output directory for this specific k
+        if args.out:
+            # Create a subfolder for each k if a base output is specified
+            k_out_dir = os.path.join(args.out, f"k{current_k}")
+        else:
+            # Default to the folder containing the specific log
+            k_out_dir = os.path.dirname(os.path.abspath(log_path))
 
-    print("\nDone.")
+        os.makedirs(k_out_dir, exist_ok=True)
+        print(f"Output folder: {k_out_dir}")
+
+        # Run all plotting functions for this log
+        for method_name, results in log["methods"].items():
+            print(f"  Plotting method: {method_name}")
+            plot_combined(method_name, results, k_out_dir)
+            plot_signal(method_name, results, k_out_dir)
+            plot_structure_table_full(method_name, results, k_out_dir)
+            plot_structure_table_compact(method_name, results, k_out_dir)
+            plot_structure_table_with_time(method_name, results, k_out_dir)
+
+        plot_summary_table(log, k_out_dir)
+        plot_tradeoff(log, k_out_dir)
+
+    print("\nAll k-values processed successfully.")
 
 
 if __name__ == "__main__":

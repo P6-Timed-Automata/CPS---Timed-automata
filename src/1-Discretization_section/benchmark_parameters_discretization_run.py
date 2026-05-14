@@ -143,8 +143,9 @@ def learn_ta_from_one_trace(discretized_trace, bins_c, tag_k):
     over-split, or hit a corner case.
     """
     actual_bins = len(bins_c) - 1
-    symbolic_traces, _, _ = map_bins_to_symbols([discretized_trace], actual_bins, bins_c)
-
+    symbolic_traces, _, _ = map_bins_to_symbols( #tried to fix
+        [discretized_trace], bins_c
+)
     # Unique tmp file so concurrent runs and Windows file locks don't collide.
     tmp_file = os.path.join(
         tempfile.gettempdir(),
@@ -253,12 +254,17 @@ def run_variant(label, method_type, params, data_lists, trace_files,
         "time_max":           float(np.max(per_trace_times)),
 
         # TA structure across traces — median + min/max
-        "n_states_median":    float(np.median(per_trace_states)),
-        "n_states_min":       int(np.min(per_trace_states)),
-        "n_states_max":       int(np.max(per_trace_states)),
-        "n_edges_median":     float(np.median(per_trace_edges)),
-        "n_edges_min":        int(np.min(per_trace_edges)),
-        "n_edges_max":        int(np.max(per_trace_edges)),
+        "n_states_median":  float(np.median(per_trace_states)),
+        "n_states_mean":    float(np.mean(per_trace_states)),
+        "n_states_std":     float(np.std(per_trace_states)),
+        "n_states_min":     int(np.min(per_trace_states)),
+        "n_states_max":     int(np.max(per_trace_states)),
+
+        "n_edges_median":   float(np.median(per_trace_edges)),
+        "n_edges_mean":     float(np.mean(per_trace_edges)),
+        "n_edges_std":      float(np.std(per_trace_edges)),
+        "n_edges_min":      int(np.min(per_trace_edges)),
+        "n_edges_max":      int(np.max(per_trace_edges)),
 
         # Consistency: how many of the per-trace TAs accepted their own
         # training data (Bug 3 fix — surfaced in the log).
@@ -279,7 +285,7 @@ def run_variant(label, method_type, params, data_lists, trace_files,
             for j in range(n_traces)
         ],
 
-        # Plot data from the median-MAE trace, not from trace 0 (Concern 8)
+        # Plot data from the median-MAE trace, not from trace 0
         "plot_trace_path":    trace_files[median_idx],
         "plot_trace_index":   median_idx,
         "plot_t_d":           per_trace_steps[median_idx][0].tolist(),
@@ -377,7 +383,7 @@ if __name__ == "__main__":
     print(f"Run folder: {run_dir}")
 
     # ----- Configuration -----
-    TAG_K_VALUES = [2, 3, 4]
+    TAG_K_VALUES = [2,4]
 
     base = BASE_DIR / "Data" / "synthetic_data" / "noisy_test"
     trace_files = sorted(str(p) for p in base.glob("noisy_test_tid*.csv"))[:20]
@@ -389,7 +395,7 @@ if __name__ == "__main__":
     }
     sax_vars = {
         f"w={w}, bins={b}": ("sax", {"w": w, "bins": b})
-        for w in [24, 72, 96, 144]   # dropped w=288 (degenerate: no PAA reduction)
+        for w in [24, 48, 96, 144]  
         for b in [4, 8, 16]
     }
     persist_vars = {

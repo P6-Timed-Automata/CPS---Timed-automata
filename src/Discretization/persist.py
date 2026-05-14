@@ -78,12 +78,7 @@ class Persist():
                 else:
                     best_bins[j - (self.break_min - 1)] = bins
         # pick best if several k were tried
-        if self.break_min != self.break_max:
-            dummy, best = best_pscores.max(axis=0), best_pscores.argmax(axis=0)
-            # bins = best_bins[best]
-            bins = best_bins
-
-        self.bins = bins
+        self.bins = best_bins
         self.pscores = best_pscores
 
     def persistence(self, bins, divergence):
