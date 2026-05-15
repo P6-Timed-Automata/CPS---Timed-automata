@@ -18,6 +18,10 @@ const int l = 3007;
  
 int temp = e;
 int prev_temp;
+const int spike_threshold = 4000;
+const int temp_min = 1800; 
+const int temp_max = 2700;
+const int stabilization_time = 900;
 </declaration>
 	<template>
 		<name x="5" y="5">TagModel</name>
@@ -33,7 +37,7 @@ int prev_temp;
 			</location>
 			<location id="id3" x="596" y="-4069">
 				<name x="596" y="-4089">S0_S2_e</name>
-				<label kind="invariant">cl_local&lt;=9300</label>
+				<label kind="invariant">cl_local&lt;=9600</label>
 			</location>
 			<location id="id4" x="435" y="-3548">
 				<name x="435" y="-3568">S1</name>
@@ -77,7 +81,7 @@ int prev_temp;
 			</location>
 			<location id="id15" x="729" y="-712">
 				<name x="729" y="-732">S22</name>
-				<label kind="invariant">cl_local&lt;=13200</label>
+				<label kind="invariant">cl_local&lt;=12900</label>
 			</location>
 			<location id="id16" x="157" y="-712">
 				<name x="157" y="-732">S3</name>
@@ -125,7 +129,7 @@ cl_local = 0
 			<source ref="id3"/>
 			<target ref="id5"/>
 			<label kind="guard">
-cl_local &gt;= 300 &amp;&amp; cl_local &lt;= 9300			</label>
+cl_local &gt;= 300 &amp;&amp; cl_local &lt;= 9600			</label>
 			<label kind="assignment">
 prev_temp = temp,
 temp = e,
@@ -256,7 +260,7 @@ cl_local = 0
 			<source ref="id15"/>
 			<target ref="id18"/>
 			<label kind="guard">
-cl_local &gt;= 13200 &amp;&amp; cl_local &lt;= 13200			</label>
+cl_local &gt;= 12900 &amp;&amp; cl_local &lt;= 12900			</label>
 			<label kind="assignment">
 prev_temp = temp,
 temp = e,
@@ -290,9 +294,68 @@ cl_local = 0
 			<target ref="id0"/>
 			<label kind="assignment">cl_local = 0</label>
 		</transition>
-	</template>	<system>
+	</template>	<template>
+		<name>TagObserver</name>
+		<declaration>
+			clock cl_observer;
+			bool SPIKE_seen = false;
+		</declaration>
+			<location id="id19" x="0" y="0">
+				<name x="0" y="-20">START</name>
+			</location>
+		<label kind="invariant">cl_observer &lt;= 0</label>
+			<location id="id20" x="200" y="50">
+				<name x="200" y="30">SPIKE</name>
+			</location>
+			<location id="id21" x="400" y="-50">
+				<name x="400" y="-70">STABLE</name>
+			</location>
+		<label kind="invariant">cl_observer &lt;= stabilization_time</label>
+			<location id="id22" x="600" y="100">
+				<name x="600" y="80">STABILIZED</name>
+			</location>
+		<init ref="id19"/>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id20"/>
+			<label kind="guard">((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold))</label>
+			<label kind="assignment">cl_observer = 0,SPIKE_seen = true</label>
+		</transition>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id21"/>
+			<label kind="guard">((temp - prev_temp &lt; spike_threshold) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max))</label>
+			<label kind="assignment">cl_observer = 0</label>
+		</transition>
+		<transition>
+			<source ref="id20"/>
+			<target ref="id21"/>
+			<label kind="guard">((temp - prev_temp &lt; spike_threshold) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max))</label>
+			<label kind="assignment">cl_observer = 0</label>
+		</transition>
+		<transition>
+			<source ref="id21"/>
+			<target ref="id22"/>
+			<label kind="guard">cl_observer &gt;= stabilization_time</label>
+			<label kind="assignment"> SPIKE_seen = false</label>
+		</transition>
+		<transition>
+			<source ref="id21"/>
+			<target ref="id20"/>
+			<label kind="guard">((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold))</label>
+			<label kind="assignment">cl_observer = 0, SPIKE_seen = true</label>
+		</transition>
+		<transition>
+			<source ref="id22"/>
+			<target ref="id20"/>
+			<label kind="guard">((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold))</label>
+			<label kind="assignment">cl_observer = 0, SPIKE_seen = true</label>
+		</transition>
+	</template>
+	<system>
 Automaton = TagModel();
-system Automaton;
+Observer = TagObserver();
+system Automaton, Observer;
 	</system>
 	<queries>
 
@@ -301,7 +364,7 @@ system Automaton;
 		</query>
 
 		<query>
-			<formula>simulate [&lt;=86400; 1] { temp } under Safe</formula>
+			<formula>simulate [&lt;=86400; 1] { temp } </formula>
 		</query>
 
 		<query>

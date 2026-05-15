@@ -44,8 +44,20 @@ def csv_to_temp_time_list(input_files, time_dtype=int):
         data = np.genfromtxt(input_file, delimiter=';', dtype=str, skip_header=1)
         # genfromtxt returns 1D for single-row files; force 2D so indexing works.
         data = np.atleast_2d(data)
-        times = data[:, 0].astype(float).astype(time_dtype)
-        values = data[:, 1].astype(float)
+        # Skip rows where the first column is not numeric (like header)
+        numeric_data = []
+        for row in data:
+            try:
+                float(row[0])  # check if first column is a number
+                numeric_data.append(row)
+            except ValueError:
+                continue
+
+        numeric_data = np.array(numeric_data)
+        times = numeric_data[:, 0].astype(float).astype(time_dtype)
+        values = numeric_data[:, 1].astype(float)
+        # times = data[:, 0].astype(float).astype(time_dtype)
+        # values = data[:, 1].astype(float)
         all_results.append(list(zip(values.tolist(), times.tolist())))
     return all_results
 
@@ -128,7 +140,7 @@ def preprocess_test_traces(test_traces, bins, mark_out_of_range=True):
 
     Returns
     -------
-    list of TAG-format strings, e.g. ["a:600 b:300 c:120", ...]
+    list of TAG-format strings, e.g. [["a:600" "b:300 "c:120"],[] ...]
     """
     n_symbols = len(bins) - 1
     letters = _alphabet(n_symbols)
@@ -160,8 +172,11 @@ def preprocess_test_traces(test_traces, bins, mark_out_of_range=True):
             labels = np.clip(labels, 0, n_symbols - 1)
             symbols = [letters[lbl] for lbl in labels]
 
-        symbol_time_pairs = list(zip(symbols, times.tolist()))
-        formatted_traces.append(_format_trace(symbol_time_pairs))
+        # symbol_time_pairs = list(zip(symbols, times.tolist()))
+        # formatted_traces.append(_format_trace(symbol_time_pairs))
+        # Build list of "symbol:time" strings per trace
+        all_trace = [f"{s}:{int(t)}" for s, t in zip(symbols, times)]
+        formatted_traces.append(all_trace)
 
     return formatted_traces
 

@@ -269,349 +269,346 @@ class Automaton:
 
 
     # VERSION with var, global, local
-<<<<<<< HEAD
     # def export_ta(self, path: str, symbol_map: dict = None, time: int = 86400, sim_nr: int = 1, data_type = "temp") -> None:
-=======
-    def export_ta(self, path: str, symbol_map: dict = None, time: int = 86400, sim_nr: int = 1, data_type = "temp") -> None:
-        """
-        Export the automaton as a UPPAAL XML file with Graphviz layout coordinates.
-
-        Args:
-            path (str): Path for the output .xml file
-            symbol_map (dict, optional): Mapping of symbol names to temperature values,
-                                         e.g. {'a': 2090, 'b': 2120, 'c': 2148}
-        """
-
-        self.update_probas()
-
-        state_ids = {s.name: f"id{i}" for i, s in enumerate(self.states)}
-        initial = next((s for s in self.states if s.initial), self.states[0])
-
-        # Use provided symbol map or fallback
-        if symbol_map is None:
-            symbol_values = {sym: i for i, sym in enumerate(self.symbols)}
-        else:
-            symbol_values = symbol_map
-
-        # ----------------------------
-        # Graphviz layout generation
-        # ----------------------------
-        dot = 'digraph G {\n'
-        dot += 'START [style=invisible]\n'
-        dot += 'node [shape="circle"]\n'
-
-        for state in self.states:
-            if state.accepting:
-                dot += f'{state.name} [shape="doublecircle"]\n'
-
-        dot += f'START -> {initial.name}\n'
-
-        for state in self.states:
-            for e in state.edges_out:
-                dot += f'{e.source.name} -> {e.destination.name} [label="{e.symbol}"]\n'
-
-        dot += '}'
-
-        positions = {}
-        try:
-            result = subprocess.run(
-                ['dot', '-Tplain'],
-                input=dot,
-                capture_output=True,
-                text=True
-            )
-
-            scale = 400
-            for line in result.stdout.splitlines():
-                parts = line.split()
-                if parts[0] == 'node' and parts[1] != 'START':
-                    name = parts[1]
-                    x = round(float(parts[2]) * scale)
-                    y = round(float(parts[3]) * scale)
-                    positions[name] = (x, -y)
-
-        except FileNotFoundError:
-            print("Warning: 'dot' command not found. Falling back to grid layout.")
-
-        # ----------------------------
-        # Compute invariants
-        # ----------------------------
-        upper_bounds = {}
-
-        for state in self.states:
-            bounds = []
-
-            for e in state.edges_out:
-                _, local_hi = e.reduced_guard()
-                bounds.append(local_hi)
-
-            upper_bounds[state.name] = max(bounds) if bounds else None
-
-
-
-        # ----------------------------
-        # Build UPPAAL declarations
-        # ----------------------------
-        const_decls = ' '.join(
-            f'const int {sym} = {val};\n'
-            for sym, val in symbol_values.items()
-        )
-
-        # Determine initial temp from initial state's outgoing symbol (or custom logic)
-        initial_symbol = None
-        if initial.edges_out:
-            initial_symbol = initial.edges_out[0].symbol
-
-        initial_temp_value = initial_symbol if initial_symbol is not None else "0"
-
-        lines = []
-
-        if data_type == "temp":
-
-            lines = [
-                '<?xml version="1.0" encoding="utf-8"?>',
-                "<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'",
-                "  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>",
-                '<nta>',
-                f'  <declaration>clock cl_local, cl_global;\n'
-                f'{const_decls} \n'
-                f'int temp = {initial_temp_value};\n'
-                'const int spike_threshold = 4000;\n'
-                'int prev_temp;\n'
-                'bool spike = false;\n'
-                'bool stable = true;\n'
-                'const int temp_min = 1800; \n'
-                'const int temp_max = 2700;\n'
-                '</declaration>',
-                '  <template>',
-                '    <name>TagModel</name>',
-                '    <declaration></declaration>',
-            ]
-        elif data_type == "ecg":
-            lines = [
-                '<?xml version="1.0" encoding="utf-8"?>',
-                "<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'",
-                "  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>",
-                '<nta>',
-                f'  <declaration>clock cl_local, cl_global;\n'
-                f'{const_decls} \n'
-                f'int temp = {initial_temp_value};\n'
-                'const int flat_threshold = -10; \n'
-                'const int peak_threshold = 50;\n'
-                'const int first_flat_window = 95;\n'
-                'const int second_flat_window = 185;\n'
-                '</declaration>',
-                '  <template>',
-                '    <name>TagModel</name>',
-                '    <declaration></declaration>',
-            ]
-
-
-        # ----------------------------
-        # Locations
-        # ----------------------------
-        for i, state in enumerate(self.states):
-            sid = state_ids[state.name]
-            x, y = positions.get(state.name, ((i % 10) * 200, (i // 10) * 200))
-
-            lines.append(f'    <location id="{sid}" x="{x}" y="{y}">')
-            lines.append(f'      <name x="{x}" y="{y - 20}">{state.name}</name>')
-
-            ub = upper_bounds.get(state.name)
-            if ub is not None:
-                lines.append(
-                    f'      <label kind="invariant" x="{x}" y="{y + 20}">'
-                    f'cl_local &lt;= {ub}</label>'
-                )
-
-            lines.append('    </location>')
-
-        lines.append(f'    <init ref="{state_ids[initial.name]}"/>')
-
-        # ----------------------------
-        # Transitions
-        # ----------------------------
-        for state in self.states:
-            for e in state.edges_out:
-
-                # Local timing bounds
-                local_lo, local_hi = e.reduced_guard()
-
-                # Global timing bounds
-                if len(e.tss) > 0:
-                    global_lo, global_hi = e.reduce_gtime()
-                else:
-                    global_lo, global_hi = local_lo, local_hi  # fallback if no global timing exists
-
-                symbol_var = e.symbol
-
-                lines.append('    <transition>')
-                lines.append(f'      <source ref="{state_ids[e.source.name]}"/>')
-                lines.append(f'      <target ref="{state_ids[e.destination.name]}"/>')
-
-                lines.append(
-                    f'      <label kind="guard">'
-                    f'cl_local &gt;= {local_lo} &amp;&amp; cl_local &lt;= {local_hi} '
-                    f'&amp;&amp; '
-                    f'cl_global &gt;= {global_lo} &amp;&amp; cl_global &lt;= {global_hi}'
-                    f'</label>'
-                )
-
-
-                if data_type == "temp":
-                    lines.append(
-                        '      <label kind="assignment">'
-                        f'temp = {symbol_var},\n'
-                        'spike = ((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold)),\n'
-                        'stable = ((temp - prev_temp &lt; spike_threshold) || (prev_temp - temp &lt; spike_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),\n'
-                        f'prev_temp = temp,'
-                        'cl_local = 0'
-                        '</label>'
-                    )
-                elif data_type == "ecg":
-                    lines.append(
-                        f'      <label kind="assignment">'
-                        f'temp = {symbol_var}, cl_local = 0'
-                        f'</label>'
-                    )
-
-                lines.append('    </transition>')
-
-        # ----------------------------
-        # Final XML
-        # ----------------------------
-        min_temp = min(symbol_values.values())
-        max_temp = max(symbol_values.values())
-
-        temp_bounds_expr = f"temp &gt;= {min_temp} &amp;&amp; temp &lt;= {max_temp}"
-
-        max_time = 300
-
-        accepting_states = [s.name for s in self.states if s.accepting]
-
-        if not accepting_states:
-            raise ValueError("No accepting/final states defined in automaton.")
-
-        final_expr = " || ".join(f"Process.{name}" for name in accepting_states)
-
-        if data_type == "temp":
-            lines += [
-                '  </template>',
-                '  <system>Process = TagModel(); system Process;</system>',
-                '  <queries>',
-
-                '    <query>',
-                f'      <formula>strategy Safe = control: A&lt;&gt; {final_expr}</formula>',
-                '    </query>',
-
-                # Simulation under controller
-                '    <query>',
-                f'      <formula>simulate [&lt;={time}; {sim_nr}] {{ temp }} under Safe</formula>',
-                '    </query>',
-
-                # Reachability
-                '    <query>',
-                f'      <formula>E&lt;&gt; {final_expr}</formula>',
-                '    </query>',
-
-                # Safety
-                '    <query>',
-                '      <formula>A[] not deadlock</formula>',
-                '    </query>',
-
-                # Eventually reach accepting state
-                '    <query>',
-                f'      <formula>A&lt;&gt; {final_expr}</formula>',
-                '    </query>',
-
-                # Checks that temperature remains within learned symbolic bounds.
-                '    <query>',
-                f'      <formula> A[] ({temp_bounds_expr})</formula>',
-                '    </query>',
-
-                # Expected global clock evolution
-                '    <query>',
-                f'      <formula>A[] cl_local &lt;= {max_time}</formula>',
-                '    </query>',
-
-                '    <query>',
-                f'       <formula>A&lt;&gt; stable under Safe</formula>',
-                '    </query>',
-
-                '    <query>',
-                f'       <formula>A[] not spike under Safe</formula>',
-                '    </query>',
-                '  </queries>',
-
-                '</nta>',
-            ]
-        elif data_type == "ecg":
-            for acc in accepting_states:
-                 state_expr = f"Process.{acc}"
-                 lines += [
-                    '  </template>',
-                    '  <system>Process = TagModel(); system Process;</system>',
-                    '  <queries>',
-
-                    '    <query>',
-                    f'      <formula>strategy Safe = control: A&lt;&gt; {state_expr}</formula>',
-                    '    </query>',
-
-                    # Simulation under controller
-                    '    <query>',
-                    f'      <formula>simulate [&lt;={time}; {sim_nr}] {{ temp }} under Safe</formula>',
-                    '    </query>',
-
-                    # Reachability
-                    '    <query>',
-                    f'      <formula>E&lt;&gt; {state_expr}</formula>',
-                    '    </query>',
-
-                    # Safety
-                    '    <query>',
-                    '      <formula>A[] not deadlock</formula>',
-                    '    </query>',
-
-                    # Eventually reach accepting state
-                    '    <query>',
-                    f'      <formula>A&lt;&gt; {state_expr} under Safe</formula>',
-                    '    </query>',
-
-                    '    <query>',
-                    f'       <formula>A&lt;&gt; (temp &gt;= peak_threshold) under Safe</formula>',
-                    '    </query>',
-                    
-
-                    '    <query>',
-                    f'       <formula>A&lt;&gt; (cl_global &lt;= first_flat_window imply temp &lt;= flat_threshold) under Safe</formula>',
-                    '    </query>',
-
-
-                    '    <query>',
-                    f'       <formula>A[] (cl_global &lt;= first_flat_window imply temp &lt;= flat_threshold) under Safe</formula>',
-                    '    </query>',
-
-
-                    '    <query>',
-                    f'       <formula>A&lt;&gt; (cl_global &gt;= second_flat_window imply temp &lt;= flat_threshold) under Safe </formula>',
-                    '    </query>',
-
-                    '    <query>',
-                    f'       <formula>A[](cl_global &gt;= second_flat_window imply temp &lt;= flat_threshold) under Safe </formula>',
-                    '    </query>',
-
-                    '  </queries>',
-
-
-                    '</nta>',
-                ]
-
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-
-        with open(path, 'w+') as f:
-            f.write('\n'.join(lines))
-
-        print(f"UPPAAL model written to {path}")
+    #     """
+    #     Export the automaton as a UPPAAL XML file with Graphviz layout coordinates.
+    #
+    #     Args:
+    #         path (str): Path for the output .xml file
+    #         symbol_map (dict, optional): Mapping of symbol names to temperature values,
+    #                                      e.g. {'a': 2090, 'b': 2120, 'c': 2148}
+    #     """
+    #
+    #     self.update_probas()
+    #
+    #     state_ids = {s.name: f"id{i}" for i, s in enumerate(self.states)}
+    #     initial = next((s for s in self.states if s.initial), self.states[0])
+    #
+    #     # Use provided symbol map or fallback
+    #     if symbol_map is None:
+    #         symbol_values = {sym: i for i, sym in enumerate(self.symbols)}
+    #     else:
+    #         symbol_values = symbol_map
+    #
+    #     # ----------------------------
+    #     # Graphviz layout generation
+    #     # ----------------------------
+    #     dot = 'digraph G {\n'
+    #     dot += 'START [style=invisible]\n'
+    #     dot += 'node [shape="circle"]\n'
+    #
+    #     for state in self.states:
+    #         if state.accepting:
+    #             dot += f'{state.name} [shape="doublecircle"]\n'
+    #
+    #     dot += f'START -> {initial.name}\n'
+    #
+    #     for state in self.states:
+    #         for e in state.edges_out:
+    #             dot += f'{e.source.name} -> {e.destination.name} [label="{e.symbol}"]\n'
+    #
+    #     dot += '}'
+    #
+    #     positions = {}
+    #     try:
+    #         result = subprocess.run(
+    #             ['dot', '-Tplain'],
+    #             input=dot,
+    #             capture_output=True,
+    #             text=True
+    #         )
+    #
+    #         scale = 400
+    #         for line in result.stdout.splitlines():
+    #             parts = line.split()
+    #             if parts[0] == 'node' and parts[1] != 'START':
+    #                 name = parts[1]
+    #                 x = round(float(parts[2]) * scale)
+    #                 y = round(float(parts[3]) * scale)
+    #                 positions[name] = (x, -y)
+    #
+    #     except FileNotFoundError:
+    #         print("Warning: 'dot' command not found. Falling back to grid layout.")
+    #
+    #     # ----------------------------
+    #     # Compute invariants
+    #     # ----------------------------
+    #     upper_bounds = {}
+    #
+    #     for state in self.states:
+    #         bounds = []
+    #
+    #         for e in state.edges_out:
+    #             _, local_hi = e.reduced_guard()
+    #             bounds.append(local_hi)
+    #
+    #         upper_bounds[state.name] = max(bounds) if bounds else None
+    #
+    #
+    #
+    #     # ----------------------------
+    #     # Build UPPAAL declarations
+    #     # ----------------------------
+    #     const_decls = ' '.join(
+    #         f'const int {sym} = {val};\n'
+    #         for sym, val in symbol_values.items()
+    #     )
+    #
+    #     # Determine initial temp from initial state's outgoing symbol (or custom logic)
+    #     initial_symbol = None
+    #     if initial.edges_out:
+    #         initial_symbol = initial.edges_out[0].symbol
+    #
+    #     initial_temp_value = initial_symbol if initial_symbol is not None else "0"
+    #
+    #     lines = []
+    #
+    #     if data_type == "temp":
+    #
+    #         lines = [
+    #             '<?xml version="1.0" encoding="utf-8"?>',
+    #             "<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'",
+    #             "  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>",
+    #             '<nta>',
+    #             f'  <declaration>clock cl_local, cl_global;\n'
+    #             f'{const_decls} \n'
+    #             f'int temp = {initial_temp_value};\n'
+    #             'const int spike_threshold = 4000;\n'
+    #             'int prev_temp;\n'
+    #             'bool spike = false;\n'
+    #             'bool stable = true;\n'
+    #             'const int temp_min = 1800; \n'
+    #             'const int temp_max = 2700;\n'
+    #             '</declaration>',
+    #             '  <template>',
+    #             '    <name>TagModel</name>',
+    #             '    <declaration></declaration>',
+    #         ]
+    #     elif data_type == "ecg":
+    #         lines = [
+    #             '<?xml version="1.0" encoding="utf-8"?>',
+    #             "<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN'",
+    #             "  'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>",
+    #             '<nta>',
+    #             f'  <declaration>clock cl_local, cl_global;\n'
+    #             f'{const_decls} \n'
+    #             f'int temp = {initial_temp_value};\n'
+    #             'const int flat_threshold = -10; \n'
+    #             'const int peak_threshold = 50;\n'
+    #             'const int first_flat_window = 95;\n'
+    #             'const int second_flat_window = 185;\n'
+    #             '</declaration>',
+    #             '  <template>',
+    #             '    <name>TagModel</name>',
+    #             '    <declaration></declaration>',
+    #         ]
+    #
+    #
+    #     # ----------------------------
+    #     # Locations
+    #     # ----------------------------
+    #     for i, state in enumerate(self.states):
+    #         sid = state_ids[state.name]
+    #         x, y = positions.get(state.name, ((i % 10) * 200, (i // 10) * 200))
+    #
+    #         lines.append(f'    <location id="{sid}" x="{x}" y="{y}">')
+    #         lines.append(f'      <name x="{x}" y="{y - 20}">{state.name}</name>')
+    #
+    #         ub = upper_bounds.get(state.name)
+    #         if ub is not None:
+    #             lines.append(
+    #                 f'      <label kind="invariant" x="{x}" y="{y + 20}">'
+    #                 f'cl_local &lt;= {ub}</label>'
+    #             )
+    #
+    #         lines.append('    </location>')
+    #
+    #     lines.append(f'    <init ref="{state_ids[initial.name]}"/>')
+    #
+    #     # ----------------------------
+    #     # Transitions
+    #     # ----------------------------
+    #     for state in self.states:
+    #         for e in state.edges_out:
+    #
+    #             # Local timing bounds
+    #             local_lo, local_hi = e.reduced_guard()
+    #
+    #             # Global timing bounds
+    #             if len(e.tss) > 0:
+    #                 global_lo, global_hi = e.reduce_gtime()
+    #             else:
+    #                 global_lo, global_hi = local_lo, local_hi  # fallback if no global timing exists
+    #
+    #             symbol_var = e.symbol
+    #
+    #             lines.append('    <transition>')
+    #             lines.append(f'      <source ref="{state_ids[e.source.name]}"/>')
+    #             lines.append(f'      <target ref="{state_ids[e.destination.name]}"/>')
+    #
+    #             lines.append(
+    #                 f'      <label kind="guard">'
+    #                 f'cl_local &gt;= {local_lo} &amp;&amp; cl_local &lt;= {local_hi} '
+    #                 f'&amp;&amp; '
+    #                 f'cl_global &gt;= {global_lo} &amp;&amp; cl_global &lt;= {global_hi}'
+    #                 f'</label>'
+    #             )
+    #
+    #
+    #             if data_type == "temp":
+    #                 lines.append(
+    #                     '      <label kind="assignment">'
+    #                     f'temp = {symbol_var},\n'
+    #                     'spike = ((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold)),\n'
+    #                     'stable = ((temp - prev_temp &lt; spike_threshold) || (prev_temp - temp &lt; spike_threshold)) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max),\n'
+    #                     f'prev_temp = temp,'
+    #                     'cl_local = 0'
+    #                     '</label>'
+    #                 )
+    #             elif data_type == "ecg":
+    #                 lines.append(
+    #                     f'      <label kind="assignment">'
+    #                     f'temp = {symbol_var}, cl_local = 0'
+    #                     f'</label>'
+    #                 )
+    #
+    #             lines.append('    </transition>')
+    #
+    #     # ----------------------------
+    #     # Final XML
+    #     # ----------------------------
+    #     min_temp = min(symbol_values.values())
+    #     max_temp = max(symbol_values.values())
+    #
+    #     temp_bounds_expr = f"temp &gt;= {min_temp} &amp;&amp; temp &lt;= {max_temp}"
+    #
+    #     max_time = 300
+    #
+    #     accepting_states = [s.name for s in self.states if s.accepting]
+    #
+    #     if not accepting_states:
+    #         raise ValueError("No accepting/final states defined in automaton.")
+    #
+    #     final_expr = " || ".join(f"Process.{name}" for name in accepting_states)
+    #
+    #     if data_type == "temp":
+    #         lines += [
+    #             '  </template>',
+    #             '  <system>Process = TagModel(); system Process;</system>',
+    #             '  <queries>',
+    #
+    #             '    <query>',
+    #             f'      <formula>strategy Safe = control: A&lt;&gt; {final_expr}</formula>',
+    #             '    </query>',
+    #
+    #             # Simulation under controller
+    #             '    <query>',
+    #             f'      <formula>simulate [&lt;={time}; {sim_nr}] {{ temp }} under Safe</formula>',
+    #             '    </query>',
+    #
+    #             # Reachability
+    #             '    <query>',
+    #             f'      <formula>E&lt;&gt; {final_expr}</formula>',
+    #             '    </query>',
+    #
+    #             # Safety
+    #             '    <query>',
+    #             '      <formula>A[] not deadlock</formula>',
+    #             '    </query>',
+    #
+    #             # Eventually reach accepting state
+    #             '    <query>',
+    #             f'      <formula>A&lt;&gt; {final_expr}</formula>',
+    #             '    </query>',
+    #
+    #             # Checks that temperature remains within learned symbolic bounds.
+    #             '    <query>',
+    #             f'      <formula> A[] ({temp_bounds_expr})</formula>',
+    #             '    </query>',
+    #
+    #             # Expected global clock evolution
+    #             '    <query>',
+    #             f'      <formula>A[] cl_local &lt;= {max_time}</formula>',
+    #             '    </query>',
+    #
+    #             '    <query>',
+    #             f'       <formula>A&lt;&gt; stable under Safe</formula>',
+    #             '    </query>',
+    #
+    #             '    <query>',
+    #             f'       <formula>A[] not spike under Safe</formula>',
+    #             '    </query>',
+    #             '  </queries>',
+    #
+    #             '</nta>',
+    #         ]
+    #     elif data_type == "ecg":
+    #         for acc in accepting_states:
+    #              state_expr = f"Process.{acc}"
+    #              lines += [
+    #                 '  </template>',
+    #                 '  <system>Process = TagModel(); system Process;</system>',
+    #                 '  <queries>',
+    #
+    #                 '    <query>',
+    #                 f'      <formula>strategy Safe = control: A&lt;&gt; {state_expr}</formula>',
+    #                 '    </query>',
+    #
+    #                 # Simulation under controller
+    #                 '    <query>',
+    #                 f'      <formula>simulate [&lt;={time}; {sim_nr}] {{ temp }} under Safe</formula>',
+    #                 '    </query>',
+    #
+    #                 # Reachability
+    #                 '    <query>',
+    #                 f'      <formula>E&lt;&gt; {state_expr}</formula>',
+    #                 '    </query>',
+    #
+    #                 # Safety
+    #                 '    <query>',
+    #                 '      <formula>A[] not deadlock</formula>',
+    #                 '    </query>',
+    #
+    #                 # Eventually reach accepting state
+    #                 '    <query>',
+    #                 f'      <formula>A&lt;&gt; {state_expr} under Safe</formula>',
+    #                 '    </query>',
+    #
+    #                 '    <query>',
+    #                 f'       <formula>A&lt;&gt; (temp &gt;= peak_threshold) under Safe</formula>',
+    #                 '    </query>',
+    #
+    #
+    #                 '    <query>',
+    #                 f'       <formula>A&lt;&gt; (cl_global &lt;= first_flat_window imply temp &lt;= flat_threshold) under Safe</formula>',
+    #                 '    </query>',
+    #
+    #
+    #                 '    <query>',
+    #                 f'       <formula>A[] (cl_global &lt;= first_flat_window imply temp &lt;= flat_threshold) under Safe</formula>',
+    #                 '    </query>',
+    #
+    #
+    #                 '    <query>',
+    #                 f'       <formula>A&lt;&gt; (cl_global &gt;= second_flat_window imply temp &lt;= flat_threshold) under Safe </formula>',
+    #                 '    </query>',
+    #
+    #                 '    <query>',
+    #                 f'       <formula>A[](cl_global &gt;= second_flat_window imply temp &lt;= flat_threshold) under Safe </formula>',
+    #                 '    </query>',
+    #
+    #                 '  </queries>',
+    #
+    #
+    #                 '</nta>',
+    #             ]
+    #
+    #     os.makedirs(os.path.dirname(path), exist_ok=True)
+    #
+    #     with open(path, 'w+') as f:
+    #         f.write('\n'.join(lines))
+    #
+    #     print(f"UPPAAL model written to {path}")
 
 
 
@@ -619,7 +616,6 @@ class Automaton:
     # VERSION local, global, variable, weights
     # def export_ta(self, path: str, symbol_map: dict = None,
     #               local_slack: int = 0) -> None:
->>>>>>> b70fb2bc3876d5a05dc688130c8a3694fe56f1a9
     #     """
     #     Export the automaton as a UPPAAL XML file with Graphviz layout coordinates.
     #
@@ -962,25 +958,42 @@ class Automaton:
 
 
 
-    def build_declarations(self, symbol_values, initial_symbol):
+    def build_declarations(self, symbol_values, initial_symbol, data_type):
         const_decls = ''.join(
             f'const int {sym} = {val};\n'
             for sym, val in symbol_values.items()
         )
 
         initial_temp_value = initial_symbol if initial_symbol is not None else "0"
-        declarations_xml = (
-            '<declaration>\n'
-            'clock cl_local, cl_global;\n'
-            f'{const_decls} \n'
-            f'int temp = {initial_temp_value};\n'
-            'int prev_temp;\n'
-            'const int spike_threshold = 4000;\n'
-            'const int temp_min = 1800; \n'
-            'const int temp_max = 2700;\n'
-            'const int stabilization_time = 1200;\n'
-            '</declaration>'
-        )
+
+        declarations_xml = ""
+
+        if data_type == "temp":
+            declarations_xml += (
+                '<declaration>\n'
+                'clock cl_local, cl_global;\n'
+                f'{const_decls} \n'
+                f'int temp = {initial_temp_value};\n'
+                'int prev_temp;\n'
+                'const int spike_threshold = 4000;\n'
+                'const int temp_min = 1800; \n'
+                'const int temp_max = 2700;\n'
+                'const int stabilization_time = 900;\n'
+                '</declaration>'
+            )
+        elif data_type == "ecg":
+            declarations_xml += (
+                '<declaration>\n'
+                'clock cl_local, cl_global;\n'
+                f'{const_decls} \n'
+                f'int temp = {initial_temp_value};\n'
+                'int prev_temp;\n'
+                'const int spike_threshold = 4000;\n'
+                'const int temp_min = 1800; \n'
+                'const int temp_max = 2700;\n'
+                'const int stabilization_time = 900;\n'
+                '</declaration>'
+            )
 
         return declarations_xml
 
@@ -1080,24 +1093,41 @@ class Automaton:
 
 
 
-    def build_queries(self, final_expr,  time, sim_nr):
+    def build_queries(self, final_expr,  time, sim_nr, data_type = "temp"):
         queries = ""
 
-        queries += "\t<queries>\n\n"
+        if data_type == "temp":
+            queries += "\t<queries>\n\n"
 
-        queries += "\t\t<query>\n"
-        queries += f"\t\t\t<formula>strategy Safe = control: A&lt;&gt; {final_expr}</formula>\n"
-        queries += "\t\t</query>\n\n"
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>strategy Safe = control: A&lt;&gt; {final_expr}</formula>\n"
+            queries += "\t\t</query>\n\n"
 
-        queries += "\t\t<query>\n"
-        queries += f"\t\t\t<formula>simulate [&lt;={time}; {sim_nr}] {{ temp }} </formula>\n"
-        queries += "\t\t</query>\n\n"
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>simulate [&lt;={time}; {sim_nr}] {{ temp }} </formula>\n"
+            queries += "\t\t</query>\n\n"
 
-        queries += "\t\t<query>\n"
-        queries += f"\t\t\t<formula>E&lt;&gt; {final_expr}</formula>\n"
-        queries += "\t\t</query>\n\n"
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>E&lt;&gt; {final_expr}</formula>\n"
+            queries += "\t\t</query>\n\n"
 
-        queries += "\t</queries>\n"
+            queries += "\t</queries>\n"
+        elif data_type == "ecg":
+            queries += "\t<queries>\n\n"
+
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>strategy Safe = control: A&lt;&gt; {final_expr}</formula>\n"
+            queries += "\t\t</query>\n\n"
+
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>simulate [&lt;={time}; {sim_nr}] {{ temp }} </formula>\n"
+            queries += "\t\t</query>\n\n"
+
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>E&lt;&gt; {final_expr}</formula>\n"
+            queries += "\t\t</query>\n\n"
+
+            queries += "\t</queries>\n"
 
         return queries
 
@@ -1117,7 +1147,7 @@ class Automaton:
             else "0"
         )
 
-        declarations = self.build_declarations(symbol_map, initial_symbol)
+        declarations = self.build_declarations(symbol_map, initial_symbol, data_type)
 
         xml += '<?xml version="1.0" encoding="utf-8"?>' + '\n'
         xml += "<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>" + '\n'
@@ -1213,22 +1243,25 @@ class Automaton:
         xml += "\t\t<name>TagObserver</name>\n"
         xml += "\t\t<declaration>\n"
         xml += "\t\t\tclock cl_observer;\n"
+        xml += "\t\t\tbool SPIKE_seen = false;\n"
         xml += "\t\t</declaration>\n"
 
         # States
-        xml += create_location(s_id, (0,0), "START")
+        xml += self.create_location(s_id, (0,0), "START")
         d_s_id["START"] = "id" + str(s_id)
+        xml += f'\t\t<label kind="invariant">cl_observer &lt;= 0</label>\n'
         s_id += 1
 
-        xml += create_location(s_id, (200,0), "SPIKE")
+        xml += self.create_location(s_id, (200,50), "SPIKE")
         d_s_id["SPIKE"] = "id" + str(s_id)
         s_id += 1
 
-        xml += create_location(s_id, (400,0), "STABLE")
+        xml += self.create_location(s_id, (400,-50), "STABLE")
         d_s_id["STABLE"] = "id" + str(s_id)
+        xml += f'\t\t<label kind="invariant">cl_observer &lt;= stabilization_time</label>\n'
         s_id += 1
 
-        xml += create_location(s_id, (600,0), "STABILIZED")
+        xml += self.create_location(s_id, (600,100), "STABILIZED")
         d_s_id["STABILIZED"] = "id" + str(s_id)
         s_id += 1
 
@@ -1236,11 +1269,19 @@ class Automaton:
         xml += f'\t\t<init ref="{d_s_id["START"]}"/>\n'
 
         # Transitions
-        # INIT -> SPIKE
+        # START -> SPIKE
         xml += "\t\t<transition>\n"
         xml += f'\t\t\t<source ref="{d_s_id["START"]}"/>\n'
         xml += f'\t\t\t<target ref="{d_s_id["SPIKE"]}"/>\n'
         xml += '\t\t\t<label kind="guard">((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold))</label>\n'
+        xml += '\t\t\t<label kind="assignment">cl_observer = 0,SPIKE_seen = true</label>\n'
+        xml += "\t\t</transition>\n"
+
+        # START -> STABLE (if first value is already stable)
+        xml += "\t\t<transition>\n"
+        xml += f'\t\t\t<source ref="{d_s_id["START"]}"/>\n'
+        xml += f'\t\t\t<target ref="{d_s_id["STABLE"]}"/>\n'
+        xml += '\t\t\t<label kind="guard">((temp - prev_temp &lt; spike_threshold) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max))</label>\n'
         xml += '\t\t\t<label kind="assignment">cl_observer = 0</label>\n'
         xml += "\t\t</transition>\n"
 
@@ -1257,6 +1298,7 @@ class Automaton:
         xml += f'\t\t\t<source ref="{d_s_id["STABLE"]}"/>\n'
         xml += f'\t\t\t<target ref="{d_s_id["STABILIZED"]}"/>\n'
         xml += '\t\t\t<label kind="guard">cl_observer &gt;= stabilization_time</label>\n'
+        xml += '\t\t\t<label kind="assignment"> SPIKE_seen = false</label>\n'
         xml += "\t\t</transition>\n"
 
         # STABLE -> SPIKE (allow another spike before stabilization)
@@ -1264,7 +1306,15 @@ class Automaton:
         xml += f'\t\t\t<source ref="{d_s_id["STABLE"]}"/>\n'
         xml += f'\t\t\t<target ref="{d_s_id["SPIKE"]}"/>\n'
         xml += '\t\t\t<label kind="guard">((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold))</label>\n'
-        xml += '\t\t\t<label kind="assignment">cl_observer = 0</label>\n'
+        xml += '\t\t\t<label kind="assignment">cl_observer = 0, SPIKE_seen = true</label>\n'
+        xml += "\t\t</transition>\n"
+
+        # STABILIZED -> SPIKE (allow spikes after stabilization)
+        xml += "\t\t<transition>\n"
+        xml += f'\t\t\t<source ref="{d_s_id["STABILIZED"]}"/>\n'
+        xml += f'\t\t\t<target ref="{d_s_id["SPIKE"]}"/>\n'
+        xml += '\t\t\t<label kind="guard">((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold))</label>\n'
+        xml += '\t\t\t<label kind="assignment">cl_observer = 0, SPIKE_seen = true</label>\n'
         xml += "\t\t</transition>\n"
 
         xml += "\t</template>\n"
@@ -1278,7 +1328,7 @@ class Automaton:
         # --- queries ---
         final_expr = " || ".join(f"Automaton.{s.name}" for s in self.states if s.accepting)
 
-        xml += self.build_queries(final_expr, time, sim_nr)
+        xml += self.build_queries(final_expr, time, sim_nr, data_type)
 
         xml += '</nta>'
 
