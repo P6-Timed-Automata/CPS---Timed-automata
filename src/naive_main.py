@@ -67,7 +67,7 @@ elif(data_type == "ecg"):
 train_raw_traces = get_trace_files(folder_path = train_folder)
 train_raw_lists = csv_to_temp_time_list(input_files=train_raw_traces)
 train_traces, bins = equal_width_discretization(train_raw_lists, symbols)
-symbolic_train_trace, symbol_map, mapping = map_bins_to_symbols(train_traces, symbols, bins)
+symbolic_train_trace, symbol_map, mapping = map_bins_to_symbols(train_traces, bins)
 
 
 #Prepare test traces (positive and negative samples)
@@ -87,8 +87,8 @@ test_positive_raw_lists = csv_to_temp_time_list(input_files=test_positive_raw_tr
 test_negative_raw_lists = csv_to_temp_time_list(input_files=test_negative_raw_traces)
 
 
-test_positive_traces_lists = preprocess_test_traces(test_traces = test_positive_raw_lists, bins = bins, s = symbols)
-test_negative_traces_lists = preprocess_test_traces(test_traces = test_negative_raw_lists, bins = bins, s = symbols)
+test_positive_traces_lists = preprocess_test_traces(test_traces = test_positive_raw_lists, bins = bins )
+test_negative_traces_lists = preprocess_test_traces(test_traces = test_negative_raw_lists, bins = bins)
 
 
 # Plot negative samples
@@ -113,8 +113,8 @@ elif(data_type == "ecg"):
 
 # Parameter for nr of Traces
 len_traces = len(train_raw_traces)  + 1
-start_traces = 1
-len_traces = 2
+start_traces = 2
+len_traces = 4
 
 
 for trace_nr in range(start_traces, len_traces):
@@ -131,7 +131,7 @@ for trace_nr in range(start_traces, len_traces):
 
     symbolic_train_trace_subset = symbolic_train_trace[:trace_nr ]
 
-    format_output(symbolic_res_list=symbolic_train_trace_subset, output_path=discretinize_data_path)
+    format_output(symbolic_traces=symbolic_train_trace_subset, output_path=discretinize_data_path)
 
 
     # Loop over varying K-future
