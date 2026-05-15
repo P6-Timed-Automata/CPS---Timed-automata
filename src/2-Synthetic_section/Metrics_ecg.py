@@ -36,8 +36,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from shared.generators import load_traces, NEG_MODE_NAMES
-from shared.pipeline import run_pipeline
+from Generators import load_traces, NEG_MODE_NAMES
+from Pipeline import run_pipeline
 
 
 # =============================================================================
