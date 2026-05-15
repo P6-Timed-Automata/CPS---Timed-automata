@@ -7,23 +7,27 @@ multiple TAG k values.
 Per-trace design:
   For each variant (method, params) and each TAG k value, fit one TA per
   trace and report aggregate statistics (median, min, max) across the 20
-  traces. This makes timing and structure metrics robust to single-trace
-  variability — the original motivation for running 20 traces.
+  traces.
+
+Crash-resilient design (for SLURM):
+  - Recursion limit is raised at startup so TAG's recursive traversals
+    don't hit Python's 1000-frame default for larger alphabets.
+  - Each variant is wrapped in try/except. Any failure (RecursionError,
+    MemoryError, anything else) is logged as status="failed" and the
+    sweep continues with the next variant.
+  - benchmark_log.json is saved to disk after every variant completes,
+    so SLURM killing the job mid-sweep still leaves earlier variants on
+    disk.
+  - Persist (and optionally SAX) use stop_on_failure=True: once one of
+    their alphabet sizes crashes, larger sizes are skipped.
 
 For each TAG k value, results go to TA_Benchmark/<timestamp>/k<n>/ with
-its own benchmark_log.json. plot_benchmark.py can then be pointed at one
-k subfolder to produce a plot set for that k.
-
-Methodology note (for the thesis):
-  This benchmark selects parameters per method. The downstream anomaly-
-  detection pipeline (exp_51_52 etc.) uses those parameters with corpus
-  fitting (one TA from all training traces) to produce the actual TA.
-  Two-stage workflow: benchmark for parameter selection, pipeline for
-  the production TA.
+its own benchmark_log.json.
 """
 
 import json
 import os
+import sys
 import tempfile
 import time
 import uuid
@@ -31,6 +35,13 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
+
+# Raise recursion limit before TAG can hit it. TAG uses recursive traversal
+# for state merging and path existence; larger alphabets produce more states
+# and deeper traversals. 50k is conservative — Python's actual ceiling is the
+# OS stack size (~1 MB → ~10k frames in practice). If you see SIGSEGV instead
+# of RecursionError, the OS stack is the bottleneck and this won't help.
+sys.setrecursionlimit(50000)
 
 from Discretization.discretizationSetup import (
     csv_to_temp_time_list,
@@ -93,14 +104,7 @@ def compute_errors(t_disc, v_disc, t_raw, v_raw):
 # ---------------------------------------------------------------------------
 
 def discretize_one_trace(method_type, params, trace_data):
-    """
-    Fit discretization on a single trace and return:
-      - discretized_trace : [(label, time), ...] for this trace
-      - bins_celsius      : bin edges in original (Celsius) space
-
-    Wraps the trace in a 1-element list for compatibility with discretization
-    APIs that expect a list of traces.
-    """
+    """Fit discretization on a single trace and return (trace, bins_c)."""
     if method_type == "naive":
         traces, bins_c = equal_width_discretization([trace_data], k=params["bins"])
         return traces[0], bins_c
@@ -134,19 +138,14 @@ def discretize_one_trace(method_type, params, trace_data):
 
 def learn_ta_from_one_trace(discretized_trace, bins_c, tag_k):
     """
-    Learn a TA from a single discretized trace. Returns:
+    Learn a TA from one discretized trace. Returns:
       (n_states, n_edges, is_consistent, n_inconsistencies)
 
-    Consistency: TAG should produce a TA that accepts its training trace(s).
-    A non-zero inconsistency count means the learned TA cannot replay one
-    or more of its own training traces — a sign that learning over-merged,
-    over-split, or hit a corner case.
+    Raises RecursionError, MemoryError, or other exceptions if TAG fails;
+    callers should wrap in try/except.
     """
-    actual_bins = len(bins_c) - 1
-    symbolic_traces, _, _ = map_bins_to_symbols( #tried to fix
-        [discretized_trace], bins_c
-)
-    # Unique tmp file so concurrent runs and Windows file locks don't collide.
+    symbolic_traces, _, _ = map_bins_to_symbols([discretized_trace], bins_c)
+
     tmp_file = os.path.join(
         tempfile.gettempdir(),
         f"tag_input_{uuid.uuid4().hex}.txt",
@@ -158,8 +157,6 @@ def learn_ta_from_one_trace(discretized_trace, bins_c, tag_k):
         n_states = len(learner.ta.states)
         n_edges = len(learner.ta.edges)
 
-        # Check whether the learned TA still accepts the training trace.
-        # show=False, p=False suppress the default printing.
         inconsistency_count = learner.ta.inconsistency_nb(
             learner.tss, timed=True, show=False, p=False
         )
@@ -171,20 +168,62 @@ def learn_ta_from_one_trace(discretized_trace, bins_c, tag_k):
             try:
                 os.remove(tmp_file)
             except OSError:
-                # Windows occasionally holds locks briefly; not worth crashing over.
                 pass
 
 
 # ---------------------------------------------------------------------------
-# Per-variant experiment
+# Per-variant experiment (with crash protection)
 # ---------------------------------------------------------------------------
 
 def run_variant(label, method_type, params, data_lists, trace_files,
                 t_raws, v_raws, tag_k):
     """
-    One variant = one (method, params) combination.
-    Fits one TA per trace, then aggregates across traces.
+    Outer wrapper that catches any exception from the inner body. On
+    failure, returns a "failed" stub with status="failed" and the error
+    message. The variant is still recorded in the log so partial sweeps
+    leave a trace of what was attempted.
     """
+    try:
+        return _run_variant_inner(
+            label, method_type, params, data_lists, trace_files,
+            t_raws, v_raws, tag_k,
+        )
+    except RecursionError as e:
+        # Most likely TAG hit the recursion limit. Specific message so it's
+        # easy to spot in logs.
+        msg = f"RecursionError (likely TAG state traversal): {e}"
+        print(f"    FAILED — {msg}", flush=True)
+        return _failed_result(label, method_type, params, tag_k,
+                              "RecursionError", str(e))
+    except MemoryError as e:
+        msg = f"MemoryError: {e}"
+        print(f"    FAILED — {msg}", flush=True)
+        return _failed_result(label, method_type, params, tag_k,
+                              "MemoryError", str(e))
+    except Exception as e:
+        error_type = type(e).__name__
+        msg = f"{error_type}: {str(e)[:200]}"
+        print(f"    FAILED — {msg}", flush=True)
+        return _failed_result(label, method_type, params, tag_k,
+                              error_type, str(e))
+
+
+def _failed_result(label, method_type, params, tag_k, error_type, error_msg):
+    """Build a 'failed' result stub for the log."""
+    return {
+        "label":       label,
+        "method_type": method_type,
+        "params":      params,
+        "tag_k":       tag_k,
+        "status":      "failed",
+        "error_type":  error_type,
+        "error_msg":   error_msg,
+    }
+
+
+def _run_variant_inner(label, method_type, params, data_lists, trace_files,
+                       t_raws, v_raws, tag_k):
+    """Actual body of one variant. May raise; caller wraps in try/except."""
     n_traces = len(data_lists)
 
     per_trace_mae = []
@@ -199,10 +238,7 @@ def run_variant(label, method_type, params, data_lists, trace_files,
     for i, trace_data in enumerate(data_lists):
         t0 = time.perf_counter()
 
-        # Fit discretization on this trace only.
         discretized_trace, bins_c = discretize_one_trace(method_type, params, trace_data)
-
-        # Learn a TA from this trace's symbolic sequence.
         n_states, n_edges, is_consistent, _ = learn_ta_from_one_trace(
             discretized_trace, bins_c, tag_k
         )
@@ -216,21 +252,15 @@ def run_variant(label, method_type, params, data_lists, trace_files,
 
         actual_bins = len(bins_c) - 1
         if method_type == "persist":
-            # get_best_bins adds two outer edges that aren't true cuts;
-            # subtract one to recover the number of bins Persist actually
-            # chose.
             actual_bins -= 1
         per_trace_actual_bins.append(actual_bins)
 
-        # MAE: discretized trace versus its own raw signal.
         t_d, v_d = discretized_to_step(discretized_trace, bins_c)
         mae, resids = compute_errors(t_d, v_d, t_raws[i], v_raws[i])
         per_trace_mae.append(mae)
         per_trace_resids.append(resids)
         per_trace_steps.append((t_d, v_d))
 
-    # Pick the median-MAE trace for plotting (Concern 8).
-    # np.argsort gives ascending indices; the middle index lands at the median.
     median_idx = int(np.argsort(per_trace_mae)[len(per_trace_mae) // 2])
 
     result = {
@@ -238,40 +268,35 @@ def run_variant(label, method_type, params, data_lists, trace_files,
         "method_type":        method_type,
         "params":             params,
         "tag_k":              tag_k,
+        "status":             "ok",
 
-        # MAE across traces — median + min/max (Note 13: robust statistics)
         "mae_median":         float(np.median(per_trace_mae)),
-        "mae_mean":           float(np.mean(per_trace_mae)),    # kept for completeness
+        "mae_mean":           float(np.mean(per_trace_mae)),
         "mae_std":            float(np.std(per_trace_mae)),
         "mae_min":            float(np.min(per_trace_mae)),
         "mae_max":            float(np.max(per_trace_mae)),
 
-        # Timing across traces
         "time_median":        float(np.median(per_trace_times)),
         "time_mean":          float(np.mean(per_trace_times)),
         "time_std":           float(np.std(per_trace_times)),
         "time_min":           float(np.min(per_trace_times)),
         "time_max":           float(np.max(per_trace_times)),
 
-        # TA structure across traces — median + min/max
-        "n_states_median":  float(np.median(per_trace_states)),
-        "n_states_mean":    float(np.mean(per_trace_states)),
-        "n_states_std":     float(np.std(per_trace_states)),
-        "n_states_min":     int(np.min(per_trace_states)),
-        "n_states_max":     int(np.max(per_trace_states)),
+        "n_states_median":    float(np.median(per_trace_states)),
+        "n_states_mean":      float(np.mean(per_trace_states)),
+        "n_states_std":       float(np.std(per_trace_states)),
+        "n_states_min":       int(np.min(per_trace_states)),
+        "n_states_max":       int(np.max(per_trace_states)),
 
-        "n_edges_median":   float(np.median(per_trace_edges)),
-        "n_edges_mean":     float(np.mean(per_trace_edges)),
-        "n_edges_std":      float(np.std(per_trace_edges)),
-        "n_edges_min":      int(np.min(per_trace_edges)),
-        "n_edges_max":      int(np.max(per_trace_edges)),
+        "n_edges_median":     float(np.median(per_trace_edges)),
+        "n_edges_mean":       float(np.mean(per_trace_edges)),
+        "n_edges_std":        float(np.std(per_trace_edges)),
+        "n_edges_min":        int(np.min(per_trace_edges)),
+        "n_edges_max":        int(np.max(per_trace_edges)),
 
-        # Consistency: how many of the per-trace TAs accepted their own
-        # training data (Bug 3 fix — surfaced in the log).
         "n_consistent":       int(sum(per_trace_consistent)),
         "n_total":            n_traces,
 
-        # Per-trace breakdown for any future analysis
         "per_trace": [
             {
                 "trace_path":  trace_files[j],
@@ -285,7 +310,6 @@ def run_variant(label, method_type, params, data_lists, trace_files,
             for j in range(n_traces)
         ],
 
-        # Plot data from the median-MAE trace, not from trace 0
         "plot_trace_path":    trace_files[median_idx],
         "plot_trace_index":   median_idx,
         "plot_t_d":           per_trace_steps[median_idx][0].tolist(),
@@ -308,10 +332,32 @@ def run_variant(label, method_type, params, data_lists, trace_files,
     return result
 
 
+# ---------------------------------------------------------------------------
+# Run all variants for one method, with incremental saving
+# ---------------------------------------------------------------------------
+
 def run_experiment(method_name, variants_dict, data_lists, trace_files,
-                   t_raws, v_raws, tag_k):
-    """Run all variants for one method at one tag_k. Returns sorted by median MAE."""
+                   t_raws, v_raws, tag_k,
+                   log, log_path, log_method_key,
+                   stop_on_failure=False):
+    """
+    Run all variants for one method × tag_k. Saves the log to disk after
+    every variant — if SLURM kills the job mid-sweep, earlier variants
+    are still on disk.
+
+    Parameters
+    ----------
+    log              : in-memory log dict being built
+    log_path         : path to write log on disk
+    log_method_key   : key under log["methods"] to populate
+    stop_on_failure  : if True, abort this method on first failure.
+                       Useful for Persist/SAX where larger alphabet
+                       sizes will likely fail the same way as smaller
+                       ones — don't waste time trying them.
+    """
     results = []
+    log["methods"][log_method_key] = results
+
     for label, (method_type, params) in variants_dict.items():
         print(f"  [{method_name}] {label} ...", flush=True)
         result = run_variant(
@@ -325,9 +371,29 @@ def run_experiment(method_name, variants_dict, data_lists, trace_files,
             tag_k=tag_k,
         )
         results.append(result)
-    # Sort by median MAE so the "best" variant is at index 0 — robust to
-    # outliers that would skew a mean-based ranking.
-    results.sort(key=lambda r: r["mae_median"])
+
+        # Incremental save — write after every variant, success or fail.
+        with open(log_path, "w") as f:
+            json.dump(log, f, indent=2)
+
+        if result.get("status") == "failed" and stop_on_failure:
+            n_remaining = len(variants_dict) - len(results)
+            print(f"  [{method_name}] Stopping after failure at '{label}'; "
+                  f"skipping {n_remaining} remaining variants.", flush=True)
+            break
+
+    # Sort: successful first (by median MAE), failures last.
+    def _sort_key(r):
+        if r.get("status") == "failed":
+            return (1, float("inf"))
+        return (0, r["mae_median"])
+
+    results.sort(key=_sort_key)
+    log["methods"][log_method_key] = results
+
+    with open(log_path, "w") as f:
+        json.dump(log, f, indent=2)
+
     return results
 
 
@@ -337,7 +403,6 @@ def run_experiment(method_name, variants_dict, data_lists, trace_files,
 
 def save_config(run_dir, tag_k_values, trace_files,
                 naive_vars, sax_vars, persist_vars):
-    """Save a plain-text summary of all benchmark parameters."""
     def _variant_lines(variants):
         return [
             f"    {label:30s} -> "
@@ -347,12 +412,13 @@ def save_config(run_dir, tag_k_values, trace_files,
 
     lines = [
         "=" * 60,
-        "Run configuration -- Benchmark (per-trace design)",
+        "Run configuration -- Benchmark (per-trace, crash-resilient)",
         "=" * 60,
         "",
         f"Timestamp     : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         f"TAG k values  : {tag_k_values}",
         f"Num traces    : {len(trace_files)}",
+        f"Recursion lim : {sys.getrecursionlimit()}",
         "",
         "--- Trace files ---",
     ]
@@ -381,9 +447,9 @@ if __name__ == "__main__":
     run_dir = BASE_DIR / "Data" / "Graphs" / "TA_Benchmark" / timestamp
     run_dir.mkdir(parents=True, exist_ok=True)
     print(f"Run folder: {run_dir}")
+    print(f"Python recursion limit raised to {sys.getrecursionlimit()}")
 
-    # ----- Configuration -----
-    TAG_K_VALUES = [2,4]
+    TAG_K_VALUES = [2, 4]
 
     base = BASE_DIR / "Data" / "synthetic_data" / "noisy_test"
     trace_files = sorted(str(p) for p in base.glob("noisy_test_tid*.csv"))[:20]
@@ -391,19 +457,19 @@ if __name__ == "__main__":
 
     naive_vars = {
         f"bins={b}": ("naive", {"bins": b})
-        for b in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        for b in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
     }
     sax_vars = {
         f"w={w}, bins={b}": ("sax", {"w": w, "bins": b})
-        for w in [24, 48, 96, 144]  
-        for b in [4, 8, 16]
+        for w in [24, 48, 96, 144]
+        for b in [5, 10, 15]
     }
     persist_vars = {
         f"k={b}": ("persist", {"bins": b})
-        for b in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+        for b in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
     }
 
-    # ----- Load data once (shared across all k values) -----
+    # Load data once (shared across all k values)
     print("Loading traces...")
     data_lists = csv_to_temp_time_list(input_files=trace_files)
     t_raws, v_raws = zip(*[load_trace(p) for p in trace_files])
@@ -411,12 +477,10 @@ if __name__ == "__main__":
     v_raws = list(v_raws)
     print(f"Loaded {len(data_lists)} traces.\n")
 
-    # ----- Config summary -----
     print("=== Config ===")
     save_config(run_dir, TAG_K_VALUES, trace_files,
                 naive_vars, sax_vars, persist_vars)
 
-    # ----- Run benchmark for each k value -----
     for tag_k in TAG_K_VALUES:
         print(f"\n{'#' * 60}")
         print(f"### TAG k = {tag_k}")
@@ -426,10 +490,6 @@ if __name__ == "__main__":
         k_dir.mkdir(parents=True, exist_ok=True)
         log_path = str(k_dir / "benchmark_log.json")
 
-        # The plotter reads t_raw and v_raw to draw the raw-signal overlay.
-        # Provide the median-MAE trace's raw data per variant via plot_t_d/v_d
-        # (already in each result); also keep a global t_raw/v_raw of trace 0
-        # for backward compatibility with the existing plot script.
         log = {
             "timestamp":   timestamp,
             "tag_k":       tag_k,
@@ -439,36 +499,38 @@ if __name__ == "__main__":
             "methods":     {},
         }
 
-        def _save_log():
-            with open(log_path, "w") as f:
-                json.dump(log, f, indent=2)
-            print(f"  Log updated: {log_path}")
-
         print(f"\n=== Naive (k={tag_k}) ===")
-        log["methods"]["Naive"] = run_experiment(
+        run_experiment(
             "Naive", naive_vars, data_lists, trace_files,
             t_raws, v_raws, tag_k,
+            log=log, log_path=log_path, log_method_key="Naive",
+            stop_on_failure=False,
         )
-        _save_log()
 
         print(f"\n=== SAX (k={tag_k}) ===")
-        log["methods"]["SAX"] = run_experiment(
+        run_experiment(
             "SAX", sax_vars, data_lists, trace_files,
             t_raws, v_raws, tag_k,
+            log=log, log_path=log_path, log_method_key="SAX",
+            stop_on_failure=False,
         )
-        _save_log()
 
         print(f"\n=== Persist (k={tag_k}) ===")
-        log["methods"]["Persist"] = run_experiment(
+        run_experiment(
             "Persist", persist_vars, data_lists, trace_files,
             t_raws, v_raws, tag_k,
+            log=log, log_path=log_path, log_method_key="Persist",
+            stop_on_failure=True,
         )
-        _save_log()
 
         # Per-k summary
         print(f"\nk={tag_k}: best variant per method (by median MAE):")
         for method_name, results in log["methods"].items():
-            best = results[0]
+            best = next((r for r in results if r.get("status") == "ok"), None)
+            if best is None:
+                n_failed = sum(1 for r in results if r.get("status") == "failed")
+                print(f"  {method_name:8s}: all {n_failed} variants failed")
+                continue
             n_inc = best["n_total"] - best["n_consistent"]
             inc = f" [{n_inc}/{best['n_total']} INCONSISTENT]" if n_inc else ""
             print(
@@ -478,5 +540,20 @@ if __name__ == "__main__":
                 f"time={best['time_median']:.3f}s"
                 f"{inc}"
             )
+
+        # Final summary of failures for this k
+        n_failures = sum(
+            1
+            for results in log["methods"].values()
+            for r in results
+            if r.get("status") == "failed"
+        )
+        if n_failures > 0:
+            print(f"\nk={tag_k}: {n_failures} variants failed across all methods.")
+            for method_name, results in log["methods"].items():
+                for r in results:
+                    if r.get("status") == "failed":
+                        print(f"  {method_name} | {r['label']} | "
+                              f"{r['error_type']}: {r['error_msg'][:100]}")
 
     print(f"\nAll done. Results in: {run_dir}")

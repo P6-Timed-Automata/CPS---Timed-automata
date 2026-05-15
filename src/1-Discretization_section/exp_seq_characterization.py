@@ -58,13 +58,13 @@ from Discretization.persist import (
 # =============================================================================
 
 METHODS = [
-    ("naive",   {"bins": 10}),
-    ("sax",     {"w": 48,  "bins": 8}),
-    ("persist", {"bins": 8}),
+    ("naive",   {"bins": 5}),
+    ("sax",     {"w": 24,  "bins": 5}),
+    ("persist", {"bins": 6}),
 ]
 
 # Which training condition to characterize. Run twice if you want both.
-TRAINING_CONDITION = "clean"   # or "noisy"
+TRAINING_CONDITION = "noisy"#"clean"   # or
 
 
 # =============================================================================
@@ -167,41 +167,6 @@ def run_length_distribution(symbolic_traces):
         run_lengths.append(current_length)
     return run_lengths
 
-
-def transition_matrix(symbolic_traces, n_symbols):
-    """
-    Count symbol→symbol transitions (different-symbol only — same-symbol
-    'transitions' are intra-run dwell).
-    Returns a (n_symbols x n_symbols) matrix of counts.
-    """
-    alphabet = list(string.ascii_lowercase)[:n_symbols]
-    sym_to_idx = {s: i for i, s in enumerate(alphabet)}
-    mat = np.zeros((n_symbols, n_symbols), dtype=int)
-
-    for trace in symbolic_traces:
-        prev = None
-        for sym in trace:
-            if prev is not None and prev != sym:
-                if prev in sym_to_idx and sym in sym_to_idx:
-                    mat[sym_to_idx[prev], sym_to_idx[sym]] += 1
-            prev = sym
-
-    return mat, alphabet
-
-
-def transition_entropy(matrix):
-    """
-    Shannon entropy of the transition distribution. Higher = more
-    transition diversity (TAG sees more distinct k-grams).
-    """
-    total = matrix.sum()
-    if total == 0:
-        return 0.0
-    probs = matrix.flatten() / total
-    probs = probs[probs > 0]
-    return float(-np.sum(probs * np.log2(probs)))
-
-
 # =============================================================================
 # PLOTS
 # =============================================================================
@@ -250,35 +215,6 @@ def plot_run_length_distribution(method_name, run_lengths, out_path):
     print(f"  Saved: {out_path}")
 
 
-def plot_transition_matrix(method_name, matrix, alphabet, out_path):
-    """Heatmap of symbol→symbol transition counts."""
-    fig, ax = plt.subplots(figsize=(8, 7))
-    # Mask diagonal (zero by construction) so the colorscale isn't dominated
-    masked = matrix.astype(float).copy()
-    np.fill_diagonal(masked, np.nan)
-    im = ax.imshow(masked, cmap="viridis", aspect="auto")
-    ax.set_xticks(range(len(alphabet)))
-    ax.set_xticklabels(alphabet)
-    ax.set_yticks(range(len(alphabet)))
-    ax.set_yticklabels(alphabet)
-    ax.set_xlabel("To symbol")
-    ax.set_ylabel("From symbol")
-    ax.set_title(f"Transitions — {method_name}\n(diagonal omitted)")
-
-    for i in range(matrix.shape[0]):
-        for j in range(matrix.shape[1]):
-            if i != j and matrix[i, j] > 0:
-                ax.text(j, i, str(matrix[i, j]),
-                        ha="center", va="center", fontsize=8,
-                        color="white" if matrix[i, j] > matrix.max() / 2 else "black")
-
-    plt.colorbar(im, ax=ax, label="Transition count")
-    fig.tight_layout()
-    fig.savefig(out_path, dpi=150, bbox_inches="tight")
-    plt.close(fig)
-    print(f"  Saved: {out_path}")
-
-
 def save_summary_table(per_method_results, out_dir):
     headers = ["method", "params", "alphabet_defined", "alphabet_used",
                "usage_rate", "run_length_median", "run_length_mean",
@@ -298,8 +234,6 @@ def save_summary_table(per_method_results, out_dir):
                 f"{r['run_length_median']:.1f}",
                 f"{r['run_length_mean']:.1f}",
                 r["run_length_max"],
-                r["n_distinct_transitions"],
-                f"{r['transition_entropy']:.2f}",
             ])
     print(f"  Saved: {csv_path}")
 
@@ -320,9 +254,6 @@ def save_summary_table(per_method_results, out_dir):
             f"{r['alphabet']['usage_rate']:.2f}",
             f"{r['run_length_median']:.1f}",
             f"{r['run_length_mean']:.1f}",
-            r["run_length_max"],
-            r["n_distinct_transitions"],
-            f"{r['transition_entropy']:.2f}",
         ])
 
     tbl = ax.table(cellText=cell_text, cellLoc="center", loc="center")
@@ -401,9 +332,6 @@ if __name__ == "__main__":
 
         alphabet_info = alphabet_usage(symbolic_traces, n_symbols)
         run_lengths = run_length_distribution(symbolic_traces)
-        trans_matrix, alphabet = transition_matrix(symbolic_traces, n_symbols)
-        n_distinct_transitions = int((trans_matrix > 0).sum())
-        trans_entropy = transition_entropy(trans_matrix)
 
         # Stats summary
         rl_arr = np.array(run_lengths)
@@ -416,8 +344,6 @@ if __name__ == "__main__":
             "run_length_max":    int(np.max(rl_arr)),
             "run_length_min":    int(np.min(rl_arr)),
             "run_length_std":    float(np.std(rl_arr)),
-            "n_distinct_transitions": n_distinct_transitions,
-            "transition_entropy":     trans_entropy,
         }
         per_method_results.append(result)
 
@@ -425,8 +351,6 @@ if __name__ == "__main__":
               f"(usage rate {alphabet_info['usage_rate']:.2f})")
         print(f"  Run length:       median={result['run_length_median']:.1f}, "
               f"mean={result['run_length_mean']:.1f}, max={result['run_length_max']}")
-        print(f"  Transitions:      {n_distinct_transitions} distinct, "
-              f"entropy={trans_entropy:.2f} bits")
         print()
 
         # Plots
@@ -434,8 +358,6 @@ if __name__ == "__main__":
                               out_dir / f"symbol_frequency_{method}.png")
         plot_run_length_distribution(method, run_lengths,
                                      out_dir / f"run_length_{method}.png")
-        plot_transition_matrix(method, trans_matrix, alphabet,
-                               out_dir / f"transition_matrix_{method}.png")
 
     log["methods"] = per_method_results
     with open(out_dir / "results.json", "w") as f:
