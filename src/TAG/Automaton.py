@@ -14,6 +14,7 @@ import os
 import subprocess
 
 
+
 class Automaton:
     """
     An instance of the class Automaton is a Timed Automaton
@@ -1099,16 +1100,52 @@ class Automaton:
         if data_type == "temp":
             queries += "\t<queries>\n\n"
 
+            # 1. Safety invariant
             queries += "\t\t<query>\n"
-            queries += f"\t\t\t<formula>strategy Safe = control: A&lt;&gt; {final_expr}</formula>\n"
+            queries += "\t\t\t<formula>A[] (temp &gt;= temp_min &amp;&amp; temp &lt;= temp_max)</formula>\n"
+            queries += "\t\t\t<comment/>\n"
             queries += "\t\t</query>\n\n"
 
+            # 2. Spike reachable
             queries += "\t\t<query>\n"
-            queries += f"\t\t\t<formula>simulate [&lt;={time}; {sim_nr}] {{ temp }} </formula>\n"
+            queries += "\t\t\t<formula>E&lt;&gt; Observer.SPIKE</formula>\n"
+            queries += "\t\t\t<comment/>\n"
             queries += "\t\t</query>\n\n"
 
+            # 3. Spike unavoidable (LIVENESS FAILURE CHECK)
             queries += "\t\t<query>\n"
-            queries += f"\t\t\t<formula>E&lt;&gt; {final_expr}</formula>\n"
+            queries += "\t\t\t<formula>A&lt;&gt; Observer.SPIKE</formula>\n"
+            queries += "\t\t\t<comment/>\n"
+            queries += "\t\t</query>\n\n"
+
+            # 4. Stabilization reachable
+            queries += "\t\t<query>\n"
+            queries += "\t\t\t<formula>E&lt;&gt; Observer.STABILIZED</formula>\n"
+            queries += "\t\t\t<comment/>\n"
+            queries += "\t\t</query>\n\n"
+
+            # 5. Always stabilizes eventually
+            queries += "\t\t<query>\n"
+            queries += "\t\t\t<formula>A&lt;&gt; Observer.STABILIZED</formula>\n"
+            queries += "\t\t\t<comment/>\n"
+            queries += "\t\t</query>\n\n"
+
+            # 6. Probabilistic spike within bounded time
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}](&lt;&gt; Observer.SPIKE)</formula>\n"
+            queries += "\t\t\t<comment/>\n"
+            queries += "\t\t</query>\n\n"
+
+            # 7. Probabilistic stabilizes within bounded time
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}](&lt;&gt; Observer.STABILIZED)</formula>\n"
+            queries += "\t\t\t<comment/>\n"
+            queries += "\t\t</query>\n\n"
+
+             # 8. Probabilistic for stabilzation after spike
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}](&lt;&gt; (Observer.SPIKE_seen &amp;&amp; Observer.STABILIZED)</formula>\n"
+            queries += "\t\t\t<comment/>\n"
             queries += "\t\t</query>\n\n"
 
             queries += "\t</queries>\n"

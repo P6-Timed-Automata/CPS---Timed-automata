@@ -113,8 +113,8 @@ elif(data_type == "ecg"):
 
 # Parameter for nr of Traces
 len_traces = len(train_raw_traces)  + 1
-start_traces = 1
-len_traces = 2
+start_traces = 2
+len_traces = 4
 
 
 for trace_nr in range(start_traces, len_traces):

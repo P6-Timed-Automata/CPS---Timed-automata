@@ -45,7 +45,7 @@ elif data_type == "ecg":
 # Parameter for SAX
 symbols = 10
 # w = 200
-w_values = [10,20]
+w_values = [50,100]
 # Parameter for TAG
 k_min = 4
 k_max = 4
@@ -95,13 +95,15 @@ for w in w_values:
 
 
     # Parameter for nr of Traces
-    len_traces = len(train_raw_traces)  + 1
-    start_traces = 1
-    len_traces = 10
+    #len_traces = len(train_raw_traces)  + 1
+    #start_traces = 1
+    #len_traces = 10
+    trace_list = [1, 10, 20, 30, 40, 50]
 
 
 
-    for trace_nr in range(start_traces, len_traces):
+
+    for trace_nr in trace_list:
         # Paths
         discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
                                   / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
