@@ -182,7 +182,9 @@ def run_pipeline(
         per_mode  : {mode_name: rejection_rate} if neg_modes provided
     """
     if tmp_path is None:
-        tmp_path = os.path.join(tempfile.gettempdir(), "_pipeline_tmp.txt")
+        # Secure a unique path to isolate concurrent SLURM executions on the same node
+        fd, tmp_path = tempfile.mkstemp(suffix=".txt", prefix="pipeline_tmp_")
+        os.close(fd)  # Close the descriptor so downstream components can open the file path
 
     # Convert to list format
     train_list   = to_list_format(train_traces)
@@ -201,7 +203,7 @@ def run_pipeline(
         pos_strings = _preprocess_test(pos_list, bins, n_symbols)
         neg_strings = _preprocess_test(neg_list, bins, n_symbols)
 
-    elif method == "sax":
+    elif method.startswith("sax"):
         w            = params["w"]
         k            = params["bins"]
         breakpoints  = scipy_norm.ppf(np.linspace(0, 1, k + 1)[1:-1])

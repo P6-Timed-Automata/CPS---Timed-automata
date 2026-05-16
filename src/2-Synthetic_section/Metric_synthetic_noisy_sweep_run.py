@@ -1,15 +1,25 @@
 """
 exp_53_run.py
 =============
-Experiment 5.3 — Noise tolerance threshold (multi-seed).
+Experiment 5.3 — Noise tolerance threshold (multi-seed, crash-resilient).
 
 For each noise level in NOISE_LEVELS, for each method, generates training
 data N_SEEDS times with different random seeds, runs the pipeline on each,
 and records F1 / precision / recall per seed.
 
-This addresses the "single-measurement-per-point" weakness of the original
-sweep — with multiple seeds we can report median + range and the
-threshold-crossing point becomes more reliable.
+Crash-resilient design (for SLURM):
+  - Recursion limit raised at startup.
+  - Each (noise, method, seed) pipeline run is wrapped in try/except.
+    Failures (RecursionError, MemoryError, anything else) are logged as
+    status="failed" and the sweep continues with the next seed/method/level.
+  - JSON saved after every noise level so SLURM SIGKILL preserves earlier
+    levels.
+  - A (noise, method) cell is "ok" if at least one seed succeeded,
+    "partial" if some seeds failed, "failed" if all seeds failed.
+
+The aggregation skips failed seeds. Median/range are computed from
+successful seeds only; if all seeds fail, the cell has status="failed"
+and no metrics.
 
 Writes results.json. The companion plotter (exp_53_plot.py) reads that file.
 
@@ -26,6 +36,9 @@ import sys
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
+
+# Raise recursion limit before TAG-related imports.
+sys.setrecursionlimit(50000)
 
 import numpy as np
 
@@ -44,10 +57,9 @@ from Pipeline import run_pipeline
 
 N_TRAIN = CONFIG["n_train"]
 
-NOISE_LEVELS = [0.02, 0.05, 0.1, 0.15, 0.2, 0.25]
+NOISE_LEVELS = [0.02, 0.05, 0.1, 0.15, 0.2, 0.25,0.3]
 
 # Number of seeds per (method, noise_level). Multiplies runtime by this factor.
-# 3 is a reasonable thesis-grade default. 5+ is more rigorous but slower.
 N_SEEDS = 3
 
 F1_THRESHOLD = 0.7
@@ -56,7 +68,7 @@ TAG_K = 4
 
 METHODS = [
     ("naive",   {"bins": 5}),
-    ("sax",     {"w": 288, "bins": 5}),
+    ("sax",     {"w": 144, "bins": 5}),   # was w=288 (degenerate); using 144
     ("persist", {"bins": 6}),
 ]
 
@@ -77,7 +89,7 @@ def _git_hash():
 def _save_config(out_dir, data, base_seed):
     lines = [
         "=" * 55,
-        "Run configuration -- Noise Sweep (multi-seed)",
+        "Run configuration -- Noise Sweep (multi-seed, crash-resilient)",
         "=" * 55,
         "",
         f"Timestamp      : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
@@ -86,6 +98,7 @@ def _save_config(out_dir, data, base_seed):
         f"F1 threshold   : {F1_THRESHOLD}",
         f"Seeds per pt   : {N_SEEDS}",
         f"Base seed      : {base_seed}  (per-seed offsets are 0..{N_SEEDS-1})",
+        f"Recursion lim  : {sys.getrecursionlimit()}",
         "",
         "--- Noise levels swept ---",
         f"  {NOISE_LEVELS}",
@@ -136,45 +149,102 @@ def _save_config(out_dir, data, base_seed):
 
 
 # =============================================================================
-# AGGREGATION
+# SINGLE SEED RUN (with crash protection)
 # =============================================================================
 
-def _aggregate_overall(per_seed_overalls):
+def _run_one_seed(method, params, train_traces, test_pos, test_neg,
+                  neg_modes, tag_k, seed):
     """
-    Aggregate a list of overall-metric dicts across seeds.
+    Run one pipeline call. Returns a dict with status='ok' + metrics, or
+    status='failed' + error info. Never raises.
+    """
+    try:
+        result = run_pipeline(
+            method=method,
+            params=params,
+            train_traces=train_traces,
+            test_pos_traces=test_pos,
+            test_neg_traces=test_neg,
+            tag_k=tag_k,
+            neg_modes=neg_modes,
+        )
+        ov = result["overall"]
+        ov_clean = {k: v for k, v in ov.items()
+                    if not isinstance(v, list)
+                    and k not in ("save_path", "run_id")}
+        return {
+            "status":    "ok",
+            "seed":      seed,
+            "overall":   ov_clean,
+            "per_mode":  result["per_mode"],
+            "n_states":  result["n_states"],
+            "n_edges":   result["n_edges"],
+        }
+    except RecursionError as e:
+        return {
+            "status":     "failed",
+            "seed":       seed,
+            "error_type": "RecursionError",
+            "error_msg":  str(e),
+        }
+    except MemoryError as e:
+        return {
+            "status":     "failed",
+            "seed":       seed,
+            "error_type": "MemoryError",
+            "error_msg":  str(e),
+        }
+    except Exception as e:
+        return {
+            "status":     "failed",
+            "seed":       seed,
+            "error_type": type(e).__name__,
+            "error_msg":  str(e),
+        }
+
+
+# =============================================================================
+# AGGREGATION (skips failed seeds)
+# =============================================================================
+
+def _aggregate_overall(per_seed_overall):
+    """
+    Aggregate a list of overall-metric dicts across successful seeds.
     Returns a dict with median/min/max/mean/std for each metric.
+    Returns {} if no successful seeds.
     """
-    if not per_seed_overalls:
+    if not per_seed_overall:
         return {}
-    metrics = per_seed_overalls[0].keys()
+    metrics = per_seed_overall[0].keys()
     out = {}
     for m in metrics:
-        vals = [s[m] for s in per_seed_overalls if isinstance(s.get(m), (int, float))]
+        vals = [s[m] for s in per_seed_overall
+                if isinstance(s.get(m), (int, float))]
         if not vals:
             continue
         out[m] = {
-            "median":     float(np.median(vals)),
-            "min":        float(np.min(vals)),
-            "max":        float(np.max(vals)),
-            "mean":       float(np.mean(vals)),
-            "std":        float(np.std(vals)),
-            "per_seed":   vals,
+            "median":   float(np.median(vals)),
+            "min":      float(np.min(vals)),
+            "max":      float(np.max(vals)),
+            "mean":     float(np.mean(vals)),
+            "std":      float(np.std(vals)),
+            "per_seed": vals,
         }
     return out
 
 
-def _aggregate_per_mode(per_seed_per_modes):
-    """Aggregate per-mode metrics across seeds."""
-    if not per_seed_per_modes:
+def _aggregate_per_mode(per_seed_per_mode):
+    """Aggregate per-mode metrics across successful seeds."""
+    if not per_seed_per_mode:
         return {}
     mode_names = set()
-    for pm in per_seed_per_modes:
+    for pm in per_seed_per_mode:
         mode_names.update(pm.keys())
 
     out = {}
     for mode in mode_names:
         rejections = []
-        for pm in per_seed_per_modes:
+        for pm in per_seed_per_mode:
             if mode in pm:
                 rejections.append(pm[mode]["rejection"])
         if rejections:
@@ -195,7 +265,8 @@ if __name__ == "__main__":
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     out_dir = ROOT / "Data" / "Graphs" / "Metrics_noisy_sweep" / timestamp
     out_dir.mkdir(parents=True, exist_ok=True)
-    print(f"Output folder: {out_dir}\n")
+    print(f"Output folder: {out_dir}")
+    print(f"Python recursion limit raised to {sys.getrecursionlimit()}\n")
 
     data = load_all_data()
     test_pos = data["clean_test"]
@@ -223,7 +294,6 @@ if __name__ == "__main__":
         "clean_noise":  CONFIG["clean"]["noise_std"],
         "noisy_noise":  CONFIG["noisy"]["noise_std"],
         "methods":      [{"method": m, "params": p} for m, p in METHODS],
-        # results[noise_level_idx][method_name] = aggregate_dict
         "results":      [],
     }
 
@@ -233,17 +303,17 @@ if __name__ == "__main__":
         noise_entry = {"noise_std": noise, "methods": {}}
 
         for method, params in METHODS:
-            per_seed_overall = []
-            per_seed_per_mode = []
-            per_seed_n_states = []
-            per_seed_n_edges = []
-            per_seed_seeds = []
+            per_seed_results = []   # ALL seeds, both ok and failed
+            per_seed_overall_ok = []
+            per_seed_per_mode_ok = []
+            per_seed_n_states_ok = []
+            per_seed_n_edges_ok = []
 
             for seed_offset in range(N_SEEDS):
                 run_counter += 1
                 seed = base_seed + seed_offset
 
-                # Regenerate training data with this seed and this noise level
+                # Regenerate training data with this seed and noise level
                 train_traces = generate_trace_set(
                     n_traces=N_TRAIN,
                     seed=seed,
@@ -255,63 +325,112 @@ if __name__ == "__main__":
                     noise_std=noise,
                 )
 
-                result = run_pipeline(
-                    method=method,
-                    params=params,
-                    train_traces=train_traces,
-                    test_pos_traces=test_pos,
-                    test_neg_traces=neg_traces,
-                    tag_k=TAG_K,
-                    neg_modes=neg_modes,
-                )
-                ov = result["overall"]
-                ov_clean = {k: v for k, v in ov.items()
-                            if not isinstance(v, list) and k not in ("save_path", "run_id")}
+                r = _run_one_seed(method, params, train_traces,
+                                  test_pos, neg_traces, neg_modes,
+                                  TAG_K, seed)
+                per_seed_results.append(r)
 
-                per_seed_overall.append(ov_clean)
-                per_seed_per_mode.append(result["per_mode"])
-                per_seed_n_states.append(result["n_states"])
-                per_seed_n_edges.append(result["n_edges"])
-                per_seed_seeds.append(seed)
+                if r["status"] == "ok":
+                    per_seed_overall_ok.append(r["overall"])
+                    per_seed_per_mode_ok.append(r["per_mode"])
+                    per_seed_n_states_ok.append(r["n_states"])
+                    per_seed_n_edges_ok.append(r["n_edges"])
 
-                print(
-                    f"  [{run_counter:3d}/{total_runs}] {method:8s} seed={seed} "
-                    f"P={ov['precision']:.3f} R={ov['recall']:.3f} F1={ov['f1']:.3f}"
-                )
+                    ov = r["overall"]
+                    print(
+                        f"  [{run_counter:3d}/{total_runs}] {method:8s} seed={seed} "
+                        f"P={ov['precision']:.3f} R={ov['recall']:.3f} F1={ov['f1']:.3f}"
+                    )
+                else:
+                    print(
+                        f"  [{run_counter:3d}/{total_runs}] {method:8s} seed={seed} "
+                        f"FAILED ({r['error_type']}): {r['error_msg'][:100]}"
+                    )
 
-            # Aggregate across seeds for this (noise, method) cell
-            agg_overall = _aggregate_overall(per_seed_overall)
-            agg_per_mode = _aggregate_per_mode(per_seed_per_mode)
+            # Aggregate
+            agg_overall = _aggregate_overall(per_seed_overall_ok)
+            agg_per_mode = _aggregate_per_mode(per_seed_per_mode_ok)
+            n_ok = len(per_seed_overall_ok)
+            n_failed = N_SEEDS - n_ok
 
-            noise_entry["methods"][method] = {
+            if n_ok == 0:
+                cell_status = "failed"
+            elif n_failed == 0:
+                cell_status = "ok"
+            else:
+                cell_status = "partial"
+
+            cell = {
                 "params":           params,
-                "overall":          agg_overall,
-                "per_mode":         agg_per_mode,
-                "n_states_median":  float(np.median(per_seed_n_states)),
-                "n_states_min":     int(np.min(per_seed_n_states)),
-                "n_states_max":     int(np.max(per_seed_n_states)),
-                "n_edges_median":   float(np.median(per_seed_n_edges)),
-                "n_edges_min":      int(np.min(per_seed_n_edges)),
-                "n_edges_max":      int(np.max(per_seed_n_edges)),
-                "seeds":            per_seed_seeds,
-                "per_seed_overall": per_seed_overall,
-                "per_seed_per_mode": per_seed_per_mode,
+                "status":           cell_status,
+                "n_seeds_ok":       n_ok,
+                "n_seeds_failed":   n_failed,
+                "per_seed_results": per_seed_results,
             }
 
-            # Brief per-(noise, method) summary
-            f1_med = agg_overall["f1"]["median"]
-            f1_lo = agg_overall["f1"]["min"]
-            f1_hi = agg_overall["f1"]["max"]
-            print(f"  {method:8s} aggregated: F1 median={f1_med:.3f} (range {f1_lo:.3f}-{f1_hi:.3f})")
+            # Only include aggregated stats if there's at least one success
+            if n_ok > 0:
+                cell.update({
+                    "overall":          agg_overall,
+                    "per_mode":         agg_per_mode,
+                    "n_states_median":  float(np.median(per_seed_n_states_ok)),
+                    "n_states_min":     int(np.min(per_seed_n_states_ok)),
+                    "n_states_max":     int(np.max(per_seed_n_states_ok)),
+                    "n_edges_median":   float(np.median(per_seed_n_edges_ok)),
+                    "n_edges_min":      int(np.min(per_seed_n_edges_ok)),
+                    "n_edges_max":      int(np.max(per_seed_n_edges_ok)),
+                })
+
+            noise_entry["methods"][method] = cell
+
+            # Per-(noise, method) summary
+            if cell_status == "failed":
+                print(f"  {method:8s} ALL {N_SEEDS} SEEDS FAILED at noise={noise:.3f}")
+            else:
+                f1_med = agg_overall["f1"]["median"]
+                f1_lo = agg_overall["f1"]["min"]
+                f1_hi = agg_overall["f1"]["max"]
+                partial = f" [{n_failed}/{N_SEEDS} seeds failed]" if n_failed > 0 else ""
+                print(f"  {method:8s} aggregated: F1 median={f1_med:.3f} "
+                      f"(range {f1_lo:.3f}-{f1_hi:.3f}){partial}")
 
         log["results"].append(noise_entry)
 
-        # Save incrementally
+        # Incremental save after every noise level
         with open(out_dir / "results.json", "w") as f:
             json.dump(log, f, indent=2)
         print()
 
     print(f"  Saved: {out_dir / 'results.json'}")
+
+    # End-of-run failure summary
+    n_total_failed_seeds = 0
+    n_failed_cells = 0
+    for noise_entry in log["results"]:
+        for method, cell in noise_entry["methods"].items():
+            n_total_failed_seeds += cell.get("n_seeds_failed", 0)
+            if cell.get("status") == "failed":
+                n_failed_cells += 1
+
+    if n_total_failed_seeds > 0:
+        print(f"\n{n_total_failed_seeds} seed(s) failed across "
+              f"{n_failed_cells} fully-failed cell(s).")
+        print("Failure breakdown:")
+        for noise_entry in log["results"]:
+            noise = noise_entry["noise_std"]
+            for method, cell in noise_entry["methods"].items():
+                n_failed = cell.get("n_seeds_failed", 0)
+                if n_failed == 0:
+                    continue
+                # Collect distinct error types
+                err_types = set()
+                for sr in cell.get("per_seed_results", []):
+                    if sr.get("status") == "failed":
+                        err_types.add(sr.get("error_type", "?"))
+                marker = "ALL" if cell.get("status") == "failed" else f"{n_failed}/{N_SEEDS}"
+                print(f"  noise={noise:.3f} {method:8s} | "
+                      f"{marker} seeds failed ({', '.join(sorted(err_types))})")
+
     print(f"\nRun complete. To generate plots:")
     print(f"  python exp_53_plot.py")
     print(f"or:")

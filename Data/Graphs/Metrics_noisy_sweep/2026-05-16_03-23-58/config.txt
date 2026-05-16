@@ -1,0 +1,49 @@
+=======================================================
+Run configuration -- Noise Sweep (multi-seed, crash-resilient)
+=======================================================
+
+Timestamp      : 2026-05-16 03:23:58
+Git hash       : unknown
+TAG k-future   : 4
+F1 threshold   : 0.7
+Seeds per pt   : 3
+Base seed      : 42  (per-seed offsets are 0..2)
+Recursion lim  : 50000
+
+--- Noise levels swept ---
+  [0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5]
+  Clean baseline: 0.05
+  Noisy baseline: 0.3
+
+--- Base training parameters (noise_std and seed overridden) ---
+  base_temp     : 22.0
+  amplitude     : 3.0
+  base_temp_std : 0.0
+  amplitude_std : 0.1
+  phase_std_h   : 0.1
+
+--- Methods ---
+  naive   : bins=15
+  sax144  : w=144, bins=15
+  sax48   : w=48, bins=15
+  sax24   : w=24, bins=15
+  persist : bins=16
+
+--- Dataset sizes ---
+  train per (level, seed) : 140 traces
+  test positives          : 60 traces (fixed)
+  negatives               : 60 traces (fixed)
+
+--- Negative modes ---
+  spikes    : 15 traces
+  shifted   : 15 traces
+  stuck     : 15 traces
+  offset    : 15 traces
+
+--- Total runs ---
+  9 noise levels x 5 methods x 3 seeds = 135
+
+--- Output folder ---
+  /nfs/home/student.aau.dk/qw57wn/CPS---Timed-automata/Data/Graphs/Metrics_noisy_sweep/2026-05-16_03-23-58
+
+=======================================================

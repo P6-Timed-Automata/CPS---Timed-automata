@@ -1,0 +1,28 @@
+============================================================
+Run configuration -- Scaling Experiment (disjoint, crash-resilient)
+============================================================
+
+Timestamp        : 2026-05-16 00:03:13
+TAG k values     : [2, 4]
+Max traces       : 25
+Repeats          : 5
+Pool size needed : 125 per dataset (disjoint repeats)
+Recursion lim    : 50000
+
+--- Subset selection scheme ---
+  At n=25 (largest), repeat r uses traces [100, 125)
+  Each (n, r) cell trains on disjoint subset of 25 traces.
+
+--- Datasets ---
+  clean       : /nfs/home/student.aau.dk/qw57wn/CPS---Timed-automata/Data/synthetic_data-absolute/clean_train
+  noisy       : /nfs/home/student.aau.dk/qw57wn/CPS---Timed-automata/Data/synthetic_data-absolute/noisy_train
+
+--- Methods ---
+  naive     : bins=10  (stop_on_failure=False)
+  sax       : w=144, bins=10  (stop_on_failure=False)
+  persist   : bins=11  (stop_on_failure=True)
+
+--- Output folder ---
+  /nfs/home/student.aau.dk/qw57wn/CPS---Timed-automata/Data/Graphs/ScalingExperiments/2026-05-16_00-03-13
+
+============================================================

@@ -24,7 +24,7 @@
 # ---------------------------------------------------------------------------
 
 set -e
-
+Q
 HOME_DIR="/nfs/home/student.aau.dk/qw57wn"
 PROJECT_DIR="$HOME_DIR/CPS---Timed-automata"
 VENV_DIR="$PROJECT_DIR/.venv"

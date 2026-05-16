@@ -31,6 +31,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
 
+def _is_ok_cell(stat_dict):
+    """A stat_summary dict is OK if it has a non-None median (>=1 successful repeat)."""
+    return stat_dict is not None and stat_dict.get("median") is not None
+
+
+def _ok_indices(result, metric):
+    """Return indices into trace_counts where the given metric has data."""
+    return [
+        i for i, s in enumerate(result.get(metric, []))
+        if _is_ok_cell(s)
+    ]
 
 # =============================================================================
 # COLORS
@@ -84,32 +95,29 @@ def find_latest_log(tag_k=2):
 
 def _extract_series(result, metric_key, central="median"):
     """
-    Extract a (x, y_central, y_lower_err, y_upper_err) tuple for plotting.
-
-    Parameters
-    ----------
-    result      : one entry from result["results"]
-    metric_key  : "disc_time", "learn_time", "total_time", "n_states", "n_edges"
-    central     : "median" or "mean" — which central tendency to plot
-
-    Returns
-    -------
-    x           : list of trace counts
-    y           : list of central values (median or mean)
-    y_low       : asymmetric lower error (y - min) for median, (std) for mean
-    y_high      : asymmetric upper error (max - y) for median, (std) for mean
+    Extract a (x, y_central, y_lower_err, y_upper_err) tuple for plotting,
+    skipping cells where all repeats failed.
     """
-    x = result["trace_counts"]
-    stats = result[metric_key]
+    stats = result.get(metric_key, [])
+    trace_counts = result.get("trace_counts", [])
+
+    # Find indices where the cell has valid data
+    valid_indices = [i for i, s in enumerate(stats) if _is_ok_cell(s)]
+
+    if not valid_indices:
+        return [], [], [], []
+
+    x = [trace_counts[i] for i in valid_indices]
+    stats_valid = [stats[i] for i in valid_indices]
 
     if central == "median":
-        y      = [s["median"] for s in stats]
-        y_low  = [s["median"] - s["min"] for s in stats]
-        y_high = [s["max"] - s["median"] for s in stats]
+        y      = [s["median"] for s in stats_valid]
+        y_low  = [s["median"] - s["min"] for s in stats_valid]
+        y_high = [s["max"] - s["median"] for s in stats_valid]
     elif central == "mean":
-        y      = [s["mean"] for s in stats]
-        y_low  = [s["std"] for s in stats]
-        y_high = [s["std"] for s in stats]
+        y      = [s["mean"] for s in stats_valid]
+        y_low  = [s["std"] for s in stats_valid]
+        y_high = [s["std"] for s in stats_valid]
     else:
         raise ValueError(f"Unknown central='{central}'")
 
@@ -245,11 +253,14 @@ def plot_individual(results, output_folder, repeats, tag_k,
                     metric_key, ylabel, file_prefix,
                     supports_fit, integer_y, show_fit=False):
     if show_fit and not supports_fit:
-        return   # don't generate fit variants for integer-valued metrics
+        return
     suffix = "_fit" if show_fit else "_raw"
 
     for result in results:
         x, y, y_low, y_high = _extract_series(result, metric_key)
+        if not x:
+            print(f"  Skipping {result['label']} for {metric_key} — no successful cells")
+            continue
         label = result["label"]
 
         fig, ax = plt.subplots(figsize=(10, 5))
