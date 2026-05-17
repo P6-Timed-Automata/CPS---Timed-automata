@@ -165,8 +165,8 @@ def evaluate(real_data, sim_matrix, sim_flat, name):
 # RUN EVALUATION
 # ======================================================
 
-train_result = evaluate(real_train, sim_matrix, sim_flat, "train")
-test_result = evaluate(real_test, sim_matrix, sim_flat, "test")
+train_result = evaluate(real_train, sim_matrix, sim_flat, "train-1k-sims")
+test_result = evaluate(real_test, sim_matrix, sim_flat, "test-1k-sims")
 
 results = pd.DataFrame([train_result, test_result])
 
@@ -175,9 +175,9 @@ results = pd.DataFrame([train_result, test_result])
 # SAVE RESULTS
 # ======================================================
 
-results.to_csv(RESULTS_DIR / "validation_summary.csv", index=False)
+results.to_csv(RESULTS_DIR / "validation_summary_1k.csv", index=False)
 
-print("\nSaved: validation_summary.csv")
+print("\nSaved: validation_summary_1k.csv")
 
 
 # ======================================================
@@ -209,7 +209,7 @@ plt.title("Temperature Distribution: Train vs Test vs Simulation")
 plt.legend()
 plt.grid()
 
-plt.savefig(GRAPH_DIR / "histogram_train_test_sim.png", dpi=300, bbox_inches="tight")
+plt.savefig(GRAPH_DIR / "histogram_train_test_sim-1k.png", dpi=300, bbox_inches="tight")
 plt.close()
 
 
@@ -243,7 +243,7 @@ plt.title("Time Series: Train vs Simulation")
 plt.legend()
 plt.grid()
 
-plt.savefig(GRAPH_DIR / "timeseries_train_vs_sim.png", dpi=300, bbox_inches="tight")
+plt.savefig(GRAPH_DIR / "timeseries_train_vs_sim-1k.png", dpi=300, bbox_inches="tight")
 plt.close()
 
 
@@ -274,5 +274,5 @@ plt.xticks(np.arange(0, 25, 2))
 plt.legend()
 plt.grid()
 
-plt.savefig(GRAPH_DIR / "timeseries_test_vs_sim.png", dpi=300, bbox_inches="tight")
+plt.savefig(GRAPH_DIR / "timeseries_test_vs_sim-1k.png", dpi=300, bbox_inches="tight")
 plt.close()
