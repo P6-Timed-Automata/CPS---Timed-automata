@@ -49,7 +49,7 @@ from Pipeline import run_pipeline
 # CONFIG
 # =============================================================================
 
-TAG_K = 2
+TAG_K = 4
 
 # Single method config per method (Path A). For full robustness sweep,
 # extend with METHOD_VARIANTS like exp_51_52_run.py.
@@ -73,7 +73,7 @@ TRAIN_SPLIT     = 0.8   # used only if TEST_POS_FOLDER doesn't exist
 # "synthetic" : use generate_negative_set (purely synthetic, used in 5.1/5.2)
 NEGATIVE_MODE = "inject"
 
-N_NEG_PER_MODE = 21
+N_NEG_PER_MODE = 20
 
 # Anomaly perturbation parameters — same magnitudes as synthetic 5.1/5.2
 OFFSET_MAGNITUDE_C    = 15.0   # °C
@@ -186,11 +186,11 @@ def build_injected_negatives(test_pos, n_per_mode, seed=42):
         neg_traces.append(_inject_phase_shift(test_pos[idx], PHASE_SHIFT_HOURS))
         neg_modes.append(1)
 
-    # Mode 2: stuck
-    for _ in range(n_per_mode):
-        idx = int(rng.integers(0, len(test_pos)))
-        neg_traces.append(_inject_stuck(test_pos[idx], STUCK_DURATION_S))
-        neg_modes.append(2)
+    # # Mode 2: stuck
+    # for _ in range(n_per_mode):
+    #     idx = int(rng.integers(0, len(test_pos)))
+    #     neg_traces.append(_inject_stuck(test_pos[idx], STUCK_DURATION_S))
+    #     neg_modes.append(2)
 
     # Mode 3: offset
     for _ in range(n_per_mode):
@@ -246,7 +246,7 @@ def save_config(out_dir, train_traces, test_pos, neg_traces, neg_modes):
             "--- Injection parameters ---",
             f"  Spike magnitude  : +{SPIKE_MAGNITUDE_C} °C for {SPIKE_DURATION_S}s",
             f"  Phase shift      : {PHASE_SHIFT_HOURS}h rotation",
-            f"  Stuck duration   : {STUCK_DURATION_S}s",
+            # f"  Stuck duration   : {STUCK_DURATION_S}s",
             f"  Offset magnitude : +{OFFSET_MAGNITUDE_C} °C",
         ]
 
@@ -323,7 +323,7 @@ def _run_one_method(method, params, train_traces, test_pos, neg_traces,
             tag_k=tag_k,
             neg_modes=neg_modes,
             save_ta_path=ta_folder,
-            ta_title=f"exp54_{method}",
+            ta_title=f"Metrics temperature_{method}",
         )
         ov = result["overall"]
         print(f"  P={ov['precision']:.3f}  R={ov['recall']:.3f}  "
@@ -358,7 +358,7 @@ def _run_one_method(method, params, train_traces, test_pos, neg_traces,
 
 if __name__ == "__main__":
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    out_dir = ROOT / "Data" / "Graphs" / "exp_54" / timestamp
+    out_dir = ROOT / "Data" / "Graphs" / "Metrics_temp" / timestamp
     out_dir.mkdir(parents=True, exist_ok=True)
     print(f"Output folder: {out_dir}")
     print(f"Recursion limit: {sys.getrecursionlimit()}\n")
@@ -398,7 +398,7 @@ if __name__ == "__main__":
             "spike_magnitude_c":  SPIKE_MAGNITUDE_C,
             "spike_duration_s":   SPIKE_DURATION_S,
             "phase_shift_hours":  PHASE_SHIFT_HOURS,
-            "stuck_duration_s":   STUCK_DURATION_S,
+            # "stuck_duration_s":   STUCK_DURATION_S,
             "offset_magnitude_c": OFFSET_MAGNITUDE_C,
         } if NEGATIVE_MODE == "inject" else None,
         "results":       [],

@@ -75,7 +75,7 @@ def load_log(log_path):
 
 
 def find_latest_log():
-    base = ROOT / "Data" / "Graphs" / "exp_55"
+    base = ROOT / "Data" / "Graphs" / "Metrics ECG"
     if not base.is_dir():
         return None
     candidates = []
@@ -263,7 +263,10 @@ def main():
     mode_names     = _get_mode_names(ok_results)
 
     print(f"Plotting run from: {log.get('timestamp', 'unknown')}")
-    print(f"Data folder:       {log.get('data_folder', 'unknown')}")
+    print(f"Train folder:      {log.get('train_folder', 'unknown')}")
+    print(f"Test folder:       {log.get('test_folder', 'unknown')}")
+    print(f"Neg folder:        {log.get('neg_folder', 'unknown')}")
+    print(f"Negative mode:     {log.get('negative_mode', 'unknown')}")
     print(f"Methods: {len(ok_results)} ok, {len(failed_results)} failed")
     print(f"Modes:   {mode_names}")
     print(f"Output folder:     {out_dir}\n")

@@ -27,6 +27,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from Generators import NEG_MODE_NAMES
 
+def _get_mode_names(ok_results):
+    """Derive per-mode keys present in results, in NEG_MODE_NAMES order."""
+    seen = set()
+    for r in ok_results:
+        seen.update(r.get("per_mode", {}).keys())
+    return [m for m in NEG_MODE_NAMES.values() if m in seen]
 
 METHOD_COLORS = {
     "naive":   "steelblue",
@@ -54,7 +60,7 @@ def load_log(log_path):
 
 
 def find_latest_log():
-    base = ROOT / "Data" / "Graphs" / "exp_54"
+    base = ROOT / "Data" / "Graphs" / "Metrics_temp"
     if not base.is_dir():
         return None
     candidates = []
@@ -103,7 +109,7 @@ def save_overall_table(results, out_dir):
 
 
 def save_per_mode_table(ok_results, out_dir):
-    mode_names = list(NEG_MODE_NAMES.values())
+    mode_names = _get_mode_names(ok_results)
     csv_path = out_dir / "table_per_mode.csv"
     headers = ["method"] + [m.capitalize() for m in mode_names]
     with open(csv_path, "w", newline="") as f:
@@ -149,7 +155,7 @@ def plot_metric_bars(ok_results, metric, ylabel, out_path):
 
 
 def plot_per_mode_heatmap(ok_results, out_path):
-    mode_names = list(NEG_MODE_NAMES.values())
+    mode_names = _get_mode_names(ok_results)
     methods = [r["method"] for r in ok_results]
     data = np.zeros((len(methods), len(mode_names)))
 

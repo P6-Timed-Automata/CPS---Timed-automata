@@ -41,9 +41,10 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from Generators import load_traces, NEG_MODE_NAMES, generate_negative_set
+from Generators import (
+    load_traces, load_traces_by_mode, NEG_MODE_NAMES, generate_negative_set,
+)
 from Pipeline import run_pipeline
-
 
 # =============================================================================
 # CONFIG
@@ -52,10 +53,13 @@ from Pipeline import run_pipeline
 TAG_K = 2
 
 # ---- Data paths -------------------------------------------------------------
-DATA_FOLDER     = ROOT / "Data" / "ecg" / "1beat-test1" / "posetive"         # folder with positive CSVs
-NEG_DATA_FOLDER = ROOT / "Data" / "ecg" / "1beat-test1" / "negative"   # set to None to use synthetic
+# Mirrors the temperature runner: separate train and test folders on disk,
+# negatives organised into mode subfolders (spikes / shifted / stuck / offset).
+TRAIN_FOLDER    = ROOT / "Data" / "3-ExtractInterval" / "ecg" / "1beat-experiment1" / "1beat-train"
+TEST_POS_FOLDER = ROOT / "Data" / "3-ExtractInterval" / "ecg" / "1beat-experiment1" / "1beat-test" / "positive"
+NEG_DATA_FOLDER = ROOT / "Data" / "3-ExtractInterval" / "ecg" / "1beat-experiment1" / "1beat-test" / "negative"
 
-TRAIN_SPLIT = 0.8   # fraction of DATA_FOLDER used for training
+TRAIN_SPLIT = 0.8   # only used if TEST_POS_FOLDER doesn't exist (fallback)
 
 # ---- Negative mode ----------------------------------------------------------
 # "folder"    : load real labeled anomalies from NEG_DATA_FOLDER
@@ -69,7 +73,7 @@ N_SYNTHETIC_NEG = 60
 # trace = 3 beats → w around 50–100 is a sane starting point.
 METHODS = [
     ("naive",   {"bins": 5}),
-    ("sax",     {"w": 50, "bins": 5}),
+    ("sax",     {"w": 48, "bins": 5}),
     ("persist", {"bins": 6}),
 ]
 
@@ -109,31 +113,46 @@ def _shuffle_traces(traces, seed=0):
 
 def load_ecg_data():
     """
-    Load and split positive ECG traces, then build the negative set.
-    Returns (train_traces, test_pos, neg_traces, neg_modes, neg_mode_names).
+    Load training and test ECG traces from separate folders, mirroring the
+    temperature runner. Falls back to splitting TRAIN_FOLDER 80/20 if
+    TEST_POS_FOLDER doesn't exist. Negatives are loaded by mode subfolder so
+    the per-mode rejection metrics in results.json are populated correctly.
     """
     print("Loading ECG traces...")
 
-    if not DATA_FOLDER.exists():
+    if not TRAIN_FOLDER.exists():
         raise FileNotFoundError(
-            f"DATA_FOLDER not found: {DATA_FOLDER}\n"
-            f"Set DATA_FOLDER at the top of this script and re-run."
+            f"TRAIN_FOLDER not found: {TRAIN_FOLDER}\n"
+            f"Run split_dataset on your ECG positives first."
         )
 
-    # Load positives, clean NaN, deterministic shuffle, 80/20 split.
-    all_traces = load_traces(DATA_FOLDER)
-    all_traces = [_clean_trace(t) for t in all_traces]
-    all_traces = [t for t in all_traces if len(t[0]) > 0]
-    all_traces = _shuffle_traces(all_traces, seed=0)
-    if not all_traces:
-        raise SystemExit("ERROR: no usable ECG traces after NaN cleaning.")
+    # --- Positives ----------------------------------------------------------
+    if TEST_POS_FOLDER.exists():
+        train_traces = load_traces(TRAIN_FOLDER)
+        test_pos     = load_traces(TEST_POS_FOLDER)
+        train_traces = [_clean_trace(t) for t in train_traces]
+        test_pos     = [_clean_trace(t) for t in test_pos]
+        train_traces = [t for t in train_traces if len(t[0]) > 0]
+        test_pos     = [t for t in test_pos     if len(t[0]) > 0]
+        print(f"  TRAIN_FOLDER    : {len(train_traces)} traces")
+        print(f"  TEST_POS_FOLDER : {len(test_pos)} traces")
+    else:
+        print(f"  TEST_POS_FOLDER missing; splitting {TRAIN_FOLDER} "
+              f"{TRAIN_SPLIT * 100:.0f}/{(1 - TRAIN_SPLIT) * 100:.0f}")
+        all_traces = load_traces(TRAIN_FOLDER)
+        all_traces = [_clean_trace(t) for t in all_traces]
+        all_traces = [t for t in all_traces if len(t[0]) > 0]
+        all_traces = _shuffle_traces(all_traces, seed=0)
+        split = int(len(all_traces) * TRAIN_SPLIT)
+        train_traces = all_traces[:split]
+        test_pos     = all_traces[split:]
+        print(f"  Train : {len(train_traces)} traces")
+        print(f"  Test+ : {len(test_pos)} traces")
 
-    split        = int(len(all_traces) * TRAIN_SPLIT)
-    train_traces = all_traces[:split]
-    test_pos     = all_traces[split:]
-    print(f"  Train: {len(train_traces)} | Test positive: {len(test_pos)}")
+    if not train_traces or not test_pos:
+        raise SystemExit("ERROR: empty train or test set after cleaning.")
 
-    # Negatives
+    # --- Negatives (per-mode subfolders, like the synthetic exp 5.1/5.2) ----
     use_folder = (
             NEGATIVE_MODE == "folder"
             and NEG_DATA_FOLDER is not None
@@ -141,12 +160,15 @@ def load_ecg_data():
     )
 
     if use_folder:
-        neg_traces = load_traces(NEG_DATA_FOLDER)
-        neg_traces = [_clean_trace(t) for t in neg_traces]
-        neg_traces = [t for t in neg_traces if len(t[0]) > 0]
-        neg_modes      = [0] * len(neg_traces)
-        neg_mode_names = ["anomaly"]
-        print(f"  Negatives: {len(neg_traces)} loaded from {NEG_DATA_FOLDER}")
+        neg_traces, neg_modes = load_traces_by_mode(NEG_DATA_FOLDER)
+        # Clean each trace, drop empties, keep modes aligned.
+        cleaned = [(_clean_trace(t), m) for t, m in zip(neg_traces, neg_modes)]
+        cleaned = [(t, m) for t, m in cleaned if len(t[0]) > 0]
+        neg_traces     = [t for t, _ in cleaned]
+        neg_modes      = [m for _, m in cleaned]
+        neg_mode_names = list(NEG_MODE_NAMES.values())
+        print(f"  Negatives: {len(neg_traces)} loaded from {NEG_DATA_FOLDER} "
+              f"(by mode subfolder)")
     else:
         if NEGATIVE_MODE == "folder":
             print(f"  Warning: NEG_DATA_FOLDER missing ({NEG_DATA_FOLDER}); "
@@ -159,7 +181,6 @@ def load_ecg_data():
         print(f"  Negatives: {len(neg_traces)}")
 
     return train_traces, test_pos, neg_traces, neg_modes, neg_mode_names
-
 
 # =============================================================================
 # PIPELINE RUN WITH CRASH PROTECTION
@@ -234,7 +255,8 @@ def save_config(out_dir, train_traces, test_pos, neg_traces, neg_mode_names,
     lines += [
         "",
         "--- Data paths ---",
-        f"  DATA_FOLDER     : {DATA_FOLDER}",
+        f"  TRAIN_FOLDER    : {TRAIN_FOLDER}",
+        f"  TEST_POS_FOLDER : {TEST_POS_FOLDER}",
         f"  NEG_DATA_FOLDER : {NEG_DATA_FOLDER}",
         "",
         "--- Dataset sizes ---",
@@ -285,7 +307,8 @@ if __name__ == "__main__":
         "git_hash":       _git_hash(),
         "tag_k":          TAG_K,
         "negative_mode":  actual_neg_mode,
-        "data_folder":    str(DATA_FOLDER),
+        "train_folder":   str(TRAIN_FOLDER),
+        "test_folder":    str(TEST_POS_FOLDER),
         "neg_folder":     str(NEG_DATA_FOLDER) if NEG_DATA_FOLDER else None,
         "n_train":        len(train_traces),
         "n_test_pos":     len(test_pos),

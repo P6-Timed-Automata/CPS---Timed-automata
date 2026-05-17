@@ -25,17 +25,148 @@ from Discretization.discretizationSetup import (
 # factor when calling build_injected_negatives_ecg.
 # =============================================================================
 
-def _inject_spike_ecg(trace, magnitude, duration_samples, rng):
-    """Brief amplitude excursion at a random position (electrode glitch / artifact)."""
+def _inject_spike_temp(trace, magnitude, duration_samples, rng):
+    """Brief amplitude excursion at a random position."""
     values = np.array([float(v) for v, _ in trace], dtype=float)
     times  = np.array([float(t) for _, t in trace], dtype=float)
+    n = len(values)
+    if n < duration_samples + 2:
+        return list(zip(values.tolist(), times.tolist()))
+    start = int(rng.integers(0, n - duration_samples))
+    sign  = int(rng.choice([-1, 1]))
+    values[start:start + duration_samples] += sign * magnitude
+    return list(zip(values.tolist(), times.tolist()))
 
-    if len(values) < duration_samples + 2:
+
+def _inject_shifted_temp(trace, shift_fraction):
+    """Phase-shift: rotate values in time (clock-skew / wrong-time-of-day)."""
+    values = np.array([float(v) for v, _ in trace], dtype=float)
+    times  = np.array([float(t) for _, t in trace], dtype=float)
+    n = len(values)
+    shift_idx = int(n * shift_fraction)
+    if shift_idx <= 0 or shift_idx >= n:
+        return list(zip(values.tolist(), times.tolist()))
+    rotated = np.concatenate([values[shift_idx:], values[:shift_idx]])
+    return list(zip(rotated.tolist(), times.tolist()))
+
+
+def _inject_stuck_temp(trace, duration_samples):
+    """Flatten a segment (sensor freeze)."""
+    values = np.array([float(v) for v, _ in trace], dtype=float)
+    times  = np.array([float(t) for _, t in trace], dtype=float)
+    n = len(values)
+    if n < duration_samples + 2:
+        return list(zip(values.tolist(), times.tolist()))
+    # Place the flat region around 1/3 of the way in (avoids start/end edges).
+    start = max(0, n // 3 - duration_samples // 2)
+    end   = min(n, start + duration_samples)
+    values[start:end] = values[start]
+    return list(zip(values.tolist(), times.tolist()))
+
+
+def _inject_offset_temp(trace, magnitude):
+    """Constant additive shift (calibration drift / electrode bias)."""
+    values = np.array([float(v) for v, _ in trace], dtype=float) + magnitude
+    times  = np.array([float(t) for _, t in trace], dtype=float)
+    return list(zip(values.tolist(), times.tolist()))
+
+
+def build_injected_negatives_temp(
+        positive_traces,
+        out_folder,
+        file_prefix,
+        n_per_mode=15,
+        spike_magnitude=5.0,          # 5 °C spike — clearly above natural ~2 °C diurnal swing
+        spike_duration_samples=2,     # ~10 min at 5-min sampling
+        phase_shift_fraction=0.25,    # 6 h shift of a 24 h trace (clearly mistimed)
+        stuck_duration_samples=60,    # ~5 h flat at 5-min sampling
+        offset_magnitude=3.0,         # 3 °C baseline drift
+        seed=42,
+):
+    """
+    Temperature counterpart to build_injected_negatives_ecg.
+    Magnitudes tuned for 5-min-sampled real room data with ~2 °C diurnal swing.
+    Writes to mode subfolders so the runner's per-mode rejection metrics work.
+
+    Modes (indices match NEG_MODE_NAMES in Generators.py):
+        0 spikes   - brief ±magnitude excursion
+        1 shifted  - rotate values in time
+        2 stuck    - flatten a centered segment
+        3 offset   - constant additive shift
+    """
+    from Generators import NEG_MODE_NAMES
+
+    if not positive_traces:
+        raise ValueError("No positive traces to inject into.")
+
+    rng = np.random.default_rng(seed)
+
+    injection_specs = [
+        (0, lambda t: _inject_spike_temp(
+            t, spike_magnitude, spike_duration_samples, rng)),
+        (1, lambda t: _inject_shifted_temp(t, phase_shift_fraction)),
+        # (2, lambda t: _inject_stuck_temp(t, stuck_duration_samples)),  # disabled for temperature
+        (3, lambda t: _inject_offset_temp(t, offset_magnitude)),
+    ]
+
+    negatives, modes = [], []
+    for mode_int, inject_fn in injection_specs:
+        for _ in range(n_per_mode):
+            idx = int(rng.integers(0, len(positive_traces)))
+            negatives.append(inject_fn(positive_traces[idx]))
+            modes.append(mode_int)
+
+    out_folder = Path(out_folder)
+    out_folder.mkdir(parents=True, exist_ok=True)
+
+    mode_counters = {m: 0 for m in NEG_MODE_NAMES}
+    for trace, mode_int in zip(negatives, modes):
+        mode_name = NEG_MODE_NAMES[mode_int]
+        mode_subfolder = out_folder / mode_name
+        mode_subfolder.mkdir(parents=True, exist_ok=True)
+        mode_counters[mode_int] += 1
+        filename = f"neg-{file_prefix}-{mode_name}-tid{mode_counters[mode_int]}.csv"
+        with open(mode_subfolder / filename, "w") as f:
+            f.write("time;value\n")
+            for value, time in trace:
+                f.write(f"{time:.0f};{value:.5f}\n")
+
+    counts = {NEG_MODE_NAMES[m]: c for m, c in mode_counters.items() if c > 0}
+    print(f"Generated {len(negatives)} temperature negatives -> {out_folder}")
+    print(f"  Mode counts: {counts}")
+    return negatives, modes
+
+def _inject_spike_ecg(trace, magnitude, duration_samples, rng,
+                      offset_min=30, offset_max=80):
+    """
+    Inject an additional spike NEAR the R-peak (mimics an ectopic beat / PVC).
+
+    For R-peak-centered traces, the extra spike is placed at sample offset
+    (offset_min..offset_max) from the trace center, on either side. At 360 Hz,
+    30-80 samples ≈ 85-220 ms — a plausible PVC coupling interval that
+    produces a visibly distinct "two-spike" trace.
+
+    Replaces the previous baseline-region placement, which was visually too
+    similar to a normal positive trace.
+    """
+    values = np.array([float(v) for v, _ in trace], dtype=float)
+    times  = np.array([float(t) for _, t in trace], dtype=float)
+    n = len(values)
+
+    if n < duration_samples + 2:
         return list(zip(values.tolist(), times.tolist()))
 
-    start = int(rng.integers(0, len(values) - duration_samples))
-    sign  = int(rng.choice([-1, 1]))           # spike up or down equally likely
-    values[start:start + duration_samples] += sign * magnitude
+    center = n // 2
+    sign   = int(rng.choice([-1, 1]))             # spike before or after R
+    offset = int(rng.integers(offset_min, offset_max + 1))
+
+    start = center + sign * offset - duration_samples // 2
+    start = max(0, min(start, n - duration_samples))
+
+    # Positive-going deflection (R-peak-like). Same magnitude convention as
+    # before, but now added to a non-baseline region so it stacks visibly.
+    values[start:start + duration_samples] += magnitude
+
     return list(zip(values.tolist(), times.tolist()))
 
 
@@ -52,15 +183,29 @@ def _inject_shifted_ecg(trace, shift_fraction):
 
 
 def _inject_stuck_ecg(trace, duration_samples):
-    """Flatten a centered segment (asystole / flat-line episode)."""
+    """
+    Flatten a narrow centered segment over the R-peak — a "missing QRS" /
+    dropped-beat event. P-wave and T-wave remain intact; only the most
+    distinctive feature is replaced with baseline.
+
+    For R-peak-centered traces, duration_samples should cover ≈ QRS+S width.
+    At 360 Hz: 40-60 samples ≈ 110-170 ms is appropriate. The previous
+    180-sample width (500 ms ≈ 30 % of a 1-beat trace) erased far more than
+    a clinically realistic conduction failure.
+    """
     values = np.array([float(v) for v, _ in trace], dtype=float)
     times  = np.array([float(t) for _, t in trace], dtype=float)
-    if len(values) < duration_samples + 2:
+    n = len(values)
+    if n < duration_samples + 2:
         return list(zip(values.tolist(), times.tolist()))
-    mid   = len(values) // 2
+
+    mid   = n // 2
     start = max(0, mid - duration_samples // 2)
-    end   = min(len(values), start + duration_samples)
-    values[start:end] = values[start]
+    end   = min(n, start + duration_samples)
+    # Flatten to the baseline level just before the QRS, not to values[start]
+    # (which would be a Q-wave or pre-R sample and look mid-amplitude).
+    baseline = float(values[max(0, start - 5)])
+    values[start:end] = baseline
     return list(zip(values.tolist(), times.tolist()))
 
 
@@ -76,11 +221,13 @@ def build_injected_negatives_ecg(
         out_folder,
         file_prefix,
         n_per_mode=15,
-        spike_magnitude=2.0,        # mV-scale: well above QRS (~1 mV)
-        spike_duration_samples=20,  # 360 Hz × 20 ≈ 55 ms (≈ 1 QRS width)
-        phase_shift_fraction=0.33,  # for 3-beat traces, ≈ 1 beat of mis-timing
-        stuck_duration_samples=180, # 360 Hz × 180 ≈ 500 ms (~ one R-R interval)
-        offset_magnitude=0.5,       # noticeable but doesn't dominate the QRS
+        spike_magnitude=2.0,
+        spike_duration_samples=20,
+        spike_offset_min=30,            # was: spike_avoid_center_fraction=0.4
+        spike_offset_max=80,            # NEW
+        phase_shift_fraction=0.33,
+        stuck_duration_samples=60,
+        offset_magnitude=0.5,
         seed=42,
 ):
     """
@@ -133,7 +280,8 @@ def build_injected_negatives_ecg(
 
     injection_specs = [
         (0, lambda t: _inject_spike_ecg(
-            t, spike_magnitude, spike_duration_samples, rng)),
+            t, spike_magnitude, spike_duration_samples, rng,
+            spike_offset_min, spike_offset_max)),
         (1, lambda t: _inject_shifted_ecg(t, phase_shift_fraction)),
         (2, lambda t: _inject_stuck_ecg(t, stuck_duration_samples)),
         (3, lambda t: _inject_offset_ecg(t, offset_magnitude)),
@@ -569,8 +717,8 @@ test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-expe
 all_ecg_traces_folder = BASE_DIR / "Data" / "3-ExtractInterval" /  "ecg" / "1beat"
 output_ecg_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{beats}-experiment1"
 
-test_ecg_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" /  "ecg" / f"{beats}-experiment"/f"{beats}-test/positive"
-test_ecg_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{beats}-experiment"/f"{beats}-test/negative"
+test_ecg_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" /  "ecg" / f"{beats}-experiment1"/f"{beats}-test/positive"
+test_ecg_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{beats}-experiment1"/f"{beats}-test/negative"
 
 
 
@@ -596,9 +744,19 @@ build_injected_negatives_ecg(
     n_per_mode      = 43,
 )
 
+# =============================================================================
+# Temperature negative generation
+# Positives are already split into A-train / A-test/positive; skip split_dataset.
+# =============================================================================
 
-
-
+test_positive_files = get_trace_files(folder_path=test_positive_folder)
+test_positive_lists = csv_to_temp_time_list(input_files=test_positive_files)
+build_injected_negatives_temp(
+    positive_traces = test_positive_lists,
+    out_folder      = test_negative_folder,
+    file_prefix     = file_prefix,
+    n_per_mode      = 22,        # 4 × 22 = 88 (close to your previous 86)
+)
 
 #
 # split_dataset(input_folder = all_ecg_traces_folder,
