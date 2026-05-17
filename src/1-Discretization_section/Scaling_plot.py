@@ -3,23 +3,16 @@ plot_scaling.py
 ===============
 Read scaling_log.json produced by run_scaling.py and regenerate all figures.
 
-Now produces plots for three timings and two structure metrics:
-  - disc_time   : just the discretization step
-  - learn_time  : just the TAG learning step
-  - total_time  : discretization + symbolic conversion + TAG learning
-  - n_states    : TA state count
-  - n_edges     : TA edge count
-
-Each metric gets four figure sets (individual / combined / per-dataset /
-per-method). Timing plots also get *_fit.png variants with linear and
-exponential curve fits.
-
-New layout: ScalingExperiments/<timestamp>/k<n>/scaling_log.json
-Use --k to pick which TAG k value to plot (default 2).
+Defensive against crashed runs:
+  - Filters out placeholders / in-progress results (entries from a SLURM
+    SIGKILL between placeholder-append and result-replace in the runner).
+  - All plot functions skip cells where _stat_summary returned None
+    (all repeats failed at that n).
+  - All label lookups use .get() with fallbacks via _safe_label.
 
 Usage:
     python plot_scaling.py                    # latest run, k=2
-    python plot_scaling.py --k 3              # latest run, k=3
+    python plot_scaling.py --k 4              # latest run, k=4
     python plot_scaling.py --log path/to/scaling_log.json
 """
 
@@ -30,6 +23,76 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
+
+def find_all_logs():
+    """
+    Find every scaling_log.json under ScalingExperiments/, across all
+    timestamped runs and all k values.
+
+    Returns
+    -------
+    list of str
+        Sorted by (timestamp, k). Older timestamps first; within a timestamp,
+        lower k values first.
+    """
+    base = os.path.normpath(os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "..", "..", "Data", "Graphs", "ScalingExperiments"
+    ))
+    if not os.path.isdir(base):
+        return []
+
+    logs = []
+    for run_entry in sorted(os.scandir(base), key=lambda e: e.name):
+        if not run_entry.is_dir():
+            continue
+        # Within each timestamp folder, look for any k<n>/scaling_log.json
+        for k_entry in sorted(os.scandir(run_entry.path), key=lambda e: e.name):
+            if not k_entry.is_dir():
+                continue
+            if not k_entry.name.startswith("k"):
+                continue
+            log_path = os.path.join(k_entry.path, "scaling_log.json")
+            if os.path.isfile(log_path):
+                logs.append(log_path)
+    return logs
+
+def _is_ok_cell(stat_dict):
+    """A stat_summary dict is OK if it has a non-None median (>=1 successful repeat)."""
+    return stat_dict is not None and stat_dict.get("median") is not None
+
+
+def _ok_indices(result, metric):
+    """Return indices into trace_counts where the given metric has data."""
+    return [
+        i for i, s in enumerate(result.get(metric, []))
+        if _is_ok_cell(s)
+    ]
+
+
+def _is_completed(result):
+    """
+    A result is considered completed if it has trace_counts as a list.
+    Placeholders inserted by run_scaling.py (when SIGKILLed between
+    append-placeholder and replace-with-result) only have:
+        {dataset, method, params, tag_k, status="in_progress"}
+    and lack trace_counts and label.
+    """
+    return isinstance(result.get("trace_counts"), list)
+
+
+def _safe_label(result):
+    """Best-effort label for log/print messages. Used when result['label'] is missing."""
+    if "label" in result:
+        return result["label"]
+    parts = []
+    if result.get("dataset"):
+        parts.append(result["dataset"])
+    if result.get("method"):
+        parts.append(result["method"].upper())
+    if result.get("params"):
+        parts.append(str(result["params"]))
+    return " ".join(parts) if parts else "<unknown>"
 
 
 # =============================================================================
@@ -52,11 +115,6 @@ def load_log(log_path):
 
 
 def find_latest_log(tag_k=2):
-    """
-    Find the most recent scaling_log.json for the given TAG k value.
-
-    New layout: <base>/<timestamp>/k<n>/scaling_log.json
-    """
     base = os.path.normpath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         "..", "..", "Data", "Graphs", "ScalingExperiments"
@@ -84,32 +142,28 @@ def find_latest_log(tag_k=2):
 
 def _extract_series(result, metric_key, central="median"):
     """
-    Extract a (x, y_central, y_lower_err, y_upper_err) tuple for plotting.
-
-    Parameters
-    ----------
-    result      : one entry from result["results"]
-    metric_key  : "disc_time", "learn_time", "total_time", "n_states", "n_edges"
-    central     : "median" or "mean" — which central tendency to plot
-
-    Returns
-    -------
-    x           : list of trace counts
-    y           : list of central values (median or mean)
-    y_low       : asymmetric lower error (y - min) for median, (std) for mean
-    y_high      : asymmetric upper error (max - y) for median, (std) for mean
+    Extract (x, y_central, y_lower_err, y_upper_err) for plotting,
+    skipping cells where all repeats failed.
     """
-    x = result["trace_counts"]
-    stats = result[metric_key]
+    stats = result.get(metric_key, [])
+    trace_counts = result.get("trace_counts", [])
+
+    valid_indices = [i for i, s in enumerate(stats) if _is_ok_cell(s)]
+
+    if not valid_indices:
+        return [], [], [], []
+
+    x = [trace_counts[i] for i in valid_indices]
+    stats_valid = [stats[i] for i in valid_indices]
 
     if central == "median":
-        y      = [s["median"] for s in stats]
-        y_low  = [s["median"] - s["min"] for s in stats]
-        y_high = [s["max"] - s["median"] for s in stats]
+        y      = [s["median"] for s in stats_valid]
+        y_low  = [s["median"] - s["min"] for s in stats_valid]
+        y_high = [s["max"] - s["median"] for s in stats_valid]
     elif central == "mean":
-        y      = [s["mean"] for s in stats]
-        y_low  = [s["std"] for s in stats]
-        y_high = [s["std"] for s in stats]
+        y      = [s["mean"] for s in stats_valid]
+        y_low  = [s["std"] for s in stats_valid]
+        y_high = [s["std"] for s in stats_valid]
     else:
         raise ValueError(f"Unknown central='{central}'")
 
@@ -117,7 +171,7 @@ def _extract_series(result, metric_key, central="median"):
 
 
 # =============================================================================
-# CURVE FITTING (unchanged from original; operates on x, y arrays)
+# CURVE FITTING
 # =============================================================================
 
 def _r2(y_true, y_pred):
@@ -130,6 +184,10 @@ def _fit_both(trace_counts, y_values):
     """Fit linear + exponential curves. Returns dict of fit info."""
     x = np.array(trace_counts, dtype=float)
     y = np.array(y_values, dtype=float)
+
+    if len(x) < 2:
+        return {}
+
     x_dense = np.linspace(x[0], x[-1], 200)
 
     lin_c = np.polyfit(x, y, 1)
@@ -170,17 +228,20 @@ def _fit_both(trace_counts, y_values):
 def _fit_tag(trace_counts, y_values):
     """Short legend tag with R² values for combined plots."""
     fits = _fit_both(trace_counts, y_values)
-    parts = [f"lin R²={fits['linear']['r2']:.3f}"]
+    if not fits:
+        return ""
+    parts = []
+    if "linear" in fits:
+        parts.append(f"lin R²={fits['linear']['r2']:.3f}")
     if "exponential" in fits:
         parts.append(f"exp R²={fits['exponential']['r2']:.3f}")
-    return f"({', '.join(parts)})"
+    return f"({', '.join(parts)})" if parts else ""
 
 
 # =============================================================================
 # METRIC METADATA
 # =============================================================================
 
-# (key, y_label, file_prefix, supports_fit, integer_y)
 METRICS = [
     ("disc_time",  "Discretization time (s)",  "disc_time",  True,  False),
     ("learn_time", "TAG learning time (s)",    "learn_time", True,  False),
@@ -245,19 +306,21 @@ def plot_individual(results, output_folder, repeats, tag_k,
                     metric_key, ylabel, file_prefix,
                     supports_fit, integer_y, show_fit=False):
     if show_fit and not supports_fit:
-        return   # don't generate fit variants for integer-valued metrics
+        return
     suffix = "_fit" if show_fit else "_raw"
 
     for result in results:
         x, y, y_low, y_high = _extract_series(result, metric_key)
-        label = result["label"]
+        if not x:
+            print(f"  Skipping {_safe_label(result)} for {metric_key} — no successful cells")
+            continue
+        label = _safe_label(result)
 
         fig, ax = plt.subplots(figsize=(10, 5))
         _plot_series(ax, x, y, y_low, y_high, color="navy", label="Measured")
 
         if show_fit:
             _overlay_fits(ax, x, y, color="navy")
-            # Also draw the explicit fit legend lines
             fits = _fit_both(x, y)
             fit_styles = {
                 "linear":      ("firebrick",   "--"),
@@ -292,15 +355,25 @@ def plot_combined(results, output_folder, repeats, tag_k,
     suffix = "_fit" if show_fit else "_raw"
 
     fig, ax = plt.subplots(figsize=(12, 6))
+    plotted_any = False
+
     for result, color in zip(results, _COLORS):
         x, y, y_low, y_high = _extract_series(result, metric_key)
+        if not x:
+            continue
+        plotted_any = True
         if show_fit:
             tag = _fit_tag(x, y)
-            legend_label = f"{result['label']} {tag}"
+            legend_label = f"{_safe_label(result)} {tag}"
             _overlay_fits(ax, x, y, color=color)
         else:
-            legend_label = result["label"]
+            legend_label = _safe_label(result)
         _plot_series(ax, x, y, y_low, y_high, color, legend_label)
+
+    if not plotted_any:
+        plt.close(fig)
+        print(f"  Skipping combined plot for {metric_key} — no successful data in any variant")
+        return
 
     _finalize_axes(
         ax,
@@ -322,21 +395,35 @@ def plot_per_dataset(results, output_folder, repeats, tag_k,
     if show_fit and not supports_fit:
         return
     suffix = "_fit" if show_fit else "_raw"
-    datasets = sorted(set(r["dataset"] for r in results))
+    datasets = sorted(set(r.get("dataset", "?") for r in results))
 
     for dataset in datasets:
-        subset = [r for r in results if r["dataset"] == dataset]
+        subset = [r for r in results if r.get("dataset") == dataset]
+        if not subset:
+            continue
+
         fig, ax = plt.subplots(figsize=(10, 5))
+        plotted_any = False
 
         for result, color in zip(subset, _COLORS):
             x, y, y_low, y_high = _extract_series(result, metric_key)
+            if not x:
+                continue
+            plotted_any = True
+            method_name = result.get("method", "?").upper()
+            params_str = str(result.get("params", ""))
             if show_fit:
                 tag = _fit_tag(x, y)
-                legend_label = f"{result['method'].upper()} ({result['params']}) {tag}"
+                legend_label = f"{method_name} ({params_str}) {tag}"
                 _overlay_fits(ax, x, y, color=color)
             else:
-                legend_label = f"{result['method'].upper()} ({result['params']})"
+                legend_label = f"{method_name} ({params_str})"
             _plot_series(ax, x, y, y_low, y_high, color, legend_label)
+
+        if not plotted_any:
+            plt.close(fig)
+            print(f"  Skipping per-dataset plot for {dataset}/{metric_key} — no data")
+            continue
 
         _finalize_axes(
             ax,
@@ -358,21 +445,33 @@ def plot_per_method(results, output_folder, repeats, tag_k,
     if show_fit and not supports_fit:
         return
     suffix = "_fit" if show_fit else "_raw"
-    methods = sorted(set(r["method"] for r in results))
+    methods = sorted(set(r.get("method", "?") for r in results))
 
     for method in methods:
-        subset = [r for r in results if r["method"] == method]
+        subset = [r for r in results if r.get("method") == method]
+        if not subset:
+            continue
+
         fig, ax = plt.subplots(figsize=(10, 5))
+        plotted_any = False
 
         for result, color in zip(subset, _COLORS):
             x, y, y_low, y_high = _extract_series(result, metric_key)
+            if not x:
+                continue
+            plotted_any = True
             if show_fit:
                 tag = _fit_tag(x, y)
-                legend_label = f"{result['dataset']} {tag}"
+                legend_label = f"{result.get('dataset', '?')} {tag}"
                 _overlay_fits(ax, x, y, color=color)
             else:
-                legend_label = result["dataset"]
+                legend_label = result.get("dataset", "?")
             _plot_series(ax, x, y, y_low, y_high, color, legend_label)
+
+        if not plotted_any:
+            plt.close(fig)
+            print(f"  Skipping per-method plot for {method}/{metric_key} — no data")
+            continue
 
         _finalize_axes(
             ax,
@@ -390,21 +489,36 @@ def plot_per_method(results, output_folder, repeats, tag_k,
 
 
 # =============================================================================
-# CONSISTENCY OVERVIEW (bonus — one plot summarizing inconsistency across runs)
+# CONSISTENCY OVERVIEW
 # =============================================================================
 
 def plot_consistency_summary(results, output_folder, repeats, tag_k):
     """
-    A small overview plot showing how many of the per-n repeats were consistent
-    for each experiment. Useful to spot configurations that produce broken TAs.
+    Overview plot of consistency rate across configurations.
     """
     fig, ax = plt.subplots(figsize=(12, 6))
+    plotted_any = False
 
     for result, color in zip(results, _COLORS):
-        x = result["trace_counts"]
-        consistency_ratio = [c / repeats for c in result["n_consistent"]]
+        x = result.get("trace_counts", [])
+        n_consistent = result.get("n_consistent", [])
+        if not x or not n_consistent:
+            continue
+        plotted_any = True
+
+        try:
+            denom = float(repeats) if repeats else 1
+        except (TypeError, ValueError):
+            denom = 1
+        consistency_ratio = [c / denom for c in n_consistent]
+
         ax.plot(x, consistency_ratio, "o-", color=color,
-                label=result["label"], linewidth=2, markersize=4)
+                label=_safe_label(result), linewidth=2, markersize=4)
+
+    if not plotted_any:
+        plt.close(fig)
+        print("  Skipping consistency summary — no data")
+        return
 
     ax.set_xlabel("Training trace count")
     ax.set_ylabel(f"Consistent TAs / {repeats}")
@@ -419,80 +533,203 @@ def plot_consistency_summary(results, output_folder, repeats, tag_k):
 
 
 # =============================================================================
-# MAIN
+# FAILURE SUMMARY
 # =============================================================================
 
+def plot_failure_summary(log, output_folder):
+    """
+    Render a table of all failed cells in the scaling sweep.
+    Skipped if everything succeeded.
+    """
+    all_failed = []
+    for r in log.get("results", []):
+        if not _is_completed(r):
+            continue
+        reasons_per_n = r.get("failure_reasons_per_n", [])
+        trace_counts = r.get("trace_counts", [])
+        if not reasons_per_n:
+            continue
+        for n, reasons in zip(trace_counts, reasons_per_n):
+            for reason in reasons:
+                all_failed.append({
+                    "dataset":    r.get("dataset", "?"),
+                    "method":     r.get("method", "?"),
+                    "params":     str(r.get("params", "?")),
+                    "n":          n,
+                    "repeat":     reason.get("repeat", "?"),
+                    "error_type": reason.get("error_type", "?"),
+                    "error_msg":  reason.get("error_msg", "")[:120],
+                })
+
+    if not all_failed:
+        return
+
+    n_rows = len(all_failed) + 1
+    fig_h = max(2, 0.35 * n_rows + 1)
+    fig, ax = plt.subplots(figsize=(16, fig_h))
+    ax.axis("off")
+
+    headers = ["Dataset", "Method", "Params", "n", "Repeat",
+               "Error type", "Error message"]
+    cell_text = [
+        [f["dataset"], f["method"], f["params"], str(f["n"]),
+         str(f["repeat"]), f["error_type"], f["error_msg"]]
+        for f in all_failed
+    ]
+
+    tbl = ax.table(cellText=cell_text, colLabels=headers,
+                   cellLoc="center", loc="center")
+    tbl.auto_set_font_size(False)
+    tbl.set_fontsize(8)
+    tbl.scale(1, 1.4)
+    for j in range(len(headers)):
+        tbl[(0, j)].set_facecolor("#2c3e50")
+        tbl[(0, j)].set_text_props(color="white", fontweight="bold")
+
+    tag_k = log.get("tag_k", "?")
+    fig.suptitle(f"Failed scaling cells (k={tag_k})", fontsize=12,
+                 fontweight="bold", y=0.97)
+
+    out_path = os.path.join(output_folder, "scaling_failures.png")
+    fig.savefig(out_path, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  Saved: {out_path}")
+
+
+# =============================================================================
+# MAIN
+# =============================================================================
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--log", default=None,
-        help="Path to scaling_log.json. Defaults to most recent run for the given --k.",
+        help="Path to a specific scaling_log.json. Overrides --k and --all.",
     )
     parser.add_argument(
         "--k", type=int, default=2,
-        help="TAG k value to plot (selects <run>/k<n>/scaling_log.json). Default: 2.",
+        help="TAG k value to plot (selects <run>/k<n>/scaling_log.json). "
+             "Used only with single-log mode. Default: 2.",
+    )
+    parser.add_argument(
+        "--all", action="store_true",
+        help="Process every scaling_log.json under ScalingExperiments/. "
+             "Plots are saved in each log's own k<n>/ folder.",
     )
     parser.add_argument(
         "--out", default=None,
-        help="Output folder for figures. Defaults to the same folder as the log file.",
+        help="Output folder. Only used in single-log mode. "
+             "In --all mode, plots go to each log's own folder.",
     )
     args = parser.parse_args()
 
-    if args.log is None:
-        args.log = find_latest_log(tag_k=args.k)
-        if args.log is None:
+    # ----- Build list of logs to process -----
+    if args.log:
+        logs_to_process = [args.log]
+    elif args.all:
+        logs_to_process = find_all_logs()
+        if not logs_to_process:
+            print("No scaling_log.json files found under ScalingExperiments/.")
+            return
+        print(f"Found {len(logs_to_process)} log(s) under ScalingExperiments/.")
+    else:
+        latest = find_latest_log(tag_k=args.k)
+        if latest is None:
             print(f"No scaling_log.json found for k={args.k}. Run run_scaling.py first.")
             return
-        print(f"Auto-selected log: {args.log}")
+        logs_to_process = [latest]
+        print(f"Auto-selected log: {latest}")
 
-    out_dir = args.out if args.out else os.path.dirname(os.path.abspath(args.log))
-    os.makedirs(out_dir, exist_ok=True)
+    # ----- Process each log -----
+    summary = []   # (log_path, n_completed, n_skipped, status)
 
-    log = load_log(args.log)
-    results = log["results"]
-    repeats = log.get("repeats", "?")
-    tag_k = log.get("tag_k", args.k)
+    for log_path in logs_to_process:
+        print(f"\n{'=' * 70}")
+        print(f"Processing: {log_path}")
+        print(f"{'=' * 70}")
 
-    print(f"Plotting run from: {log.get('timestamp', 'unknown')} (k={tag_k})")
-    print(f"Experiments:       {len(results)}")
-    print(f"Output folder:     {out_dir}\n")
+        # In --all mode, always save next to the log file
+        if args.all or args.out is None:
+            out_dir = os.path.dirname(os.path.abspath(log_path))
+        else:
+            out_dir = args.out
+        os.makedirs(out_dir, exist_ok=True)
 
-    for metric_key, ylabel, file_prefix, supports_fit, integer_y in METRICS:
-        print(f"=== Metric: {ylabel} ===")
+        try:
+            log = load_log(log_path)
+        except Exception as e:
+            print(f"  FAILED to load log: {e}")
+            summary.append((log_path, 0, 0, f"load error: {e}"))
+            continue
 
-        for show_fit in [False, True]:
-            if show_fit and not supports_fit:
-                continue
-            label = "with fit" if show_fit else "raw"
-            print(f"  --- {label.upper()} ---")
+        raw_results = log.get("results", [])
+        results = [r for r in raw_results if _is_completed(r)]
+        n_skipped = len(raw_results) - len(results)
 
-            print(f"    Individual...")
-            plot_individual(results, out_dir, repeats, tag_k,
-                            metric_key, ylabel, file_prefix,
-                            supports_fit, integer_y, show_fit=show_fit)
+        repeats = log.get("repeats", "?")
+        tag_k = log.get("tag_k", "?")
 
-            print(f"    Combined...")
-            plot_combined(results, out_dir, repeats, tag_k,
-                          metric_key, ylabel, file_prefix,
-                          supports_fit, integer_y, show_fit=show_fit)
+        print(f"  Run timestamp: {log.get('timestamp', 'unknown')} (k={tag_k})")
+        print(f"  Experiments:   {len(results)} completed")
+        if n_skipped > 0:
+            print(f"  Skipped:       {n_skipped} placeholder/in-progress entries")
+        print(f"  Output:        {out_dir}\n")
 
-            print(f"    Per dataset...")
-            plot_per_dataset(results, out_dir, repeats, tag_k,
-                             metric_key, ylabel, file_prefix,
-                             supports_fit, integer_y, show_fit=show_fit)
+        if not results:
+            print("  No completed results. Skipping this log.\n")
+            summary.append((log_path, 0, n_skipped, "no completed results"))
+            continue
 
-            print(f"    Per method...")
-            plot_per_method(results, out_dir, repeats, tag_k,
-                            metric_key, ylabel, file_prefix,
-                            supports_fit, integer_y, show_fit=show_fit)
+        n_total_failed_cells = sum(
+            sum(1 for s in r.get("status_per_n", []) if s != "ok")
+            for r in results
+        )
+        if n_total_failed_cells > 0:
+            print(f"  Note: {n_total_failed_cells} (variant, n) cells had failures; "
+                  f"see scaling_failures.png\n")
 
-        print()
+        try:
+            for metric_key, ylabel, file_prefix, supports_fit, integer_y in METRICS:
+                print(f"  === Metric: {ylabel} ===")
 
-    print("=== Consistency summary ===")
-    plot_consistency_summary(results, out_dir, repeats, tag_k)
-    print()
+                for show_fit in [False, True]:
+                    if show_fit and not supports_fit:
+                        continue
 
-    print("Done.")
+                    plot_individual(results, out_dir, repeats, tag_k,
+                                    metric_key, ylabel, file_prefix,
+                                    supports_fit, integer_y, show_fit=show_fit)
+                    plot_combined(results, out_dir, repeats, tag_k,
+                                  metric_key, ylabel, file_prefix,
+                                  supports_fit, integer_y, show_fit=show_fit)
+                    plot_per_dataset(results, out_dir, repeats, tag_k,
+                                     metric_key, ylabel, file_prefix,
+                                     supports_fit, integer_y, show_fit=show_fit)
+                    plot_per_method(results, out_dir, repeats, tag_k,
+                                    metric_key, ylabel, file_prefix,
+                                    supports_fit, integer_y, show_fit=show_fit)
+
+            plot_consistency_summary(results, out_dir, repeats, tag_k)
+            plot_failure_summary(log, out_dir)
+
+            summary.append((log_path, len(results), n_skipped, "ok"))
+
+        except Exception as e:
+            print(f"  ERROR during plotting: {type(e).__name__}: {e}")
+            summary.append((log_path, len(results), n_skipped,
+                            f"plot error: {type(e).__name__}"))
+
+    # ----- Final summary -----
+    print(f"\n{'=' * 70}")
+    print(f"Final summary")
+    print(f"{'=' * 70}")
+    for log_path, n_done, n_skip, status in summary:
+        run_name = os.path.basename(
+            os.path.dirname(os.path.dirname(os.path.abspath(log_path)))
+        )
+        k_name = os.path.basename(os.path.dirname(os.path.abspath(log_path)))
+        print(f"  {status:25s} {run_name}/{k_name:6s} "
+              f"({n_done} variants, {n_skip} skipped)")
+    print(f"\nProcessed {len(summary)} log(s). Done.")
 
 
 if __name__ == "__main__":

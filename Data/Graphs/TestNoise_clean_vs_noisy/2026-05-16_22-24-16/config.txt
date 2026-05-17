@@ -1,0 +1,43 @@
+============================================================
+Run configuration — Test-Noise Sweep (clean vs noisy training)
+============================================================
+
+Timestamp     : 2026-05-16 22:24:16
+Git hash      : d4d5638fd986b5945dedf9d5d8c140e9a178c5de
+TAG k-future  : 2
+Seeds per pt  : 3
+Base seed     : 42
+Recursion lim : 3000
+
+--- Test-time noise levels (14) ---
+  [0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.7, 1.0, 1.5, 2.0, 3.0]
+
+--- Training conditions ---
+  clean : base_temp_std=0.0  amplitude_std=0.1  phase_std_h=0.1  noise_std=0.05
+  noisy : base_temp_std=2.0  amplitude_std=1.0  phase_std_h=1.0  noise_std=0.3
+
+--- Test trace profile (clean shape; only noise_std sweeps) ---
+  base_temp_std : 0.0
+  amplitude_std : 0.1
+  phase_std_h   : 0.1
+
+--- Methods ---
+  naive   : bins=15
+  sax144  : w=144, bins=15
+  sax48   : w=48, bins=15
+  sax24   : w=24, bins=15
+  persist : bins=16
+
+--- Dataset sizes ---
+  train per (condition, seed) : 140 traces
+  test positives per level    : 60 traces (regenerated per seed)
+  negatives                   : 60 traces (fixed)
+
+--- Total runs ---
+  Trainings: 2 × 5 × 3 = 30
+  Evals:     30 × 14 = 420
+
+--- Output folder ---
+  C:\Users\Jacob\Documents\GitHub\CPS---Timed-automata\Data\Graphs\TestNoise_clean_vs_noisy\2026-05-16_22-24-16
+
+============================================================

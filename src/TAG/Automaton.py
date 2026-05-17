@@ -1144,7 +1144,7 @@ class Automaton:
 
              # 8. Probabilistic for stabilzation after spike
             queries += "\t\t<query>\n"
-            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}](&lt;&gt; (Observer.SPIKE_seen &amp;&amp; Observer.STABILIZED)</formula>\n"
+            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}](&lt;&gt; (Observer.SPIKE_seen &amp;&amp; Observer.STABILIZED))</formula>\n"
             queries += "\t\t\t<comment/>\n"
             queries += "\t\t</query>\n\n"
 
