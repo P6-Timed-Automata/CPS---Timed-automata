@@ -14,6 +14,160 @@ from Discretization.discretizationSetup import (
 )
 
 
+# =============================================================================
+# ECG NEGATIVE INJECTION
+# Mirrors build_injected_negatives in Metrics_temp_run.py but adapted for ECG
+# time/value scale. Four controlled anomaly modes preserve real-data baseline
+# characteristics while introducing detectable, known-class anomalies.
+#
+# Default magnitudes assume mV-scale ECG (typical MIT-BIH). If your traces are
+# in raw ADC counts or otherwise scaled, multiply magnitudes by your scale
+# factor when calling build_injected_negatives_ecg.
+# =============================================================================
+
+def _inject_spike_ecg(trace, magnitude, duration_samples, rng):
+    """Brief amplitude excursion at a random position (electrode glitch / artifact)."""
+    values = np.array([float(v) for v, _ in trace], dtype=float)
+    times  = np.array([float(t) for _, t in trace], dtype=float)
+
+    if len(values) < duration_samples + 2:
+        return list(zip(values.tolist(), times.tolist()))
+
+    start = int(rng.integers(0, len(values) - duration_samples))
+    sign  = int(rng.choice([-1, 1]))           # spike up or down equally likely
+    values[start:start + duration_samples] += sign * magnitude
+    return list(zip(values.tolist(), times.tolist()))
+
+
+def _inject_shifted_ecg(trace, shift_fraction):
+    """Rotate values in time (beat misalignment / arrhythmia-style mis-timing)."""
+    values = np.array([float(v) for v, _ in trace], dtype=float)
+    times  = np.array([float(t) for _, t in trace], dtype=float)
+    n = len(values)
+    shift_idx = int(n * shift_fraction)
+    if shift_idx <= 0 or shift_idx >= n:
+        return list(zip(values.tolist(), times.tolist()))
+    rotated = np.concatenate([values[shift_idx:], values[:shift_idx]])
+    return list(zip(rotated.tolist(), times.tolist()))
+
+
+def _inject_stuck_ecg(trace, duration_samples):
+    """Flatten a centered segment (asystole / flat-line episode)."""
+    values = np.array([float(v) for v, _ in trace], dtype=float)
+    times  = np.array([float(t) for _, t in trace], dtype=float)
+    if len(values) < duration_samples + 2:
+        return list(zip(values.tolist(), times.tolist()))
+    mid   = len(values) // 2
+    start = max(0, mid - duration_samples // 2)
+    end   = min(len(values), start + duration_samples)
+    values[start:end] = values[start]
+    return list(zip(values.tolist(), times.tolist()))
+
+
+def _inject_offset_ecg(trace, magnitude):
+    """Constant additive shift (baseline drift / electrode bias)."""
+    values = np.array([float(v) for v, _ in trace], dtype=float) + magnitude
+    times  = np.array([float(t) for _, t in trace], dtype=float)
+    return list(zip(values.tolist(), times.tolist()))
+
+
+def build_injected_negatives_ecg(
+        positive_traces,
+        out_folder,
+        file_prefix,
+        n_per_mode=15,
+        spike_magnitude=2.0,        # mV-scale: well above QRS (~1 mV)
+        spike_duration_samples=20,  # 360 Hz × 20 ≈ 55 ms (≈ 1 QRS width)
+        phase_shift_fraction=0.33,  # for 3-beat traces, ≈ 1 beat of mis-timing
+        stuck_duration_samples=180, # 360 Hz × 180 ≈ 500 ms (~ one R-R interval)
+        offset_magnitude=0.5,       # noticeable but doesn't dominate the QRS
+        seed=42,
+):
+    """
+    Generate ECG negative test traces by injecting controlled anomalies into
+    real positive traces. Four modes, saved to mode subfolders so the runner
+    can produce per-mode rejection rates (matching exp 5.1/5.2/5.4 layout).
+
+    Modes (indices match NEG_MODE_NAMES in Generators.py):
+        0 spikes   - brief amplitude excursion at a random position
+        1 shifted  - rotate values in time (beat misalignment)
+        2 stuck    - flatten a centered segment (asystole)
+        3 offset   - constant additive shift (baseline drift)
+
+    Each mode samples n_per_mode positives with replacement, so the same
+    positive can be perturbed across multiple modes.
+
+    Parameters
+    ----------
+    positive_traces : list of [(value, time), ...]
+        Real ECG positives, e.g. from csv_to_temp_time_list().
+    out_folder : Path or str
+        Output root; mode subfolders are created beneath it.
+    file_prefix : str
+        Filename prefix for generated CSVs.
+    n_per_mode : int
+        Negatives per mode. Total = 4 * n_per_mode.
+
+    The five magnitude/duration parameters are tuned for ~1 mV-amplitude
+    ECG at 360 Hz with 3-beat traces. Adjust if your scale differs:
+      - ECG in ADC counts (e.g. ×200) → multiply spike_magnitude and
+        offset_magnitude by ~200.
+      - Different sampling rate → scale spike_duration_samples and
+        stuck_duration_samples by your_fs / 360.
+      - Different trace length / n_beats → keep phase_shift_fraction
+        around 1/n_beats.
+
+    Returns
+    -------
+    (negatives, modes)
+        negatives : list of [(value, time), ...]
+        modes     : list of int, one per trace, 0-3
+    Also writes CSVs to disk under out_folder/<mode_name>/.
+    """
+    from Generators import NEG_MODE_NAMES
+
+    if not positive_traces:
+        raise ValueError("No positive traces to inject into.")
+
+    rng = np.random.default_rng(seed)
+
+    injection_specs = [
+        (0, lambda t: _inject_spike_ecg(
+            t, spike_magnitude, spike_duration_samples, rng)),
+        (1, lambda t: _inject_shifted_ecg(t, phase_shift_fraction)),
+        (2, lambda t: _inject_stuck_ecg(t, stuck_duration_samples)),
+        (3, lambda t: _inject_offset_ecg(t, offset_magnitude)),
+    ]
+
+    negatives, modes = [], []
+    for mode_int, inject_fn in injection_specs:
+        for _ in range(n_per_mode):
+            idx = int(rng.integers(0, len(positive_traces)))
+            negatives.append(inject_fn(positive_traces[idx]))
+            modes.append(mode_int)
+
+    # Write to disk, organized by mode subfolder so the runner can do
+    # per-mode evaluation with load_traces_by_mode.
+    out_folder = Path(out_folder)
+    out_folder.mkdir(parents=True, exist_ok=True)
+
+    mode_counters = {m: 0 for m in NEG_MODE_NAMES}
+    for trace, mode_int in zip(negatives, modes):
+        mode_name = NEG_MODE_NAMES[mode_int]
+        mode_subfolder = out_folder / mode_name
+        mode_subfolder.mkdir(parents=True, exist_ok=True)
+        mode_counters[mode_int] += 1
+        filename = f"neg-{file_prefix}-{mode_name}-tid{mode_counters[mode_int]}.csv"
+        with open(mode_subfolder / filename, "w") as f:
+            f.write("time;value\n")
+            for value, time in trace:
+                f.write(f"{time:.0f};{value:.5f}\n")
+
+    counts = {NEG_MODE_NAMES[m]: c for m, c in mode_counters.items() if c > 0}
+    print(f"Generated {len(negatives)} ECG negatives -> {out_folder}")
+    print(f"  Mode counts: {counts}")
+    return negatives, modes
+
 def plot_and_save_traces(
         traces,
         output_folder,
@@ -400,7 +554,7 @@ SEED = 42
 
 room = "A"
 period = "1day"
-beats = "3beat"
+beats = "1beat"
 
 file_prefix = f"room{room}-{period}"
 
@@ -413,10 +567,36 @@ test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-expe
 
 
 all_ecg_traces_folder = BASE_DIR / "Data" / "3-ExtractInterval" /  "ecg" / "1beat"
-output_ecg_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{beats}-experiment"
+output_ecg_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{beats}-experiment1"
 
 test_ecg_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" /  "ecg" / f"{beats}-experiment"/f"{beats}-test/positive"
 test_ecg_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{beats}-experiment"/f"{beats}-test/negative"
+
+
+
+# =============================================================================
+# ECG negative generation workflow
+# Run once to populate the negative folder, then run Metrics_ecg_run.py.
+# =============================================================================
+
+# Step 1 (one-time): split your ECG positives into train/test
+split_dataset(
+    input_folder  = all_ecg_traces_folder,
+    output_folder = output_ecg_folder,
+    prefix        = beats,
+)
+
+#Step 2: generate negatives from the test positives
+test_positive_files = get_trace_files(folder_path=test_ecg_positive_folder)
+test_positive_lists = csv_to_temp_time_list(input_files=test_positive_files)
+build_injected_negatives_ecg(
+    positive_traces = test_positive_lists,
+    out_folder      = test_ecg_negative_folder,
+    file_prefix     = file_ecg_prefix,
+    n_per_mode      = 43,
+)
+
+
 
 
 

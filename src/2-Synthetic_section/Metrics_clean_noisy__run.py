@@ -33,31 +33,19 @@ from Pipeline import run_pipeline
 # CONFIG
 # =============================================================================
 
-TAG_K = 2
+TAG_K = 4
 
 # Parameter sweep per method. Picks a few values around the benchmark's
 # best for each method to characterise robustness.
 METHOD_VARIANTS = {
     "naive": [
         {"bins": 5},
-        {"bins": 10},
-        {"bins": 15},
     ],
     "sax": [
         {"w": 24,  "bins": 5},
-        {"w": 48,  "bins": 5},
-        {"w": 144,  "bins": 5},
-        {"w": 24,  "bins": 10},
-        {"w": 48,  "bins": 10},
-        {"w": 144,  "bins": 10},
-        {"w": 24,  "bins": 15},
-        {"w": 48,  "bins": 15},
-        {"w": 144,  "bins": 15},
     ],
     "persist": [
         {"bins": 6},
-        {"bins": 11},
-        {"bins": 16},
     ],
 }
 

@@ -57,10 +57,10 @@ from Pipeline import run_pipeline
 
 N_TRAIN = CONFIG["n_train"]
 
-NOISE_LEVELS = [0.02, 0.05, 0.1, 0.15, 0.2, 0.25,0.3,0.4,0.5]
+NOISE_LEVELS = [0.02, 0.05, 0.1, 0.15, 0.2, 0.25,0.3,0.4,0.5, 0.7,1]
 
 # Number of seeds per (method, noise_level). Multiplies runtime by this factor.
-N_SEEDS = 3
+N_SEEDS = 5
 
 F1_THRESHOLD = 0.7
 
@@ -68,7 +68,7 @@ TAG_K = 4
 
 METHODS = [
     ("naive",   {"bins": 5}),
-    ("sax144",     {"w": 144, "bins": 5}),   # was w=288 (degenerate); using 144
+    ("sax144",     {"w": 144, "bins": 5}),
     ("sax48",     {"w": 48, "bins": 5}),
     ("sax24",     {"w": 24, "bins": 5}),
     ("persist", {"bins": 6}),
@@ -436,4 +436,4 @@ if __name__ == "__main__":
     print(f"\nRun complete. To generate plots:")
     print(f"  python exp_53_plot.py")
     print(f"or:")
-    print(f"  python exp_53_plot.py --log {out_dir / 'results.json'}")
+    print(f"  python Metrics_synthetic_noisy_sweep.py --log {out_dir / 'results.json'}")
