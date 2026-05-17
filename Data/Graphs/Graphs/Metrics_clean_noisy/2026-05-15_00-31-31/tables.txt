@@ -1,0 +1,61 @@
+Overall metrics (one row per variant per condition)
+Condition  Method   Params          Precision  Recall  F1     States  Edges
+---------  -------  --------------  ---------  ------  -----  ------  -----
+clean      naive    bins=5          0.964      0.900   0.931  19      24   
+clean      naive    bins=10         1.000      0.767   0.868  41      66   
+clean      sax      w=24, bins=5    0.968      1.000   0.984  10      10   
+clean      sax      w=48, bins=5    0.966      0.950   0.958  10      10   
+clean      sax      w=144, bins=5   0.965      0.917   0.940  23      31   
+clean      sax      w=24, bins=10   1.000      0.967   0.983  42      54   
+clean      sax      w=48, bins=10   1.000      0.967   0.983  26      29   
+clean      sax      w=144, bins=10  0.982      0.900   0.939  47      67   
+clean      persist  bins=6          0.907      0.650   0.757  59      90   
+clean      persist  bins=11         0.958      0.383   0.548  166     253  
+noisy      naive    bins=5          1.000      0.817   0.899  15      23   
+noisy      naive    bins=10         0.978      0.733   0.838  37      65   
+noisy      sax      w=24, bins=5    0.734      0.783   0.758  39      52   
+noisy      sax      w=48, bins=5    0.667      0.567   0.613  80      109  
+noisy      sax      w=144, bins=5   0.742      0.817   0.778  25      41   
+noisy      sax      w=24, bins=10   0.625      0.417   0.500  117     171  
+noisy      sax      w=48, bins=10   0.634      0.433   0.515  138     218  
+noisy      sax      w=144, bins=10  0.545      0.300   0.387  109     193  
+noisy      persist  bins=6          0.564      0.950   0.708  50      74   
+noisy      persist  bins=11         0.541      0.550   0.545  134     224  
+
+Per-mode rejection rate (%) — clean training
+Variant            Spikes  Shifted  Stuck   Offset
+-----------------  ------  -------  ------  ------
+naive_bins=5       86.7%   100.0%   100.0%  100.0%
+naive_bins=10      100.0%  100.0%   100.0%  100.0%
+sax_w=24_bins=5    86.7%   100.0%   100.0%  100.0%
+sax_w=48_bins=5    86.7%   100.0%   100.0%  100.0%
+sax_w=144_bins=5   86.7%   100.0%   100.0%  100.0%
+sax_w=24_bins=10   100.0%  100.0%   100.0%  100.0%
+sax_w=48_bins=10   100.0%  100.0%   100.0%  100.0%
+sax_w=144_bins=10  93.3%   100.0%   100.0%  100.0%
+persist_bins=6     73.3%   100.0%   100.0%  100.0%
+persist_bins=11    93.3%   100.0%   100.0%  100.0%
+
+Per-mode rejection rate (%) — noisy training
+Variant            Spikes  Shifted  Stuck   Offset
+-----------------  ------  -------  ------  ------
+naive_bins=5       100.0%  100.0%   100.0%  100.0%
+naive_bins=10      100.0%  93.3%    100.0%  100.0%
+sax_w=24_bins=5    86.7%   100.0%   100.0%  0.0%  
+sax_w=48_bins=5    86.7%   100.0%   100.0%  0.0%  
+sax_w=144_bins=5   100.0%  93.3%    93.3%   0.0%  
+sax_w=24_bins=10   100.0%  100.0%   100.0%  0.0%  
+sax_w=48_bins=10   100.0%  100.0%   100.0%  0.0%  
+sax_w=144_bins=10  100.0%  100.0%   100.0%  0.0%  
+persist_bins=6     20.0%   86.7%    0.0%    0.0%  
+persist_bins=11    100.0%  86.7%    26.7%   0.0%  
+
+Robustness: F1 spread per method across variants
+Condition  Method   F1 median  F1 range     Best variant      Worst variant    
+---------  -------  ---------  -----------  ----------------  -----------------
+clean      naive    0.899      0.868-0.931  naive_bins=5      naive_bins=10    
+clean      persist  0.652      0.548-0.757  persist_bins=6    persist_bins=11  
+clean      sax      0.971      0.939-0.984  sax_w=24_bins=5   sax_w=144_bins=10
+noisy      naive    0.869      0.838-0.899  naive_bins=5      naive_bins=10    
+noisy      persist  0.627      0.545-0.708  persist_bins=6    persist_bins=11  
+noisy      sax      0.564      0.387-0.778  sax_w=144_bins=5  sax_w=144_bins=10
