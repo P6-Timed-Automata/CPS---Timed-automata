@@ -56,9 +56,9 @@ from Discretization.persist import (
 # =============================================================================
 
 METHODS = [
-    ("naive",   {"bins": 5}),
-    ("sax",     {"w": 48, "bins": 5}),
-    ("persist", {"bins": 5}),
+    ("naive",   {"bins": 15}),
+    ("sax",     {"w": 48, "bins": 15}),
+    ("persist", {"bins": 16}),
 ]
 
 TRAINING_CONDITION = "clean"
