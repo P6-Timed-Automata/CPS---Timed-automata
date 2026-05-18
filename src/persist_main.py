@@ -34,8 +34,6 @@ room = "A"
 discretization_method = "persist"
 period_nr = 1
 
-time = 0
-period = ""
 if data_type == "temp":
     period = f"{period_nr}day"
     time = 86400
@@ -57,7 +55,6 @@ k_max = 4
 k_increment = 2
 
 #Prepare train traces
-train_folder = ""
 #Prepare train traces
 if (data_type == "temp"):
     train_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/ f"{room}-train"
@@ -78,12 +75,10 @@ print("bins",bins)
 print("symbols", symbols)
 
 train_traces = discretize_traces_with_bins(train_raw_lists, bins)
-symbolic_train_trace, symbol_map, mapping = map_bins_to_symbols(train_traces, symbols, bins)
+symbolic_train_trace, symbol_map, mapping = map_bins_to_symbols(train_traces, bins)
 
 
 #Prepare test traces (positive and negative samples)
-test_positive_folder = ""
-test_negative_folder = ""
 if (data_type == "temp"):
     test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/positive"
     test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/negative"
@@ -97,17 +92,14 @@ test_negative_raw_traces = get_trace_files(folder_path = test_negative_folder)
 test_positive_raw_lists = csv_to_temp_time_list(input_files=test_positive_raw_traces)
 test_negative_raw_lists = csv_to_temp_time_list(input_files=test_negative_raw_traces)
 
-test_positive_traces_lists = preprocess_test_traces(test_traces = test_positive_raw_lists, bins = bins, s = symbols)
-test_negative_traces_lists = preprocess_test_traces(test_traces = test_negative_raw_lists, bins = bins, s = symbols)
-
-
+test_positive_traces_lists = preprocess_test_traces(test_traces = test_positive_raw_lists, bins = bins)
+test_negative_traces_lists = preprocess_test_traces(test_traces = test_negative_raw_lists, bins = bins)
 
 #Path to log data
-log_data_path = ""
 if (data_type == "temp"):
-    log_data_path = BASE_DIR /"Data" /"8-LoggedData" / f"{discretization_method}-temp-log.csv"
+    log_data_path = BASE_DIR /"Data" /"8-LoggedData" /"metrics"/f"{discretization_method}-temp-log.csv"
 elif(data_type == "ecg"):
-    log_data_path = BASE_DIR /"Data" /"8-LoggedData" / f"{discretization_method}-ecg-log.csv"
+    log_data_path = BASE_DIR /"Data" /"8-LoggedData" /"metrics"/ f"{discretization_method}-ecg-log.csv"
 
 # Parameter for nr of Traces
 len_traces = len(train_raw_traces)  + 1
@@ -130,7 +122,7 @@ for trace_nr in range(start_traces, len_traces):
 
     symbolic_train_trace_subset = symbolic_train_trace[:trace_nr ]
 
-    format_output(symbolic_res_list=symbolic_train_trace_subset, output_path=discretinize_data_path)
+    format_output(symbolic_traces=symbolic_train_trace_subset, output_path=discretinize_data_path)
 
     # Now vary k
     for k in range(k_min, k_max + 1, k_increment):
@@ -147,7 +139,7 @@ for trace_nr in range(start_traces, len_traces):
         # Transform to TA
         learner = TALearner(tss_path=discretinize_data_path, display=False, k=k)
         learner.ta.show(title = title, savePng = True, output_path = TA_output_path)
-        learner.ta.export_ta(path=xml_path, symbol_map=symbol_map, data_type = data_type, time = time)
+        learner.ta.export_ta(ta=learner.ta, path=xml_path, symbol_map=symbol_map, data_type = data_type, time = time)
 
         # Compute metrics
         metrics = learner.ta.evaluate_classifier(positive_tss = test_positive_traces_lists, negative_tss = test_negative_traces_lists,  save_path = log_data_path, run_id= run_id, timed=True)

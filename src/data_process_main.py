@@ -71,7 +71,8 @@ egg_output_folder = BASE_DIR / "Data" /"3-ExtractInterval" /"ecg" / f"{beats}bea
 ecg_output_prefix = f"{beats}beat"
 #
 extract_fixed_beats_traces(
-    input_file=output_egg_formated, output_folder=egg_output_folder,
+    input_file=output_egg_formated,
+    output_folder=egg_output_folder,
     n_beats = beats,
     output_prefix = ecg_output_prefix)
 
