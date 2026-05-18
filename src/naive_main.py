@@ -36,16 +36,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 data_type ="temp"
 room = "A"
 discretization_method = "naiv"
+sim_nr = 10000
 period_nr = 1
 
-time = 0
-period = ""
 if data_type == "temp":
     period = f"{period_nr}day"
     time = 86400
 elif data_type == "ecg":
     period = "1beat"
-    time = 250
+    time = 275
 
 
 # Parameter for Naiv
@@ -56,7 +55,6 @@ k_min = 4
 k_max = 4
 k_increment = 2
 
-train_folder = ""
 #Prepare train traces
 if (data_type == "temp"):
     train_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/ f"{room}-train"
@@ -71,8 +69,6 @@ symbolic_train_trace, symbol_map, mapping = map_bins_to_symbols(train_traces, bi
 
 
 #Prepare test traces (positive and negative samples)
-test_positive_folder = ""
-test_negative_folder = ""
 if (data_type == "temp"):
     test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/positive"
     test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/negative"
@@ -104,17 +100,17 @@ title_prefix = f"{discretization_method}-{period}-s{symbols}"
 # )
 
 #Path to log data
-log_data_path = ""
 if (data_type == "temp"):
-    log_data_path = BASE_DIR /"Data" /"8-LoggedData" / f"{discretization_method}-temp-log.csv"
+    log_data_path = BASE_DIR /"Data" /"8-LoggedData" / "metrics"/ f"{discretization_method}-temp-log.csv"
 elif(data_type == "ecg"):
-    log_data_path = BASE_DIR /"Data" /"8-LoggedData" / f"{discretization_method}-ecg-log.csv"
+    log_data_path = BASE_DIR /"Data" /"8-LoggedData" / "metrics"/ f"{discretization_method}-ecg-log.csv"
 
 
 # Parameter for nr of Traces
 len_traces = len(train_raw_traces)  + 1
-start_traces = 2
-len_traces = 4
+start_traces = 1
+len_traces = 3
+
 
 
 for trace_nr in range(start_traces, len_traces):
@@ -134,6 +130,7 @@ for trace_nr in range(start_traces, len_traces):
     format_output(symbolic_traces=symbolic_train_trace_subset, output_path=discretinize_data_path)
 
 
+
     # Loop over varying K-future
     for k in range(k_min, k_max + 1, k_increment):
 
@@ -147,7 +144,7 @@ for trace_nr in range(start_traces, len_traces):
         # Tranform to TA
         learner = TALearner(tss_path=discretinize_data_path,display=False,k=k )
         learner.ta.show(title=title,savePng=True,output_path=TA_output_path)
-        learner.ta.export_ta(ta = learner.ta, path=xml_path, symbol_map=symbol_map, data_type = data_type, time = time )
+        learner.ta.export_ta(ta = learner.ta, path=xml_path, symbol_map=symbol_map, data_type = data_type, time = time, sim_nr = sim_nr )
 
         # Compute metrics
         metrics = learner.ta.evaluate_classifier(positive_tss = test_positive_traces_lists, negative_tss = test_negative_traces_lists,  save_path = log_data_path, run_id= run_id, timed=True)
