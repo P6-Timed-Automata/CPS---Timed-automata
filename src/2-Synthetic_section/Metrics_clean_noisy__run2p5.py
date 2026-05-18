@@ -11,10 +11,11 @@ without re-running pipelines.
 Usage:
     python exp_51_52_run.py
 """
+import sys
+sys.setrecursionlimit(50000)
 
 import json
 import subprocess
-import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -25,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from Generate_data import load_all_data
 from Generators import NEG_MODE_NAMES
 from Pipeline import run_pipeline
+
 
 
 # =============================================================================
@@ -38,12 +40,12 @@ TAG_K = 2
 METHOD_VARIANTS = {
     "naive": [
         {"bins": 5},
+
     ],
     "sax": [
         {"w": 24,  "bins": 5},
         {"w": 48,  "bins": 5},
         {"w": 144,  "bins": 5},
-
 
     ],
     "persist": [
@@ -72,7 +74,6 @@ def _git_hash():
 
 def _run_condition(label, train_traces, test_pos, test_neg, neg_modes,
                    out_dir, method_variants, tag_k):
-    """Run all (method, params) variants for one training condition."""
     results = []
     for method, variants in method_variants.items():
         for params in variants:
@@ -80,34 +81,48 @@ def _run_condition(label, train_traces, test_pos, test_neg, neg_modes,
             print(f"  [{label}] {vlabel} ...", flush=True)
             ta_folder = str(out_dir / "ta_images" / label / vlabel)
 
-            result = run_pipeline(
-                method=method, params=params,
-                train_traces=train_traces,
-                test_pos_traces=test_pos,
-                test_neg_traces=test_neg,
-                tag_k=tag_k,
-                neg_modes=neg_modes,
-                save_ta_path=ta_folder,
-                ta_title=f"{label}_{vlabel}",
-            )
-            ov = result["overall"]
-            print(f"    P={ov['precision']:.3f} R={ov['recall']:.3f} "
-                  f"F1={ov['f1']:.3f} states={result['n_states']}")
+            try:
+                result = run_pipeline(
+                    method=method, params=params,
+                    train_traces=train_traces,
+                    test_pos_traces=test_pos,
+                    test_neg_traces=test_neg,
+                    tag_k=tag_k,
+                    neg_modes=neg_modes,
+                    save_ta_path=ta_folder,
+                    ta_title=f"{label}_{vlabel}",
+                )
+                ov = result["overall"]
+                print(f"    P={ov['precision']:.3f} R={ov['recall']:.3f} "
+                      f"F1={ov['f1']:.3f} states={result['n_states']}")
 
-            # Strip non-serializable fields before storing
-            overall_clean = {k: v for k, v in ov.items()
-                             if k not in ("save_path", "run_id")}
+                overall_clean = {k: v for k, v in ov.items()
+                                 if k not in ("save_path", "run_id")}
 
-            results.append({
-                "condition":     label,
-                "method":        method,
-                "params":        params,
-                "variant_label": vlabel,
-                "n_states":      result["n_states"],
-                "n_edges":       result["n_edges"],
-                "overall":       overall_clean,
-                "per_mode":      result["per_mode"],
-            })
+                results.append({
+                    "condition":     label,
+                    "method":        method,
+                    "params":        params,
+                    "variant_label": vlabel,
+                    "status":        "ok",
+                    "n_states":      result["n_states"],
+                    "n_edges":       result["n_edges"],
+                    "overall":       overall_clean,
+                    "per_mode":      result["per_mode"],
+                })
+
+            except Exception as e:
+                error_type = type(e).__name__
+                print(f"    FAILED ({error_type}): {str(e)[:200]}", flush=True)
+                results.append({
+                    "condition":     label,
+                    "method":        method,
+                    "params":        params,
+                    "variant_label": vlabel,
+                    "status":        "failed",
+                    "error_type":    error_type,
+                    "error_msg":     str(e),
+                })
     return results
 
 

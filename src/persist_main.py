@@ -29,7 +29,7 @@ from DataProcessing.processData import (
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # PARAMETERS SETTINGS
-data_type ="temp"
+data_type ="ecg"
 room = "A"
 discretization_method = "persist"
 period_nr = 1
@@ -102,12 +102,15 @@ elif(data_type == "ecg"):
     log_data_path = BASE_DIR /"Data" /"8-LoggedData" /"metrics"/ f"{discretization_method}-ecg-log.csv"
 
 # Parameter for nr of Traces
-len_traces = len(train_raw_traces)  + 1
-start_traces = 1
-len_traces = 2
+#len_traces = len(train_raw_traces)  + 1
+#start_traces = 1
+#len_traces = 2
+
+trace_list = [1, 10, 20, 30, 40, 50]
 
 
-for trace_nr in range(start_traces, len_traces):
+
+for trace_nr in trace_list:
 
     # Paths
     discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period

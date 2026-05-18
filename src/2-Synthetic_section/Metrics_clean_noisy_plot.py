@@ -26,6 +26,23 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from Generators import NEG_MODE_NAMES
 
+# =============================================================================
+# STATUS FILTERING
+# =============================================================================
+
+def _ok(r):
+    """True if this variant completed successfully."""
+    return r.get("status", "ok") == "ok"
+
+
+def _ok_results(results):
+    """Filter a list of results to only those that completed successfully."""
+    return [r for r in results if _ok(r)]
+
+
+def _failed_results(results):
+    """Filter a list of results to only failed ones."""
+    return [r for r in results if not _ok(r)]
 
 # =============================================================================
 # LOG LOADING
@@ -37,7 +54,7 @@ def load_log(log_path):
 
 
 def find_latest_log():
-    """Find the most recent results.json under Metrics_5_1_5_2/."""
+    """Find the most recent results.json under Metrics_clean_noisy/."""
     base = ROOT / "Data" / "Graphs" / "Metrics_clean_noisy"
     if not base.is_dir():
         return None
@@ -74,48 +91,72 @@ def _make_table(headers, rows):
 
 def build_tables(all_results):
     mode_names = list(NEG_MODE_NAMES.values())
+    ok_results = _ok_results(all_results)
+    failed_results = _failed_results(all_results)
 
-    # ----- Table 1: Overall metrics, one row per variant per condition -----
-    t1_headers = ["Condition", "Method", "Params", "Precision", "Recall",
-                  "F1", "States", "Edges"]
+    # ----- Table 1: Overall metrics (ok variants only, failures listed at end)
+    t1_headers = ["Condition", "Method", "Params", "Status", "Precision",
+                  "Recall", "F1", "States", "Edges"]
     t1_rows = []
-    for r in all_results:
+    for r in ok_results:
         ov = r["overall"]
         param_str = ", ".join(f"{k}={v}" for k, v in r["params"].items())
         t1_rows.append([
-            r["condition"], r["method"], param_str,
+            r["condition"], r["method"], param_str, "ok",
             f"{ov['precision']:.3f}", f"{ov['recall']:.3f}",
             f"{ov['f1']:.3f}", r["n_states"], r["n_edges"],
         ])
+    # Append failed variants
+    for r in failed_results:
+        param_str = ", ".join(f"{k}={v}" for k, v in r["params"].items())
+        err_type = r.get("error_type", "failed")
+        t1_rows.append([
+            r["condition"], r["method"], param_str, err_type,
+            "-", "-", "-", "-", "-",
+        ])
 
-    # ----- Tables 2 & 3: Per-mode rejection rate per variant per condition -
+    # ----- Tables 2 & 3: Per-mode rejection rate (ok variants only) -----
     def per_mode_rows(condition):
         rows = []
         for r in all_results:
             if r["condition"] != condition:
                 continue
             row = [r["variant_label"]]
-            for mode in mode_names:
-                pct = r["per_mode"].get(mode, {}).get("rejection", 0.0)
-                row.append(f"{pct:.1f}%")
+            if not _ok(r):
+                err = r.get("error_type", "failed")
+                row.extend([err] * len(mode_names))
+            else:
+                for mode in mode_names:
+                    pct = r["per_mode"].get(mode, {}).get("rejection", 0.0)
+                    row.append(f"{pct:.1f}%")
             rows.append(row)
         return rows
 
     t23_headers = ["Variant"] + [m.capitalize() for m in mode_names]
 
-    # ----- Table 4: Robustness — median F1 + (min, max) across variants ----
+    # ----- Table 4: Robustness (computed on ok variants only) -----
     t4_headers = ["Condition", "Method", "F1 median", "F1 range",
-                  "Best variant", "Worst variant"]
+                  "Best variant", "Worst variant", "N ok / total"]
     t4_rows = []
     grouped = defaultdict(list)
+    grouped_all = defaultdict(list)
     for r in all_results:
-        grouped[(r["condition"], r["method"])].append(r)
+        grouped_all[(r["condition"], r["method"])].append(r)
+        if _ok(r):
+            grouped[(r["condition"], r["method"])].append(r)
 
-    for (cond, method), variants in sorted(grouped.items()):
+    for (cond, method), all_variants in sorted(grouped_all.items()):
+        variants = grouped[(cond, method)]
+        n_total = len(all_variants)
+        n_ok = len(variants)
+        if not variants:
+            t4_rows.append([
+                cond, method, "-", "-", "all failed", "-",
+                f"0/{n_total}",
+            ])
+            continue
         f1s = [v["overall"]["f1"] for v in variants]
         labels = [v["variant_label"] for v in variants]
-        if not f1s:
-            continue
         f1_median = float(np.median(f1s))
         f1_min, f1_max = float(min(f1s)), float(max(f1s))
         best = labels[int(np.argmax(f1s))]
@@ -124,6 +165,7 @@ def build_tables(all_results):
             cond, method,
             f"{f1_median:.3f}", f"{f1_min:.3f}-{f1_max:.3f}",
             best, worst,
+            f"{n_ok}/{n_total}",
         ])
 
     return {
@@ -261,6 +303,11 @@ def save_tables_as_images(tables, out_dir):
 # =============================================================================
 
 def plot_metric_comparison(all_results, metric, metric_title, out_path):
+    all_results = _ok_results(all_results)   # filter at the top
+    if not all_results:
+        print(f"  Skipping {metric} plot — no successful variants")
+        return
+
     methods = sorted(set(r["method"] for r in all_results))
     conditions = ["clean", "noisy"]
     colors = {"clean": "steelblue", "noisy": "darkorange"}
@@ -307,6 +354,11 @@ def plot_metric_comparison(all_results, metric, metric_title, out_path):
 
 
 def plot_robustness(all_results, out_path):
+    all_results = _ok_results(all_results)
+    if not all_results:
+        print("  Skipping robustness plot — no successful variants")
+        return
+
     methods = sorted(set(r["method"] for r in all_results))
     conditions = ["clean", "noisy"]
     colors = {"clean": "steelblue", "noisy": "darkorange"}

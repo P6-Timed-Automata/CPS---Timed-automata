@@ -1,0 +1,41 @@
+Overall metrics (one row per variant per condition)
+Condition  Method   Params         Precision  Recall  F1     States  Edges
+---------  -------  -------------  ---------  ------  -----  ------  -----
+clean      naive    bins=5         0.967      0.983   0.975  7       10   
+clean      sax      w=24, bins=5   0.968      1.000   0.984  10      10   
+clean      sax      w=48, bins=5   0.966      0.950   0.958  10      10   
+clean      sax      w=144, bins=5  0.951      0.967   0.959  3       7    
+clean      persist  bins=6         0.926      0.833   0.877  6       13   
+noisy      naive    bins=5         1.000      0.917   0.957  9       17   
+noisy      sax      w=24, bins=5   0.595      0.833   0.694  20      28   
+noisy      sax      w=48, bins=5   0.491      0.900   0.635  8       15   
+noisy      sax      w=144, bins=5  0.622      0.850   0.718  13      23   
+noisy      persist  bins=6         0.564      0.950   0.708  27      53   
+
+Per-mode rejection rate (%) — clean training
+Variant           Spikes  Shifted  Stuck   Offset
+----------------  ------  -------  ------  ------
+naive_bins=5      86.7%   100.0%   100.0%  100.0%
+sax_w=24_bins=5   86.7%   100.0%   100.0%  100.0%
+sax_w=48_bins=5   86.7%   100.0%   100.0%  100.0%
+sax_w=144_bins=5  80.0%   100.0%   100.0%  100.0%
+persist_bins=6    73.3%   100.0%   100.0%  100.0%
+
+Per-mode rejection rate (%) — noisy training
+Variant           Spikes  Shifted  Stuck   Offset
+----------------  ------  -------  ------  ------
+naive_bins=5      100.0%  100.0%   100.0%  100.0%
+sax_w=24_bins=5   73.3%   100.0%   0.0%    0.0%  
+sax_w=48_bins=5   26.7%   0.0%     0.0%    0.0%  
+sax_w=144_bins=5  100.0%  0.0%     93.3%   0.0%  
+persist_bins=6    20.0%   86.7%    0.0%    0.0%  
+
+Robustness: F1 spread per method across variants
+Condition  Method   F1 median  F1 range     Best variant      Worst variant  
+---------  -------  ---------  -----------  ----------------  ---------------
+clean      naive    0.975      0.975-0.975  naive_bins=5      naive_bins=5   
+clean      persist  0.877      0.877-0.877  persist_bins=6    persist_bins=6 
+clean      sax      0.959      0.958-0.984  sax_w=24_bins=5   sax_w=48_bins=5
+noisy      naive    0.957      0.957-0.957  naive_bins=5      naive_bins=5   
+noisy      persist  0.708      0.708-0.708  persist_bins=6    persist_bins=6 
+noisy      sax      0.694      0.635-0.718  sax_w=144_bins=5  sax_w=48_bins=5

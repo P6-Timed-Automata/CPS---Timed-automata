@@ -14,6 +14,7 @@ import os
 import subprocess
 
 
+
 class Automaton:
     """
     An instance of the class Automaton is a Timed Automaton

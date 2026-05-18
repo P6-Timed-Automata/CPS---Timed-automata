@@ -25,10 +25,15 @@ from DataProcessing.negative_samples_production import (
     plot_and_save_traces, period
 )
 
+
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+
+
 # PARAMETERS SETTINGS
-data_type = "temp"
+data_type ="temp"
 room = "A"
 discretization_method = "naiv"
 sim_nr = 10000
