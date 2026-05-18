@@ -29,7 +29,7 @@ from DataProcessing.processData import (
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # PARAMETERS SETTINGS
-data_type ="ecg"
+data_type ="temp"
 room = "A"
 discretization_method = "persist"
 period_nr = 1
@@ -44,7 +44,7 @@ elif data_type == "ecg":
 
 
 #Parameters for Persist
-break_max = 6
+break_max = 10
 break_min = 2
 skip_min = 4
 skip_max = 4
@@ -81,7 +81,7 @@ symbolic_train_trace, symbol_map, mapping = map_bins_to_symbols(train_traces, bi
 #Prepare test traces (positive and negative samples)
 if (data_type == "temp"):
     test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/positive"
-    test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/negative"
+    test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test"/"negative"/"combined"
 elif(data_type == "ecg"):
     test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" /  "ecg" / f"{period}-experiment"/ f"{period}-test/positive"
     test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{period}-experiment"/f"{period}-test/negative"

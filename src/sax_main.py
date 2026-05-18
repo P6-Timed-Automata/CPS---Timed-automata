@@ -22,7 +22,12 @@ from DataProcessing.processData import (
     get_trace_files
 )
 
+from pathlib import Path
+import shutil
+
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 
 
 # PARAMETERS SETTINGS
@@ -42,9 +47,9 @@ elif data_type == "ecg":
 
 
 # Parameter for SAX
-symbols = 10
+symbols = 15
 # w = 200
-w_values = [200]
+w_values = [24,48]
 # Parameter for TAG
 k_min = 4
 k_max = 4
@@ -59,13 +64,49 @@ elif(data_type == "ecg"):
 train_raw_traces = get_trace_files(folder_path = train_folder)
 train_raw_lists = csv_to_temp_time_list(input_files=train_raw_traces)
 
+# PATHS FOR NEGATIVE DATA
+
+test_negative_folder = (
+    BASE_DIR
+    / "Data"
+    / "3-ExtractInterval"
+    / f"{period}-experiment"
+    / f"{room}-test"
+    / "negative"
+)
+
+# Folder where all files will be collected
+combined_negative_folder = test_negative_folder / "combined"
+combined_negative_folder.mkdir(exist_ok=True)
+
+# ======================================================
+# CONCATENATE FILES FROM SUBFOLDERS
+# ======================================================
+
+for subfolder in test_negative_folder.iterdir():
+
+    # Skip if it's not a folder or if it's the output folder itself
+    if not subfolder.is_dir() or subfolder.name == "combined":
+        continue
+
+    for file in subfolder.iterdir():
+
+        if file.is_file():
+
+            # Optional: preserve unique filenames
+            destination = combined_negative_folder / f"{subfolder.name}_{file.name}"
+
+            shutil.copy(file, destination)
+
+print(f"All negative files copied to: {combined_negative_folder}")
+
 #Prepare test traces (positive and negative samples)
 if (data_type == "temp"):
     test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/positive"
-    test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/negative"
+    test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test"/"negative"/"combined"
 elif(data_type == "ecg"):
     test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" /  "ecg" / f"{period}-experiment"/ f"{period}-test/positive"
-    test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{period}-experiment"/f"{period}-test/negative"
+    test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{period}-experiment"/f"{period}-test"/ "negative"
 
 test_positive_raw_traces = get_trace_files(folder_path = test_positive_folder)
 test_negative_raw_traces = get_trace_files(folder_path = test_negative_folder)
@@ -82,9 +123,13 @@ elif(data_type == "ecg"):
 
 
 # Parameter for nr of Traces
-len_traces = len(train_raw_traces)  + 1
-start_traces = 1
-len_traces = 2
+#len_traces = len(train_raw_traces)  + 1
+#start_traces = 1
+#len_traces = 2
+
+trace_list = [1, 10, 20, 30, 40, 50]
+
+
 
 
 for w in w_values:
@@ -97,7 +142,7 @@ for w in w_values:
     test_negative_traces_lists = preprocess_test_traces(test_traces = test_negative_raw_lists, bins = bins)
 
 
-    for trace_nr in range(start_traces, len_traces):
+    for trace_nr in trace_list: #range(start_traces, len_traces):
         # Paths
         discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
                                   / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
