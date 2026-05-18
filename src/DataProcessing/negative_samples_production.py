@@ -728,35 +728,35 @@ test_ecg_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{
 # =============================================================================
 
 # Step 1 (one-time): split your ECG positives into train/test
-split_dataset(
-    input_folder  = all_ecg_traces_folder,
-    output_folder = output_ecg_folder,
-    prefix        = beats,
-)
+# split_dataset(
+#     input_folder  = all_ecg_traces_folder,
+#     output_folder = output_ecg_folder,
+#     prefix        = beats,
+# )
 
 #Step 2: generate negatives from the test positives
-test_positive_files = get_trace_files(folder_path=test_ecg_positive_folder)
-test_positive_lists = csv_to_temp_time_list(input_files=test_positive_files)
-build_injected_negatives_ecg(
-    positive_traces = test_positive_lists,
-    out_folder      = test_ecg_negative_folder,
-    file_prefix     = file_ecg_prefix,
-    n_per_mode      = 43,
-)
+# test_positive_files = get_trace_files(folder_path=test_ecg_positive_folder)
+# test_positive_lists = csv_to_temp_time_list(input_files=test_positive_files)
+# build_injected_negatives_ecg(
+#     positive_traces = test_positive_lists,
+#     out_folder      = test_ecg_negative_folder,
+#     file_prefix     = file_ecg_prefix,
+#     n_per_mode      = 43,
+# )
 
 # =============================================================================
 # Temperature negative generation
 # Positives are already split into A-train / A-test/positive; skip split_dataset.
 # =============================================================================
 
-test_positive_files = get_trace_files(folder_path=test_positive_folder)
-test_positive_lists = csv_to_temp_time_list(input_files=test_positive_files)
-build_injected_negatives_temp(
-    positive_traces = test_positive_lists,
-    out_folder      = test_negative_folder,
-    file_prefix     = file_prefix,
-    n_per_mode      = 22,        # 4 × 22 = 88 (close to your previous 86)
-)
+# test_positive_files = get_trace_files(folder_path=test_positive_folder)
+# test_positive_lists = csv_to_temp_time_list(input_files=test_positive_files)
+# build_injected_negatives_temp(
+#     positive_traces = test_positive_lists,
+#     out_folder      = test_negative_folder,
+#     file_prefix     = file_prefix,
+#     n_per_mode      = 22,        # 4 × 22 = 88 (close to your previous 86)
+# )
 
 #
 # split_dataset(input_folder = all_ecg_traces_folder,

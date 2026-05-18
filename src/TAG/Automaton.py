@@ -774,11 +774,30 @@ class Automaton:
             # EXISTENCE / REACHABILITY CHECKS (E<>)
             # --------------------------------------
 
+            # temperature bounds
+            queries += "\t\t<query>\n"
+            queries += "\t\t\t<formula>E&lt;&gt;(temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>\n"
+            queries += "\t\t\t<comment>Ensure there exist temperature that remains within safe operating bounds </comment>\n"
+            queries += "\t\t</query>\n\n"
+
             # 2. Spike reachable
             queries += "\t\t<query>\n"
             queries += "\t\t\t<formula>E&lt;&gt; Observer.SPIKE</formula>\n"
             queries += "\t\t\t<comment>Check whether a spike state is reachable in at least one execution path</comment>\n"
             queries += "\t\t</query>\n\n"
+
+            # 3. STABLE reachable
+            queries += "\t\t<query>\n"
+            queries += "\t\t\t<formula>E&lt;&gt; Observer.STABLE</formula>\n"
+            queries += "\t\t\t<comment>Check whether a stable state is reachable in at least one execution path</comment>\n"
+            queries += "\t\t</query>\n\n"
+
+            # STABLE reachable in temp range
+            queries += "\t\t<query>\n"
+            queries += "\t\t\t<formula>E&lt;&gt; Observer.STABLE &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>\n"
+            queries += "\t\t\t<comment>Check whether a stable state is reachable in at least one execution path in temp range</comment>\n"
+            queries += "\t\t</query>\n\n"
+
 
             # 4. Stabilization reachable
             queries += "\t\t<query>\n"
@@ -786,10 +805,22 @@ class Automaton:
             queries += "\t\t\t<comment>Check whether the system can reach a stabilized state in at least one execution path</comment>\n"
             queries += "\t\t</query>\n\n"
 
+            # 4. Stabilization reachable in range
+            queries += "\t\t<query>\n"
+            queries += "\t\t\t<formula>E&lt;&gt; Observer.STABILIZED &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>\n"
+            queries += "\t\t\t<comment>Check whether the system can reach a stabilized state in at least one execution path in temp range</comment>\n"
+            queries += "\t\t</query>\n\n"
+
             # Spike followed by stabilization reachable
             queries += "\t\t<query>\n"
             queries += "\t\t\t<formula>E&lt;&gt; Observer.SPIKE_seen &amp;&amp; Observer.STABILIZED</formula>\n"
             queries += "\t\t\t<comment>Check whether there exists a run where a spike occurs and stabilization is eventually reached afterward</comment>\n"
+            queries += "\t\t</query>\n\n"
+
+            # Spike followed by stabilization reachable in range
+            queries += "\t\t<query>\n"
+            queries += "\t\t\t<formula>E&lt;&gt; Observer.SPIKE_seen &amp;&amp; Observer.STABILIZED &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>\n"
+            queries += "\t\t\t<comment>Check whether there exists a run where a spike occurs and stabilization is eventually reached afterward in temp range</comment>\n"
             queries += "\t\t</query>\n\n"
 
             queries += "\t\t<query>\n"
@@ -801,7 +832,7 @@ class Automaton:
 
             # Safety invariant: temperature bounds
             queries += "\t\t<query>\n"
-            queries += "\t\t\t<formula>A[] (temp &gt;= temp_min &amp;&amp; temp &lt;= temp_max)</formula>\n"
+            queries += "\t\t\t<formula>A[] (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>\n"
             queries += "\t\t\t<comment>Ensure temperature always remains within safe operating bounds in all states</comment>\n"
             queries += "\t\t</query>\n\n"
 
@@ -818,10 +849,35 @@ class Automaton:
             # UNIVERSAL REACHABILITY CONSTRAINTS (A<>)
             # --------------------------------------
 
+            # Can reach acceptance states
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>A&lt;&gt; {final_expr}</formula>\n"
+            queries += "\t\t\t<comment>Check that the model can reach an accepting state for all paths</comment>\n"
+            queries += "\t\t</query>\n\n"
+
+            # temperature bounds
+            queries += "\t\t<query>\n"
+            queries += "\t\t\t<formula>A&lt;&gt; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>\n"
+            queries += "\t\t\t<comment>Ensure temperature  remains within safe operating bounds </comment>\n"
+            queries += "\t\t</query>\n\n"
+
+
             # Spike unavoidable (liveness check)
             queries += "\t\t<query>\n"
             queries += "\t\t\t<formula>A&lt;&gt; Observer.SPIKE</formula>\n"
             queries += "\t\t\t<comment>Check whether spike eventually occurs on all execution paths (liveness requirement)</comment>\n"
+            queries += "\t\t</query>\n\n"
+
+            # Stable unavoidable (liveness check)
+            queries += "\t\t<query>\n"
+            queries += "\t\t\t<formula>A&lt;&gt; Observer.STABLE</formula>\n"
+            queries += "\t\t\t<comment>Check whether spike eventually occurs on all execution paths (liveness requirement)</comment>\n"
+            queries += "\t\t</query>\n\n"
+
+            # Stable unavoidable (liveness check) in range
+            queries += "\t\t<query>\n"
+            queries += "\t\t\t<formula>A&lt;&gt; Observer.STABLE &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>\n"
+            queries += "\t\t\t<comment>Check whether spike eventually occurs on all execution paths in temp range(liveness requirement)</comment>\n"
             queries += "\t\t</query>\n\n"
 
             # Stabilization unavoidable
@@ -830,10 +886,22 @@ class Automaton:
             queries += "\t\t\t<comment>Check whether all executions eventually reach a stabilized state</comment>\n"
             queries += "\t\t</query>\n\n"
 
+            # Stabilization unavoidable in range
+            queries += "\t\t<query>\n"
+            queries += "\t\t\t<formula>A&lt;&gt; Observer.STABILIZED &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>\n"
+            queries += "\t\t\t<comment>Check whether all executions eventually reach a stabilized state in temp range</comment>\n"
+            queries += "\t\t</query>\n\n"
+
             # Spike followed by stabilization on all paths
             queries += "\t\t<query>\n"
             queries += "\t\t\t<formula>A&lt;&gt; Observer.SPIKE_seen &amp;&amp; Observer.STABILIZED</formula>\n"
             queries += "\t\t\t<comment>Check whether all executions eventually include both spike occurrence and subsequent stabilization</comment>\n"
+            queries += "\t\t</query>\n\n"
+
+            # Spike followed by stabilization on all paths in range
+            queries += "\t\t<query>\n"
+            queries += "\t\t\t<formula>A&lt;&gt; Observer.SPIKE_seen &amp;&amp; Observer.STABILIZED &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>\n"
+            queries += "\t\t\t<comment>Check whether all executions eventually include both spike occurrence and subsequent stabilization in temp range</comment>\n"
             queries += "\t\t</query>\n\n"
 
             queries += "\t\t<query>\n"
@@ -843,10 +911,35 @@ class Automaton:
             # PROBABILISTIC BEHAVIOUR (Pr[])
             # --------------------------------------
 
+            # Probability of reaching accept state
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}] (&lt;&gt; ({final_expr})) </formula>\n"
+            queries += "\t\t\t<comment>Probability that accept state reached during the simulation time</comment>\n"
+            queries += "\t\t</query>\n\n"
+
+
+            # Probability of temperature range within bounded time
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}](&lt;&gt; ((temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)))</formula>\n"
+            queries += "\t\t\t<comment>Compute probability that a temperature occurs within the given temp range</comment>\n"
+            queries += "\t\t</query>\n\n"
+
             # Probability of spike within bounded time
             queries += "\t\t<query>\n"
             queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}](&lt;&gt; Observer.SPIKE)</formula>\n"
             queries += "\t\t\t<comment>Compute probability that a spike occurs within the given time bound</comment>\n"
+            queries += "\t\t</query>\n\n"
+
+            # Probability of stable within bounded time
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}](&lt;&gt; Observer.STABLE)</formula>\n"
+            queries += "\t\t\t<comment>Compute probability that a stable occurs within the given time bound</comment>\n"
+            queries += "\t\t</query>\n\n"
+
+            # Probability of stable within bounded time in range
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}](&lt;&gt; (Observer.STABLE &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)))</formula>\n"
+            queries += "\t\t\t<comment>Compute probability that a stable occurs within the given time bound in temp range</comment>\n"
             queries += "\t\t</query>\n\n"
 
             # Probability of stabilization within bounded time
@@ -855,10 +948,22 @@ class Automaton:
             queries += "\t\t\t<comment>Compute probability that the system stabilizes within the given time bound</comment>\n"
             queries += "\t\t</query>\n\n"
 
+            # Probability of stabilization within bounded time in range
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}](&lt;&gt; (Observer.STABILIZED &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)))</formula>\n"
+            queries += "\t\t\t<comment>Compute probability that the system stabilizes within the given time bound in temp range</comment>\n"
+            queries += "\t\t</query>\n\n"
+
             # Probability of spike then stabilization
             queries += "\t\t<query>\n"
             queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}](&lt;&gt; (Observer.SPIKE_seen &amp;&amp; Observer.STABILIZED))</formula>\n"
             queries += "\t\t\t<comment>Compute probability that a spike occurs followed by stabilization within the time bound</comment>\n"
+            queries += "\t\t</query>\n\n"
+
+            # Probability of spike then stabilization in range
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}](&lt;&gt; (Observer.SPIKE_seen &amp;&amp; Observer.STABILIZED &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)))</formula>\n"
+            queries += "\t\t\t<comment>Compute probability that a spike occurs followed by stabilization within the time bound in temp range</comment>\n"
             queries += "\t\t</query>\n\n"
 
             queries += "\t</queries>\n"
@@ -910,19 +1015,19 @@ class Automaton:
 
             # Initial flat before spike lasts at least flat_window
             queries += "\t\t<query>\n"
-            queries += f"\t\t\t<formula>E&lt;&gt; Observer.FLAT &amp;&amp; !Observer.SPIKE_seen &amp;&amp; Observer.cl_observer &gt;= flat_window</formula>\n"
+            queries += f"\t\t\t<formula>E&lt;&gt; Observer.FLAT &amp;&amp; !Observer.SPIKE_seen &amp;&amp; Observer.cl_flat &gt;= flat_window</formula>\n"
             queries += "\t\t\t<comment>Check that the initial flat region lasts at least flat_window time units</comment>\n"
             queries += "\t\t</query>\n\n"
 
             # Recovery flat after spike lasts at least flat_window
             queries += "\t\t<query>\n"
-            queries += f"\t\t\t<formula>E&lt;&gt; Observer.FLAT &amp;&amp; Observer.SPIKE_seen &amp;&amp; Observer.cl_observer &gt;= flat_window</formula>\n"
+            queries += f"\t\t\t<formula>E&lt;&gt; Observer.FLAT &amp;&amp; Observer.SPIKE_seen &amp;&amp; Observer.cl_flat &gt;= flat_window</formula>\n"
             queries += "\t\t\t<comment>Check that the recovery flat region after a spike lasts at least flat_window time units</comment>\n"
             queries += "\t\t</query>\n\n"
 
             # Spike lasts at least spike_window
             queries += "\t\t<query>\n"
-            queries += f"\t\t\t<formula>E&lt;&gt; Observer.SPIKE &amp;&amp; Observer.cl_observer &gt;= spike_window</formula>\n"
+            queries += f"\t\t\t<formula>E&lt;&gt; Observer.SPIKE &amp;&amp; Observer.cl_spike &gt;= spike_window</formula>\n"
             queries += "\t\t\t<comment>Check that a spike can last at least spike_window time units</comment>\n"
             queries += "\t\t</query>\n\n"
 
@@ -946,6 +1051,12 @@ class Automaton:
             # UNIVERSAL REACHABILITY CONSTRAINS (A<>)
             # --------------------------------------
 
+            # Can reach acceptance states
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>A&lt;&gt; {final_expr}</formula>\n"
+            queries += "\t\t\t<comment>Check that the model can reach an accepting state for all paths</comment>\n"
+            queries += "\t\t</query>\n\n"
+
             # Spike eventually occurs in all executions
             queries += "\t\t<query>\n"
             queries += f"\t\t\t<formula>A&lt;&gt; Observer.SPIKE</formula>\n"
@@ -966,19 +1077,19 @@ class Automaton:
 
             # Initial flat lasts enough time in all executions
             queries += "\t\t<query>\n"
-            queries += f"\t\t\t<formula>A&lt;&gt; Observer.FLAT &amp;&amp; !Observer.SPIKE_seen &amp;&amp; Observer.cl_observer &gt;= flat_window</formula>\n"
+            queries += f"\t\t\t<formula>A&lt;&gt; Observer.FLAT &amp;&amp; !Observer.SPIKE_seen &amp;&amp; Observer.cl_flat &gt;= flat_window</formula>\n"
             queries += "\t\t\t<comment>Every execution eventually has initial flat lasting at least flat_window</comment>\n"
             queries += "\t\t</query>\n\n"
 
             # Recovery flat lasts enough time in all executions
             queries += "\t\t<query>\n"
-            queries += f"\t\t\t<formula>A&lt;&gt; Observer.FLAT &amp;&amp; Observer.SPIKE_seen &amp;&amp; Observer.cl_observer &gt;= flat_window</formula>\n"
+            queries += f"\t\t\t<formula>A&lt;&gt; Observer.FLAT &amp;&amp; Observer.SPIKE_seen &amp;&amp; Observer.cl_flat &gt;= flat_window</formula>\n"
             queries += "\t\t\t<comment>Every execution eventually has recovery flat lasting at least flat_window</comment>\n"
             queries += "\t\t</query>\n\n"
 
             # Spike lasts enough time in all executions
             queries += "\t\t<query>\n"
-            queries += f"\t\t\t<formula>A&lt;&gt; Observer.SPIKE &amp;&amp; Observer.cl_observer &gt;= spike_window</formula>\n"
+            queries += f"\t\t\t<formula>A&lt;&gt; Observer.SPIKE &amp;&amp; Observer.cl_spike &gt;= spike_window</formula>\n"
             queries += "\t\t\t<comment>Every execution eventually has a spike lasting at least spike_window</comment>\n"
             queries += "\t\t</query>\n\n"
 
@@ -990,6 +1101,13 @@ class Automaton:
             # --------------------------------------
             # PROBABILISTIC BEHAVIOUR (Pr[])
             # --------------------------------------
+
+            # Probability of reaching accept state
+            queries += "\t\t<query>\n"
+            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}] (&lt;&gt; ({final_expr})) </formula>\n"
+            queries += "\t\t\t<comment>Probability that accept state reached during the simulation time</comment>\n"
+            queries += "\t\t</query>\n\n"
+
 
             # Probability of a spike occurring within simulation
             queries += "\t\t<query>\n"
@@ -1011,19 +1129,19 @@ class Automaton:
 
             # Probability that initial flat lasts at least flat_window
             queries += "\t\t<query>\n"
-            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}] (&lt;&gt; (Observer.FLAT &amp;&amp; Observer.SPIKE_seen &amp;&amp; Observer.cl_observer &gt;= flat_window)) </formula>\n"
+            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}] (&lt;&gt; (Observer.FLAT &amp;&amp; Observer.SPIKE_seen &amp;&amp; Observer.cl_flat &gt;= flat_window)) </formula>\n"
             queries += "\t\t\t<comment>Probability that flat region lasts at least flat_window time units after a spike</comment>\n"
             queries += "\t\t</query>\n\n"
 
             # Probability that initial flat lasts at least flat_window
             queries += "\t\t<query>\n"
-            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}] (&lt;&gt; (Observer.FLAT &amp;&amp; !Observer.SPIKE_seen &amp;&amp; Observer.cl_observer &gt;= flat_window)) </formula>\n"
+            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}] (&lt;&gt; (Observer.FLAT &amp;&amp; !Observer.SPIKE_seen &amp;&amp; Observer.cl_flat &gt;= flat_window)) </formula>\n"
             queries += "\t\t\t<comment>Probability that flat region lasts at least flat_window time units before a spike</comment>\n"
             queries += "\t\t</query>\n\n"
 
             # Probability that spike lasts at least spike_window
             queries += "\t\t<query>\n"
-            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}] (&lt;&gt; (Observer.SPIKE &amp;&amp; Observer.cl_observer &gt;= spike_window)) </formula>\n"
+            queries += f"\t\t\t<formula>Pr[&lt;={time}; {sim_nr}] (&lt;&gt; (Observer.SPIKE &amp;&amp; Observer.cl_spike &gt;= spike_window)) </formula>\n"
             queries += "\t\t\t<comment>Probability that spike lasts at least spike_window time units</comment>\n"
             queries += "\t\t</query>\n\n"
 
@@ -1033,7 +1151,7 @@ class Automaton:
         return queries
 
 
-    def export_ta(self, ta, path, symbol_map=None, time=86400, sim_nr=1, data_type="temp"):
+    def export_ta(self, ta, path, symbol_map=None, time=86400, sim_nr=1, data_type="temp", accept_connect = False):
         s_id = 0
         d_s_id = dict.fromkeys([s.name for s in ta.states] + ta.symbols)
         xml = ""
@@ -1115,60 +1233,64 @@ class Automaton:
                     xml += self.create_edge(e, d_s_id[name], d_s_id[e.destination.name])
 
         # Connect acceptance states back to init
-        initial_id = "id0"
+        if accept_connect:
+            initial_id = "id0"
 
-        for state in ta.states:
-            if not state.accepting:
-                continue
+            for state in ta.states:
+                if not state.accepting:
+                    continue
 
-            if state.accepting:
-                source_id = d_s_id.get(state.name)
-                # Create a transition back to the initial state
-                # add invariant
-                pattern = rf'(<location id="{source_id}"[^>]*>\s*<name[^>]*>[^<]*</name>)'
-                replacement = r'\1\n\t\t\t\t<label kind="invariant">cl_local &lt;= 0</label>'
-                xml = re.sub(pattern, replacement, xml, count=1)
+                if state.accepting:
+                    source_id = d_s_id.get(state.name)
+                    # Create a transition back to the initial state
+                    # add invariant
+                    pattern = rf'(<location id="{source_id}"[^>]*>\s*<name[^>]*>[^<]*</name>)'
+                    replacement = r'\1\n\t\t\t\t<label kind="invariant">cl_local &lt;= 0</label>'
+                    xml = re.sub(pattern, replacement, xml, count=1)
 
 
-                xml += "\t\t<transition>\n"
-                xml += f"\t\t\t<source ref=\"{source_id}\"/>\n"
-                xml += f"\t\t\t<target ref=\"{initial_id}\"/>\n"
-                # Assignment: reset local clock
-                xml += "\t\t\t<label kind=\"assignment\">cl_local = 0</label>\n"
-                xml += "\t\t</transition>\n"
+                    xml += "\t\t<transition>\n"
+                    xml += f"\t\t\t<source ref=\"{source_id}\"/>\n"
+                    xml += f"\t\t\t<target ref=\"{initial_id}\"/>\n"
+                    # Assignment: reset local clock
+                    xml += "\t\t\t<label kind=\"assignment\">cl_local = 0</label>\n"
+                    xml += "\t\t</transition>\n"
 
 
 
         xml += "\t</template>"
 
-        # Observer
-        xml += "\t<template>\n"
-        xml += "\t\t<name>TagObserver</name>\n"
-        xml += "\t\t<declaration>\n"
-        xml += "\t\t\tclock cl_observer;\n"
-        xml += "\t\t\tbool SPIKE_seen = false;\n"
-        xml += "\t\t</declaration>\n"
+
 
         # --- Auxiliary automaton for verification ---
         if data_type == "temp":
+            invariant = 1000
+            # Observer
+            xml += "\t<template>\n"
+            xml += "\t\t<name>TagObserver</name>\n"
+            xml += "\t\t<declaration>\n"
+            xml += "clock cl_observer,cl_stabilize;\n"
+            xml += "bool SPIKE_seen = false;\n"
+            xml += "\t\t</declaration>\n"
+
             # States
-            xml += self.create_location(s_id, (0,0), "START")
+            xml += self.create_location(s_id, (0,400), "START")
             d_s_id["START"] = "id" + str(s_id)
             xml += f'\t\t<label kind="invariant">cl_observer &lt;= 0</label>\n'
             s_id += 1
 
-            xml += self.create_location(s_id, (200,50), "SPIKE")
-            xml += f'\t\t<label kind="invariant">cl_observer &lt;= 90000</label>\n'
+            xml += self.create_location(s_id, (600,800), "SPIKE")
+            xml += f'\t\t<label kind="invariant">cl_observer &lt;= {invariant}</label>\n'
             d_s_id["SPIKE"] = "id" + str(s_id)
             s_id += 1
 
-            xml += self.create_location(s_id, (400,-50), "STABLE")
+            xml += self.create_location(s_id, (600,0), "STABLE")
             d_s_id["STABLE"] = "id" + str(s_id)
-            xml += f'\t\t<label kind="invariant">cl_observer &lt;= stabilization_time</label>\n'
+            xml += f'\t\t<label kind="invariant">cl_observer &lt;= {invariant}</label>\n'
             s_id += 1
 
-            xml += self.create_location(s_id, (600,100), "STABILIZED")
-            xml += f'\t\t<label kind="invariant">cl_observer &lt;= 90000</label>\n'
+            xml += self.create_location(s_id, (1200,400), "STABILIZED")
+            xml += f'\t\t<label kind="invariant">cl_observer &lt;= {invariant}</label>\n'
             d_s_id["STABILIZED"] = "id" + str(s_id)
             s_id += 1
 
@@ -1180,15 +1302,30 @@ class Automaton:
             xml += "\t\t<transition>\n"
             xml += f'\t\t\t<source ref="{d_s_id["START"]}"/>\n'
             xml += f'\t\t\t<target ref="{d_s_id["SPIKE"]}"/>\n'
-            xml += '\t\t\t<label kind="guard">((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold))</label>\n'
-            xml += '\t\t\t<label kind="assignment">cl_observer = 0,SPIKE_seen = true</label>\n'
+            xml += ('\t\t\t<label kind="guard">'
+                    '((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold))'
+                    '</label>\n')
+            xml += '\t\t\t<label kind="assignment">cl_observer = 0, cl_stabilize = 0, SPIKE_seen = true</label>\n'
             xml += "\t\t</transition>\n"
 
             # START -> STABLE (if first value is already stable)
             xml += "\t\t<transition>\n"
             xml += f'\t\t\t<source ref="{d_s_id["START"]}"/>\n'
             xml += f'\t\t\t<target ref="{d_s_id["STABLE"]}"/>\n'
-            xml += '\t\t\t<label kind="guard">((temp - prev_temp &lt; spike_threshold) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max))</label>\n'
+            xml += ('\t\t\t<label kind="guard">'
+                    '((temp - prev_temp &lt; spike_threshold) || (prev_temp - temp  &lt; spike_threshold) )'
+                    '</label>\n')
+            xml += '\t\t\t<label kind="assignment">cl_observer = 0, cl_stabilize = 0</label>\n'
+            xml += "\t\t</transition>\n"
+
+            # SPIKE -> SPIKE
+            xml += "\t\t<transition>\n"
+            xml += f'\t\t\t<source ref="{d_s_id["SPIKE"]}"/>\n'
+            xml += f'\t\t\t<target ref="{d_s_id["SPIKE"]}"/>\n'
+            xml += (f'\t\t\t<label kind="guard">'
+                    f'(((temp - prev_temp &lt; spike_threshold) || (prev_temp - temp  &lt; spike_threshold)) &amp;&amp; '
+                    f'(cl_observer &gt;= {invariant}))'
+                    f'</label>\n')
             xml += '\t\t\t<label kind="assignment">cl_observer = 0</label>\n'
             xml += "\t\t</transition>\n"
 
@@ -1196,7 +1333,20 @@ class Automaton:
             xml += "\t\t<transition>\n"
             xml += f'\t\t\t<source ref="{d_s_id["SPIKE"]}"/>\n'
             xml += f'\t\t\t<target ref="{d_s_id["STABLE"]}"/>\n'
-            xml += '\t\t\t<label kind="guard">((temp - prev_temp &lt; spike_threshold) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max))</label>\n'
+            xml += ('\t\t\t<label kind="guard">'
+                    '((temp - prev_temp &lt; spike_threshold) || (prev_temp - temp &lt; spike_threshold))'
+                    '</label>\n')
+            xml += '\t\t\t<label kind="assignment">cl_observer = 0</label>\n'
+            xml += "\t\t</transition>\n"
+
+            # STABLE -> STABLE
+            xml += "\t\t<transition>\n"
+            xml += f'\t\t\t<source ref="{d_s_id["STABLE"]}"/>\n'
+            xml += f'\t\t\t<target ref="{d_s_id["STABLE"]}"/>\n'
+            xml += (f'\t\t\t<label kind="guard">'
+                    f'(((temp - prev_temp &lt; spike_threshold) || (prev_temp - temp  &lt; spike_threshold)) &amp;&amp; '
+                    f'(cl_observer &gt;= {invariant}))'
+                    f'</label>\n')
             xml += '\t\t\t<label kind="assignment">cl_observer = 0</label>\n'
             xml += "\t\t</transition>\n"
 
@@ -1204,7 +1354,10 @@ class Automaton:
             xml += "\t\t<transition>\n"
             xml += f'\t\t\t<source ref="{d_s_id["STABLE"]}"/>\n'
             xml += f'\t\t\t<target ref="{d_s_id["STABILIZED"]}"/>\n'
-            xml += '\t\t\t<label kind="guard">cl_observer &gt;= stabilization_time</label>\n'
+            xml += ('\t\t\t<label kind="guard">'
+                    '((cl_stabilize &gt;= stabilization_time) &amp;&amp; '
+                    f'((temp - prev_temp &lt; spike_threshold) || (prev_temp - temp  &lt; spike_threshold)))'
+                    '</label>\n')
             xml += '\t\t\t<label kind="assignment">cl_observer = 0</label>\n'
             xml += "\t\t</transition>\n"
 
@@ -1213,21 +1366,42 @@ class Automaton:
             xml += f'\t\t\t<source ref="{d_s_id["STABLE"]}"/>\n'
             xml += f'\t\t\t<target ref="{d_s_id["SPIKE"]}"/>\n'
             xml += '\t\t\t<label kind="guard">((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold))</label>\n'
+            xml += '\t\t\t<label kind="assignment">cl_observer = 0, cl_stabilize = 0, SPIKE_seen = true</label>\n'
+            xml += "\t\t</transition>\n"
+
+            # STABILIZED -> STABILIZED (after some time)
+            xml += "\t\t<transition>\n"
+            xml += f'\t\t\t<source ref="{d_s_id["STABILIZED"]}"/>\n'
+            xml += f'\t\t\t<target ref="{d_s_id["STABILIZED"]}"/>\n'
+            xml += ('\t\t\t<label kind="guard">'
+                    '((cl_stabilize &gt;= stabilization_time) &amp;&amp; '
+                    f'((temp - prev_temp &lt; spike_threshold) || (prev_temp - temp  &lt; spike_threshold)) &amp;&amp; '
+                    f'(cl_observer &gt;= {invariant}))'
+                    '</label>\n')
             xml += '\t\t\t<label kind="assignment">cl_observer = 0</label>\n'
             xml += "\t\t</transition>\n"
+
 
             # STABILIZED -> SPIKE (allow spikes after stabilization)
             xml += "\t\t<transition>\n"
             xml += f'\t\t\t<source ref="{d_s_id["STABILIZED"]}"/>\n'
             xml += f'\t\t\t<target ref="{d_s_id["SPIKE"]}"/>\n'
             xml += '\t\t\t<label kind="guard">((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold))</label>\n'
-            xml += '\t\t\t<label kind="assignment">cl_observer = 0</label>\n'
+            xml += '\t\t\t<label kind="assignment">cl_observer = 0, cl_stabilize = 0</label>\n'
             xml += "\t\t</transition>\n"
 
             xml += "\t</template>\n"
 
 
         elif data_type == "ecg":
+            # Observer
+            xml += "\t<template>\n"
+            xml += "\t\t<name>TagObserver</name>\n"
+            xml += "\t\t<declaration>\n"
+            xml += "clock cl_observer,cl_spike,cl_flat;\n"
+            xml += "bool SPIKE_seen = false;\n"
+            xml += "\t\t</declaration>\n"
+
             # START
             xml += self.create_location(s_id, (0, 0), "START")
             d_s_id["START"] = "id" + str(s_id)
@@ -1235,16 +1409,18 @@ class Automaton:
             s_id += 1
 
             # FLAT (loop location)
-            xml += self.create_location(s_id, (200, 50), "FLAT")
+            xml += self.create_location(s_id, (300, 300), "FLAT")
             d_s_id["FLAT"] = "id" + str(s_id)
-            xml += f'\t\t<label kind="invariant">cl_observer &lt;= 300</label>\n'
+            xml += f'\t\t<label kind="invariant">cl_observer &lt;= 1</label>\n'
             s_id += 1
 
+
             # SPIKE
-            xml += self.create_location(s_id, (400, -50), "SPIKE")
+            xml += self.create_location(s_id, (900, 0), "SPIKE")
             d_s_id["SPIKE"] = "id" + str(s_id)
-            xml += f'\t\t<label kind="invariant">cl_observer &lt;= 300</label>\n'
+            xml += f'\t\t<label kind="invariant">cl_observer &lt;= 1</label>\n'
             s_id += 1
+
 
             # Initial state
             xml += f'\t\t<init ref="{d_s_id["START"]}"/>\n'
@@ -1256,15 +1432,42 @@ class Automaton:
             xml += f'\t\t\t<source ref="{d_s_id["START"]}"/>\n'
             xml += f'\t\t\t<target ref="{d_s_id["FLAT"]}"/>\n'
             xml += '\t\t\t<label kind="guard">(temp &lt;= flat_threshold)</label>\n'
-            xml += '\t\t\t<label kind="assignment">cl_observer = 0, SPIKE_seen = false</label>\n'
+            xml += '\t\t\t<label kind="assignment">cl_observer = 0, cl_flat = 0, cl_spike = 0</label>\n'
             xml += "\t\t</transition>\n"
+
+            # --------------------------------------
+            # FLAT STATE BEHAVIOUR
+            # --------------------------------------
+
+            # FLAT -> FLAT
+            xml += "\t\t<transition>\n"
+            xml += f'\t\t\t<source ref="{d_s_id["FLAT"]}"/>\n'
+            xml += f'\t\t\t<target ref="{d_s_id["FLAT"]}"/>\n'
+            xml += '\t\t\t<label kind="guard">(temp &lt;= flat_threshold &amp;&amp; cl_observer &gt;= 1 ) </label>\n'
+            xml += '\t\t\t<label kind="assignment">cl_observer = 0</label>\n'
+            xml += "\t\t</transition>\n"
+
 
             # FLAT -> SPIKE
             xml += "\t\t<transition>\n"
             xml += f'\t\t\t<source ref="{d_s_id["FLAT"]}"/>\n'
             xml += f'\t\t\t<target ref="{d_s_id["SPIKE"]}"/>\n'
             xml += '\t\t\t<label kind="guard">(temp &gt;= spike_threshold)</label>\n'
-            xml += '\t\t\t<label kind="assignment">cl_observer = 0, SPIKE_seen = true</label>\n'
+            xml += '\t\t\t<label kind="assignment">cl_observer = 0, cl_flat = 0, cl_spike = 0,SPIKE_seen = true</label>\n'
+            xml += "\t\t</transition>\n"
+
+
+            # --------------------------------------
+            # SPIKE STATE BEHAVIOUR
+            # --------------------------------------
+
+            # SPIKE -> SPIKE
+            # Remain in spike region while ECG stays high
+            xml += "\t\t<transition>\n"
+            xml += f'\t\t\t<source ref="{d_s_id["SPIKE"]}"/>\n'
+            xml += f'\t\t\t<target ref="{d_s_id["SPIKE"]}"/>\n'
+            xml += '\t\t\t<label kind="guard">(temp &gt;= spike_threshold) &amp;&amp; cl_observer &gt;= 1</label>\n'
+            xml += '\t\t\t<label kind="assignment">cl_observer = 0</label>\n'
             xml += "\t\t</transition>\n"
 
             # SPIKE -> FLAT (return to flat, loop back)
@@ -1272,7 +1475,7 @@ class Automaton:
             xml += f'\t\t\t<source ref="{d_s_id["SPIKE"]}"/>\n'
             xml += f'\t\t\t<target ref="{d_s_id["FLAT"]}"/>\n'
             xml += '\t\t\t<label kind="guard">(temp &lt;= flat_threshold)</label>\n'
-            xml += '\t\t\t<label kind="assignment">cl_observer = 0</label>\n'
+            xml += '\t\t\t<label kind="assignment">cl_observer = 0,cl_flat = 0, cl_spike = 0</label>\n'
             xml += "\t\t</transition>\n"
 
             xml += "\t</template>\n"

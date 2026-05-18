@@ -21,7 +21,6 @@ from DataProcessing.processData import (
 )
 
 from DataProcessing.negative_samples_production import (
-    generate_negative_samples,
     plot_and_save_traces, period
 )
 
@@ -30,10 +29,8 @@ from DataProcessing.negative_samples_production import (
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-
-
 # PARAMETERS SETTINGS
-data_type ="temp"
+data_type ="ecg"
 room = "A"
 discretization_method = "naiv"
 sim_nr = 10000
@@ -109,8 +106,7 @@ elif(data_type == "ecg"):
 # Parameter for nr of Traces
 len_traces = len(train_raw_traces)  + 1
 start_traces = 1
-len_traces = 3
-
+len_traces = 5
 
 
 for trace_nr in range(start_traces, len_traces):
