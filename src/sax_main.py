@@ -13,7 +13,8 @@ from Discretization.discretizationSetup import (
     csv_to_temp_time_list,
     format_output,
     map_bins_to_symbols,
-    preprocess_test_traces
+    preprocess_test_traces,
+    sax_preprocess_traces
 )
 
 from DataProcessing.processData import (
@@ -31,9 +32,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # PARAMETERS SETTINGS
-data_type ="temp"
+data_type ="ecg"
 room = "A"
 discretization_method = "sax"
+sim_nr = 10000
 period_nr = 1
 
 
@@ -42,14 +44,15 @@ if data_type == "temp":
     time = 86400
 elif data_type == "ecg":
     period = "1beat"
-    time = 250
+    time = 275
 
 
 
 # Parameter for SAX
 symbols = 15
 # w = 200
-w_values = [24,48]
+w_values = [24,48,288]
+
 # Parameter for TAG
 k_min = 4
 k_max = 4
@@ -65,40 +68,39 @@ train_raw_traces = get_trace_files(folder_path = train_folder)
 train_raw_lists = csv_to_temp_time_list(input_files=train_raw_traces)
 
 # PATHS FOR NEGATIVE DATA
-
-test_negative_folder = (
-    BASE_DIR
-    / "Data"
-    / "3-ExtractInterval"
-    / f"{period}-experiment"
-    / f"{room}-test"
-    / "negative"
-)
-
-# Folder where all files will be collected
-combined_negative_folder = test_negative_folder / "combined"
-combined_negative_folder.mkdir(exist_ok=True)
-
-# ======================================================
-# CONCATENATE FILES FROM SUBFOLDERS
-# ======================================================
-
-for subfolder in test_negative_folder.iterdir():
-
-    # Skip if it's not a folder or if it's the output folder itself
-    if not subfolder.is_dir() or subfolder.name == "combined":
-        continue
-
-    for file in subfolder.iterdir():
-
-        if file.is_file():
-
-            # Optional: preserve unique filenames
-            destination = combined_negative_folder / f"{subfolder.name}_{file.name}"
-
-            shutil.copy(file, destination)
-
-print(f"All negative files copied to: {combined_negative_folder}")
+# test_negative_folder = (
+#     BASE_DIR
+#     / "Data"
+#     / "3-ExtractInterval"
+#     / f"{period}-experiment"
+#     / f"{room}-test"
+#     / "negative"
+# )
+#
+# # Folder where all files will be collected
+# combined_negative_folder = test_negative_folder / "combined"
+# combined_negative_folder.mkdir(exist_ok=True)
+#
+# # ======================================================
+# # CONCATENATE FILES FROM SUBFOLDERS
+# # ======================================================
+#
+# for subfolder in test_negative_folder.iterdir():
+#
+#     # Skip if it's not a folder or if it's the output folder itself
+#     if not subfolder.is_dir() or subfolder.name == "combined":
+#         continue
+#
+#     for file in subfolder.iterdir():
+#
+#         if file.is_file():
+#
+#             # Optional: preserve unique filenames
+#             destination = combined_negative_folder / f"{subfolder.name}_{file.name}"
+#
+#             shutil.copy(file, destination)
+#
+# print(f"All negative files copied to: {combined_negative_folder}")
 
 #Prepare test traces (positive and negative samples)
 if (data_type == "temp"):
@@ -106,13 +108,18 @@ if (data_type == "temp"):
     test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test"/"negative"/"combined"
 elif(data_type == "ecg"):
     test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" /  "ecg" / f"{period}-experiment"/ f"{period}-test/positive"
-    test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{period}-experiment"/f"{period}-test"/ "negative"
+    test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{period}-experiment"/f"{period}-test"/"negative"
 
 test_positive_raw_traces = get_trace_files(folder_path = test_positive_folder)
+
 test_negative_raw_traces = get_trace_files(folder_path = test_negative_folder)
+
+
 
 test_positive_raw_lists = csv_to_temp_time_list(input_files=test_positive_raw_traces)
 test_negative_raw_lists = csv_to_temp_time_list(input_files=test_negative_raw_traces)
+
+# print(test_positive_raw_lists)
 
 #Path to log data
 if (data_type == "temp"):
@@ -123,32 +130,50 @@ elif(data_type == "ecg"):
 
 
 # Parameter for nr of Traces
-#len_traces = len(train_raw_traces)  + 1
-#start_traces = 1
-#len_traces = 2
+len_traces = len(train_raw_traces)  + 1
+start_traces = 1
+len_traces = 51
 
-trace_list = [1, 10, 20, 30, 40, 50]
+trace_list = [500,600,800,900,1000]
 
 
 
 
 for w in w_values:
-    train_traces, bins, _, _ = sax_discretization_multi(train_raw_lists,w, symbols)
 
+    train_traces, bins, breakpoints, global_mean, global_std = sax_discretization_multi(train_raw_lists,w, symbols)
     symbolic_train_trace, symbol_map, mapping = map_bins_to_symbols(train_traces,bins)
 
+    # test_positive_traces_lists = preprocess_test_traces(test_traces = test_positive_raw_lists, bins = bins)
+    # test_negative_traces_lists = preprocess_test_traces(test_traces = test_negative_raw_lists, bins = bins)
 
-    test_positive_traces_lists = preprocess_test_traces(test_traces = test_positive_raw_lists, bins = bins)
-    test_negative_traces_lists = preprocess_test_traces(test_traces = test_negative_raw_lists, bins = bins)
+    test_positive_traces_lists = sax_preprocess_traces(
+        test_positive_raw_lists,
+        w,
+        breakpoints,
+        global_mean,
+        global_std
+    )
 
 
-    for trace_nr in trace_list: #range(start_traces, len_traces):
+    test_negative_traces_lists = sax_preprocess_traces(
+        test_negative_raw_lists,
+        w,
+        breakpoints,
+        global_mean,
+        global_std
+    )
+
+
+
+    for trace_nr in  trace_list: #range(start_traces, len_traces):
         # Paths
         discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
                                   / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
                                   )
-
         symbolic_train_trace_subset = symbolic_train_trace[:trace_nr ]
+
+
 
         format_output(symbolic_traces=symbolic_train_trace_subset, output_path=discretinize_data_path)
 
@@ -165,8 +190,8 @@ for w in w_values:
 
             # Tranform to TA
             learner = TALearner(tss_path=discretinize_data_path,display=False,k=k)
-            learner.ta.show(title=title,savePng=True,output_path=TA_output_path)
-            learner.ta.export_ta( ta=learner.ta, path=xml_path, symbol_map=symbol_map, data_type = data_type, time = time)
+            # learner.ta.show(title=title,savePng=True,output_path=TA_output_path)
+            learner.ta.export_ta( ta=learner.ta, path=xml_path, symbol_map=symbol_map, data_type = data_type, time = time, sim_nr=sim_nr)
 
             # Compute metrics
             metrics = learner.ta.evaluate_classifier(positive_tss = test_positive_traces_lists, negative_tss = test_negative_traces_lists,  save_path = log_data_path, run_id= run_id, timed=True)

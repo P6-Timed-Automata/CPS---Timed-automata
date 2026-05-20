@@ -76,7 +76,6 @@ const int stabilization_time = 900;
 			</location>
 			<location id="id12" x="1549" y="-19710">
 				<name x="1549" y="-19730">S1</name>
-				<label kind="invariant">cl_local &lt;= 0</label>
 				<label kind="invariant">cl_local&lt;=8400</label>
 			</location>
 			<location id="id14" x="1977" y="-23010">
@@ -365,7 +364,6 @@ const int stabilization_time = 900;
 			</location>
 			<location id="id97" x="1355" y="-13075">
 				<name x="1355" y="-13095">S15</name>
-				<label kind="invariant">cl_local &lt;= 0</label>
 				<label kind="invariant">cl_local&lt;=3300</label>
 			</location>
 			<location id="id99" x="666" y="-12669">
@@ -546,12 +544,10 @@ const int stabilization_time = 900;
 			</location>
 			<location id="id150" x="3449" y="-13481">
 				<name x="3449" y="-13501">S82</name>
-				<label kind="invariant">cl_local &lt;= 0</label>
 				<label kind="invariant">cl_local&lt;=300</label>
 			</location>
 			<location id="id151" x="749" y="-4530">
 				<name x="749" y="-4550">S64</name>
-				<label kind="invariant">cl_local &lt;= 0</label>
 			</location>
 			<location id="id152" x="3988" y="-5153">
 				<name x="3988" y="-5173">S460</name>
@@ -559,7 +555,6 @@ const int stabilization_time = 900;
 			</location>
 			<location id="id153" x="3988" y="-4530">
 				<name x="3988" y="-4550">S461</name>
-				<label kind="invariant">cl_local &lt;= 0</label>
 			</location>
 			<location id="id154" x="1538" y="-17791">
 				<name x="1538" y="-17811">S397</name>
@@ -603,7 +598,6 @@ const int stabilization_time = 900;
 			</location>
 			<location id="id164" x="1044" y="-9936">
 				<name x="1044" y="-9956">S519</name>
-				<label kind="invariant">cl_local &lt;= 0</label>
 			</location>
 			<location id="id165" x="1760" y="-3283">
 				<name x="1760" y="-3303">S201</name>
@@ -627,7 +621,6 @@ const int stabilization_time = 900;
 			</location>
 			<location id="id170" x="1760" y="-166">
 				<name x="1760" y="-186">S206</name>
-				<label kind="invariant">cl_local &lt;= 0</label>
 			</location>
 			<location id="id171" x="3999" y="-22198">
 				<name x="3999" y="-22218">S458</name>
@@ -647,7 +640,6 @@ const int stabilization_time = 900;
 			</location>
 			<location id="id175" x="2283" y="-3283">
 				<name x="2283" y="-3303">S329</name>
-				<label kind="invariant">cl_local &lt;= 0</label>
 			</location>
 			<branchpoint id="id1">
 			</branchpoint>
@@ -2641,129 +2633,82 @@ temp = k,
 cl_local = 0
 			</label>
 		</transition>
-		<transition>
-			<source ref="id12"/>
-			<target ref="id0"/>
-			<label kind="assignment">cl_local = 0</label>
-		</transition>
-		<transition>
-			<source ref="id54"/>
-			<target ref="id0"/>
-			<label kind="assignment">cl_local = 0</label>
-		</transition>
-		<transition>
-			<source ref="id97"/>
-			<target ref="id0"/>
-			<label kind="assignment">cl_local = 0</label>
-		</transition>
-		<transition>
-			<source ref="id102"/>
-			<target ref="id0"/>
-			<label kind="assignment">cl_local = 0</label>
-		</transition>
-		<transition>
-			<source ref="id107"/>
-			<target ref="id0"/>
-			<label kind="assignment">cl_local = 0</label>
-		</transition>
-		<transition>
-			<source ref="id110"/>
-			<target ref="id0"/>
-			<label kind="assignment">cl_local = 0</label>
-		</transition>
-		<transition>
-			<source ref="id121"/>
-			<target ref="id0"/>
-			<label kind="assignment">cl_local = 0</label>
-		</transition>
-		<transition>
-			<source ref="id150"/>
-			<target ref="id0"/>
-			<label kind="assignment">cl_local = 0</label>
-		</transition>
-		<transition>
-			<source ref="id151"/>
-			<target ref="id0"/>
-			<label kind="assignment">cl_local = 0</label>
-		</transition>
-		<transition>
-			<source ref="id153"/>
-			<target ref="id0"/>
-			<label kind="assignment">cl_local = 0</label>
-		</transition>
-		<transition>
-			<source ref="id164"/>
-			<target ref="id0"/>
-			<label kind="assignment">cl_local = 0</label>
-		</transition>
-		<transition>
-			<source ref="id170"/>
-			<target ref="id0"/>
-			<label kind="assignment">cl_local = 0</label>
-		</transition>
-		<transition>
-			<source ref="id175"/>
-			<target ref="id0"/>
-			<label kind="assignment">cl_local = 0</label>
-		</transition>
 	</template>	<template>
 		<name>TagObserver</name>
 		<declaration>
-			clock cl_observer;
-			bool SPIKE_seen = false;
+clock cl_observer,cl_stabilize;
+bool SPIKE_seen = false;
 		</declaration>
-			<location id="id176" x="0" y="0">
-				<name x="0" y="-20">START</name>
+			<location id="id176" x="0" y="400">
+				<name x="0" y="380">START</name>
 			</location>
 		<label kind="invariant">cl_observer &lt;= 0</label>
-			<location id="id177" x="200" y="50">
-				<name x="200" y="30">SPIKE</name>
+			<location id="id177" x="600" y="800">
+				<name x="600" y="780">SPIKE</name>
 			</location>
-		<label kind="invariant">cl_observer &lt;= 90000</label>
-			<location id="id178" x="400" y="-50">
-				<name x="400" y="-70">STABLE</name>
+		<label kind="invariant">cl_observer &lt;= 300</label>
+			<location id="id178" x="600" y="0">
+				<name x="600" y="-20">STABLE</name>
 			</location>
-		<label kind="invariant">cl_observer &lt;= stabilization_time</label>
-			<location id="id179" x="600" y="100">
-				<name x="600" y="80">STABILIZED</name>
+		<label kind="invariant">cl_observer &lt;= 300</label>
+			<location id="id179" x="1200" y="400">
+				<name x="1200" y="380">STABILIZED</name>
 			</location>
-		<label kind="invariant">cl_observer &lt;= 90000</label>
+		<label kind="invariant">cl_observer &lt;= 300</label>
 		<init ref="id176"/>
 		<transition>
 			<source ref="id176"/>
 			<target ref="id177"/>
 			<label kind="guard">((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold))</label>
-			<label kind="assignment">cl_observer = 0,SPIKE_seen = true</label>
+			<label kind="assignment">cl_observer = 0, cl_stabilize = 0, SPIKE_seen = true</label>
 		</transition>
 		<transition>
 			<source ref="id176"/>
 			<target ref="id178"/>
-			<label kind="guard">((temp - prev_temp &lt; spike_threshold) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max))</label>
+			<label kind="guard">((temp - prev_temp &lt; spike_threshold) || (prev_temp - temp  &lt; spike_threshold) )</label>
+			<label kind="assignment">cl_observer = 0, cl_stabilize = 0</label>
+		</transition>
+		<transition>
+			<source ref="id177"/>
+			<target ref="id177"/>
+			<label kind="guard">(((temp - prev_temp &lt; spike_threshold) || (prev_temp - temp  &lt; spike_threshold)) &amp;&amp; (cl_observer &gt;= 300))</label>
 			<label kind="assignment">cl_observer = 0</label>
 		</transition>
 		<transition>
 			<source ref="id177"/>
 			<target ref="id178"/>
-			<label kind="guard">((temp - prev_temp &lt; spike_threshold) &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max))</label>
+			<label kind="guard">((temp - prev_temp &lt; spike_threshold) || (prev_temp - temp &lt; spike_threshold))</label>
+			<label kind="assignment">cl_observer = 0</label>
+		</transition>
+		<transition>
+			<source ref="id178"/>
+			<target ref="id178"/>
+			<label kind="guard">(((temp - prev_temp &lt; spike_threshold) || (prev_temp - temp  &lt; spike_threshold)) &amp;&amp; (cl_observer &gt;= 300))</label>
 			<label kind="assignment">cl_observer = 0</label>
 		</transition>
 		<transition>
 			<source ref="id178"/>
 			<target ref="id179"/>
-			<label kind="guard">cl_observer &gt;= stabilization_time</label>
+			<label kind="guard">((cl_stabilize &gt;= stabilization_time) &amp;&amp; ((temp - prev_temp &lt; spike_threshold) || (prev_temp - temp  &lt; spike_threshold)))</label>
 			<label kind="assignment">cl_observer = 0</label>
 		</transition>
 		<transition>
 			<source ref="id178"/>
 			<target ref="id177"/>
 			<label kind="guard">((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold))</label>
+			<label kind="assignment">cl_observer = 0, cl_stabilize = 0, SPIKE_seen = true</label>
+		</transition>
+		<transition>
+			<source ref="id179"/>
+			<target ref="id179"/>
+			<label kind="guard">((cl_stabilize &gt;= stabilization_time) &amp;&amp; ((temp - prev_temp &lt; spike_threshold) || (prev_temp - temp  &lt; spike_threshold)) &amp;&amp; (cl_observer &gt;= 300))</label>
 			<label kind="assignment">cl_observer = 0</label>
 		</transition>
 		<transition>
 			<source ref="id179"/>
 			<target ref="id177"/>
 			<label kind="guard">((temp - prev_temp &gt;= spike_threshold) || (prev_temp - temp &gt;= spike_threshold))</label>
-			<label kind="assignment">cl_observer = 0</label>
+			<label kind="assignment">cl_observer = 0, cl_stabilize = 0</label>
 		</transition>
 	</template>
 	<system>
@@ -2774,11 +2719,16 @@ system Automaton, Observer;
 	<queries>
 
 		<query>
-			<formula>simulate [&lt;=86400; 1] { temp } </formula>
+			<formula>simulate [&lt;=86400; 10000] { temp } </formula>
 			<comment>Simulate temperature traces over bounded time horizon to visually inspect spike events and stabilization behavior</comment>
 		</query>
 
 		<query>
+		</query>
+
+		<query>
+			<formula>E&lt;&gt;(temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>
+			<comment>Ensure there exist temperature that remains within safe operating bounds </comment>
 		</query>
 
 		<query>
@@ -2787,8 +2737,23 @@ system Automaton, Observer;
 		</query>
 
 		<query>
+			<formula>E&lt;&gt; Observer.STABLE</formula>
+			<comment>Check whether a stable state is reachable in at least one execution path</comment>
+		</query>
+
+		<query>
+			<formula>E&lt;&gt; Observer.STABLE &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>
+			<comment>Check whether a stable state is reachable in at least one execution path in temp range</comment>
+		</query>
+
+		<query>
 			<formula>E&lt;&gt; Observer.STABILIZED</formula>
 			<comment>Check whether the system can reach a stabilized state in at least one execution path</comment>
+		</query>
+
+		<query>
+			<formula>E&lt;&gt; Observer.STABILIZED &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>
+			<comment>Check whether the system can reach a stabilized state in at least one execution path in temp range</comment>
 		</query>
 
 		<query>
@@ -2797,10 +2762,15 @@ system Automaton, Observer;
 		</query>
 
 		<query>
+			<formula>E&lt;&gt; Observer.SPIKE_seen &amp;&amp; Observer.STABILIZED &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>
+			<comment>Check whether there exists a run where a spike occurs and stabilization is eventually reached afterward in temp range</comment>
 		</query>
 
 		<query>
-			<formula>A[] (temp &gt;= temp_min &amp;&amp; temp &lt;= temp_max)</formula>
+		</query>
+
+		<query>
+			<formula>A[] (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>
 			<comment>Ensure temperature always remains within safe operating bounds in all states</comment>
 		</query>
 
@@ -2813,8 +2783,28 @@ system Automaton, Observer;
 		</query>
 
 		<query>
+			<formula>A&lt;&gt; Automaton.S1 || Automaton.S33 || Automaton.S15 || Automaton.S16 || Automaton.S135 || Automaton.S17 || Automaton.S18 || Automaton.S82 || Automaton.S64 || Automaton.S461 || Automaton.S519 || Automaton.S206 || Automaton.S329</formula>
+			<comment>Check that the model can reach an accepting state for all paths</comment>
+		</query>
+
+		<query>
+			<formula>A&lt;&gt; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>
+			<comment>Ensure temperature  remains within safe operating bounds </comment>
+		</query>
+
+		<query>
 			<formula>A&lt;&gt; Observer.SPIKE</formula>
 			<comment>Check whether spike eventually occurs on all execution paths (liveness requirement)</comment>
+		</query>
+
+		<query>
+			<formula>A&lt;&gt; Observer.STABLE</formula>
+			<comment>Check whether spike eventually occurs on all execution paths (liveness requirement)</comment>
+		</query>
+
+		<query>
+			<formula>A&lt;&gt; Observer.STABLE &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>
+			<comment>Check whether spike eventually occurs on all execution paths in temp range(liveness requirement)</comment>
 		</query>
 
 		<query>
@@ -2823,26 +2813,66 @@ system Automaton, Observer;
 		</query>
 
 		<query>
+			<formula>A&lt;&gt; Observer.STABILIZED &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>
+			<comment>Check whether all executions eventually reach a stabilized state in temp range</comment>
+		</query>
+
+		<query>
 			<formula>A&lt;&gt; Observer.SPIKE_seen &amp;&amp; Observer.STABILIZED</formula>
 			<comment>Check whether all executions eventually include both spike occurrence and subsequent stabilization</comment>
 		</query>
 
 		<query>
+			<formula>A&lt;&gt; Observer.SPIKE_seen &amp;&amp; Observer.STABILIZED &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)</formula>
+			<comment>Check whether all executions eventually include both spike occurrence and subsequent stabilization in temp range</comment>
 		</query>
 
 		<query>
-			<formula>Pr[&lt;=86400; 1](&lt;&gt; Observer.SPIKE)</formula>
+		</query>
+
+		<query>
+			<formula>Pr[&lt;=86400; 10000] (&lt;&gt; (Automaton.S1 || Automaton.S33 || Automaton.S15 || Automaton.S16 || Automaton.S135 || Automaton.S17 || Automaton.S18 || Automaton.S82 || Automaton.S64 || Automaton.S461 || Automaton.S519 || Automaton.S206 || Automaton.S329)) </formula>
+			<comment>Probability that accept state reached during the simulation time</comment>
+		</query>
+
+		<query>
+			<formula>Pr[&lt;=86400; 10000](&lt;&gt; ((temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)))</formula>
+			<comment>Compute probability that a temperature occurs within the given temp range</comment>
+		</query>
+
+		<query>
+			<formula>Pr[&lt;=86400; 10000](&lt;&gt; Observer.SPIKE)</formula>
 			<comment>Compute probability that a spike occurs within the given time bound</comment>
 		</query>
 
 		<query>
-			<formula>Pr[&lt;=86400; 1](&lt;&gt; Observer.STABILIZED)</formula>
+			<formula>Pr[&lt;=86400; 10000](&lt;&gt; Observer.STABLE)</formula>
+			<comment>Compute probability that a stable occurs within the given time bound</comment>
+		</query>
+
+		<query>
+			<formula>Pr[&lt;=86400; 10000](&lt;&gt; (Observer.STABLE &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)))</formula>
+			<comment>Compute probability that a stable occurs within the given time bound in temp range</comment>
+		</query>
+
+		<query>
+			<formula>Pr[&lt;=86400; 10000](&lt;&gt; Observer.STABILIZED)</formula>
 			<comment>Compute probability that the system stabilizes within the given time bound</comment>
 		</query>
 
 		<query>
-			<formula>Pr[&lt;=86400; 1](&lt;&gt; (Observer.SPIKE_seen &amp;&amp; Observer.STABILIZED))</formula>
+			<formula>Pr[&lt;=86400; 10000](&lt;&gt; (Observer.STABILIZED &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)))</formula>
+			<comment>Compute probability that the system stabilizes within the given time bound in temp range</comment>
+		</query>
+
+		<query>
+			<formula>Pr[&lt;=86400; 10000](&lt;&gt; (Observer.SPIKE_seen &amp;&amp; Observer.STABILIZED))</formula>
 			<comment>Compute probability that a spike occurs followed by stabilization within the time bound</comment>
+		</query>
+
+		<query>
+			<formula>Pr[&lt;=86400; 10000](&lt;&gt; (Observer.SPIKE_seen &amp;&amp; Observer.STABILIZED &amp;&amp; (temp &gt;= temp_min) &amp;&amp; (temp &lt;= temp_max)))</formula>
+			<comment>Compute probability that a spike occurs followed by stabilization within the time bound in temp range</comment>
 		</query>
 
 	</queries>

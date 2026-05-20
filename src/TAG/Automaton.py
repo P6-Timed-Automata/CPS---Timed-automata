@@ -1264,7 +1264,7 @@ class Automaton:
 
         # --- Auxiliary automaton for verification ---
         if data_type == "temp":
-            invariant = 1000
+            invariant = 300
             # Observer
             xml += "\t<template>\n"
             xml += "\t\t<name>TagObserver</name>\n"

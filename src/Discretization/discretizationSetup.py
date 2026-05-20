@@ -56,10 +56,15 @@ def csv_to_temp_time_list(input_files, time_dtype=int):
         numeric_data = np.array(numeric_data)
         times = numeric_data[:, 0].astype(float).astype(time_dtype)
         values = numeric_data[:, 1].astype(float)
+
         # times = data[:, 0].astype(float).astype(time_dtype)
         # values = data[:, 1].astype(float)
         all_results.append(list(zip(values.tolist(), times.tolist())))
+
     return all_results
+
+
+
 
 
 # -----------------------------------------------------------------------------
@@ -175,8 +180,85 @@ def preprocess_test_traces(test_traces, bins, mark_out_of_range=True):
         # symbol_time_pairs = list(zip(symbols, times.tolist()))
         # formatted_traces.append(_format_trace(symbol_time_pairs))
         # Build list of "symbol:time" strings per trace
-        all_trace = [f"{s}:{int(t)}" for s, t in zip(symbols, times)]
-        formatted_traces.append(all_trace)
+        # all_trace = [f"{s}:{int(t)}" for s, t in zip(symbols, times)]
+        # formatted_traces.append(all_trace)
+
+
+        # Convert to TAG format with collapsing + relative delays
+        symbol_time_pairs = list(zip(symbols, times.tolist()))
+
+
+        formatted = _format_trace(symbol_time_pairs)
+
+        # keep output as list instead of single string
+        formatted_traces.append(formatted.split())
+
+    return formatted_traces
+
+
+
+def sax_preprocess_traces(test_traces, w, breakpoints, mean, std, mark_out_of_range=True):
+    n_symbols = len(breakpoints) + 1
+    letters = _alphabet(n_symbols)
+
+    formatted_traces = []
+
+    for trace in test_traces:
+        if len(trace) == 0:
+            formatted_traces.append([])
+            continue
+
+        values = np.array([v for v, _ in trace], dtype=float)
+        times = np.array([t for _, t in trace], dtype=float)
+
+        # ---- SAME NORMALIZATION AS TRAIN ----
+        norm_v = (values - mean) / std
+        norm_v = np.nan_to_num(norm_v)
+
+        # ---- SAME PAA AS TRAIN ----
+        n = len(norm_v)
+        w_eff = min(w, n)
+
+        v_segs = np.array_split(norm_v, w_eff)
+        t_segs = np.array_split(times, w_eff)
+
+        paa_v = []
+        paa_t = []
+
+        for vs, ts in zip(v_segs, t_segs):
+            if len(vs) == 0:
+                continue
+            paa_v.append(np.nanmean(vs))
+            paa_t.append(int(np.nanmean(ts)))
+
+        paa_v = np.array(paa_v)
+        paa_t = np.array(paa_t)
+
+        if len(paa_v) == 0:
+            formatted_traces.append([])
+            continue
+
+        # ---- SAX DISCRETIZATION (CRITICAL FIX) ----
+        labels = np.digitize(paa_v, breakpoints, right=False) # SAME AS TRAIN
+
+        # ---- OUT OF RANGE HANDLING (MATCH YOUR PIPELINE) ----
+        if mark_out_of_range:
+            symbols = []
+            for lbl in labels:
+                if 0 <= lbl < n_symbols:
+                    symbols.append(letters[lbl])
+                else:
+                    symbols.append(OUT_OF_RANGE_SYMBOL)
+        else:
+            labels = np.clip(labels, 0, n_symbols - 1)
+            symbols = [letters[lbl] for lbl in labels]
+
+        # ---- FORMAT EXACTLY LIKE YOUR EXISTING PIPELINE ----
+        symbol_time_pairs = list(zip(symbols, paa_t.tolist()))
+        formatted = _format_trace(symbol_time_pairs)
+
+        formatted_traces.append(formatted.split())
+
 
     return formatted_traces
 
@@ -195,6 +277,7 @@ def _format_trace(symbol_time_pairs):
     """
     if not symbol_time_pairs:
         return ""
+
 
     parts = []
     run_start_idx = 0
