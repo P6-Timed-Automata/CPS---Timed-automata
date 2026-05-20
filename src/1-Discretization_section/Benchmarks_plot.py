@@ -14,6 +14,8 @@ Usage:
     python plot_benchmark.py                       # latest run for k=2,4
     python plot_benchmark.py --k_list 2            # just k=2
     python plot_benchmark.py --log path/to/log.json
+
+All figures are written as both PNG (raster, dpi=300) and SVG (vector).
 """
 
 import argparse
@@ -40,6 +42,23 @@ def _ok_results(results):
 
 def _failed_results(results):
     return [r for r in results if not _ok(r)]
+
+
+# ---------------------------------------------------------------------------
+# Dual-format figure saver (PNG + SVG)
+# ---------------------------------------------------------------------------
+
+def _save_dual(fig, out_png, **kwargs):
+    """
+    Save `fig` to `out_png` and to a sibling .svg file.
+    `dpi` is stripped for the SVG call since it's irrelevant for vector output.
+    """
+    fig.savefig(out_png, **kwargs)
+    svg_path = os.path.splitext(out_png)[0] + ".svg"
+    svg_kwargs = {k: v for k, v in kwargs.items() if k != "dpi"}
+    fig.savefig(svg_path, **svg_kwargs)
+    print(f"  Saved: {out_png}")
+    print(f"  Saved: {svg_path}")
 
 
 # ---------------------------------------------------------------------------
@@ -255,9 +274,8 @@ def _save_table(method_name, rows, cols, output_folder, suffix,
     fig.subplots_adjust(top=1.0, bottom=0.0, left=0.01, right=0.99)
 
     out = os.path.join(output_folder, f"{method_name}{suffix}.png")
-    plt.savefig(out, bbox_inches="tight", dpi=300)
+    _save_dual(fig, out, bbox_inches="tight", dpi=300)
     plt.close(fig)
-    print(f"  Saved: {out}")
 
 
 # ---------------------------------------------------------------------------
@@ -356,9 +374,8 @@ def plot_combined_for_variant_and_reference(
         output_folder,
         f"{method_name}_TA_Benchmark_{variant_descriptor}_ref{ref_slot}.png",
     )
-    plt.savefig(out, bbox_inches="tight", dpi=300)
+    _save_dual(fig, out, bbox_inches="tight", dpi=300)
     plt.close(fig)
-    print(f"  Saved: {out}")
 
 
 def plot_signal_for_variant_and_reference(
@@ -409,9 +426,8 @@ def plot_signal_for_variant_and_reference(
         output_folder,
         f"{method_name}_signal_{variant_descriptor}_ref{ref_slot}.png",
     )
-    plt.savefig(out, bbox_inches="tight", dpi=300)
+    _save_dual(fig, out, bbox_inches="tight", dpi=300)
     plt.close(fig)
-    print(f"  Saved: {out}")
 
 
 # ---------------------------------------------------------------------------
@@ -499,9 +515,8 @@ def plot_combined(method_name, results, output_folder):
                       transform=ax_table.transAxes, color="gray")
 
     out = os.path.join(output_folder, f"{method_name}_TA_Benchmark.png")
-    plt.savefig(out, bbox_inches="tight", dpi=300)
+    _save_dual(fig, out, bbox_inches="tight", dpi=300)
     plt.close(fig)
-    print(f"  Saved: {out}")
 
 
 # ---------------------------------------------------------------------------
@@ -543,9 +558,8 @@ def plot_signal(method_name, results, output_folder):
     ax_bot.set_ylabel("Residual")
 
     out = os.path.join(output_folder, f"{method_name}_signal.png")
-    plt.savefig(out, bbox_inches="tight", dpi=300)
+    _save_dual(fig, out, bbox_inches="tight", dpi=300)
     plt.close(fig)
-    print(f"  Saved: {out}")
 
 
 # ---------------------------------------------------------------------------
@@ -812,9 +826,8 @@ def plot_tradeoff(log, output_folder):
                       all_states=all_states, all_maes=all_maes)
     fig.tight_layout()
     out = os.path.join(output_folder, "tradeoff_combined.png")
-    fig.savefig(out, bbox_inches="tight", dpi=300)
+    _save_dual(fig, out, bbox_inches="tight", dpi=300)
     plt.close(fig)
-    print(f"  Saved: {out}")
 
     for method_name, d in method_data.items():
         fig, ax = plt.subplots(figsize=(9, 6))
@@ -825,9 +838,8 @@ def plot_tradeoff(log, output_folder):
                           all_states=all_states, all_maes=all_maes)
         fig.tight_layout()
         out = os.path.join(output_folder, f"tradeoff_{method_name}.png")
-        fig.savefig(out, bbox_inches="tight", dpi=300)
+        _save_dual(fig, out, bbox_inches="tight", dpi=300)
         plt.close(fig)
-        print(f"  Saved: {out}")
 
 
 # ---------------------------------------------------------------------------
