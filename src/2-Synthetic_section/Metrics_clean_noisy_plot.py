@@ -81,7 +81,8 @@ def _fmt_row(values, widths):
 
 def _make_table(headers, rows):
     all_rows = [headers] + [[str(c) for c in r] for r in rows]
-    widths = [max(len(r[i]) for r in all_rows) for i in range(len(headers))]
+    # Added + 2 to provide extra padding between text columns
+    widths = [max(len(r[i]) for r in all_rows) + 2 for i in range(len(headers))]
     separator = "  ".join("-" * w for w in widths)
     lines = [_fmt_row(headers, widths), separator]
     for row in rows:
@@ -255,8 +256,9 @@ def save_tables_as_images(tables, out_dir):
         n_cols = len(headers)
         n_rows = len(rows) + 1
 
-        fig_w = max(8, n_cols * 1.6)
-        fig_h = max(2, n_rows * 0.45 + 0.8)
+        # 1. Scale down base figure dimensions for a compact fit
+        fig_w = n_cols * 1.1
+        fig_h = n_rows * 0.35 + 0.2
 
         fig, ax = plt.subplots(figsize=(fig_w, fig_h))
         ax.axis("off")
@@ -277,6 +279,9 @@ def save_tables_as_images(tables, out_dir):
         tbl_obj.set_fontsize(9)
         tbl_obj.scale(1, 1.4)
 
+        # Keep auto-width to prevent text overlap
+        tbl_obj.auto_set_column_width(col=list(range(n_cols)))
+
         for (ri, ci), cell in tbl_obj.get_celld().items():
             cell.set_edgecolor("white")
             cell.set_linewidth(1.5)
@@ -289,15 +294,18 @@ def save_tables_as_images(tables, out_dir):
             else:
                 cell.set_text_props(color="#2c3e50")
 
-        fig.suptitle(tbl["title"], fontsize=11, fontweight="bold",
-                     y=0.97, color="#2c3e50")
+        # 2. Anchor title to the axes (table) instead of the figure frame
+        ax.set_title(tbl["title"], fontsize=11, fontweight="bold",
+                     color="#2c3e50", pad=12)
 
-        out_path = out_dir / filename_map[key]
-        fig.savefig(out_path, dpi=200, bbox_inches="tight", facecolor="white")
+        out_path_png = out_dir / filename_map[key]
+        out_path_svg = out_path_png.with_suffix(".svg")
+
+        # 3. Save as both PNG and SVG, trimming the exact bounding box
+        fig.savefig(out_path_png, dpi=200, bbox_inches="tight", facecolor="white")
+        fig.savefig(out_path_svg, bbox_inches="tight", facecolor="white")
         plt.close(fig)
-        print(f"  Saved: {out_path}")
-
-
+        print(f"  Saved: {out_path_png.name} & .svg")
 # =============================================================================
 # PLOTS
 # =============================================================================
@@ -348,9 +356,12 @@ def plot_metric_comparison(all_results, metric, metric_title, out_path):
     fig.suptitle(f"{metric_title} per variant — clean vs. noisy training",
                  fontsize=12)
     fig.tight_layout()
+
+    # Save both PNG and SVG
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    fig.savefig(out_path.with_suffix(".svg"), bbox_inches="tight")
     plt.close(fig)
-    print(f"  Saved: {out_path}")
+    print(f"  Saved: {out_path.name} & .svg")
 
 
 def plot_robustness(all_results, out_path):
@@ -409,9 +420,12 @@ def plot_robustness(all_results, out_path):
     ax.legend(handles=legend_elements, loc="lower right")
 
     fig.tight_layout()
+
+    # Save both PNG and SVG
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    fig.savefig(out_path.with_suffix(".svg"), bbox_inches="tight")
     plt.close(fig)
-    print(f"  Saved: {out_path}")
+    print(f"  Saved: {out_path.name} & .svg")
 
 
 def plot_per_mode_heatmap(all_results, out_path):
@@ -445,9 +459,12 @@ def plot_per_mode_heatmap(all_results, out_path):
     fig.suptitle("Anomaly rejection rate per variant per mode (higher = better)",
                  fontsize=11)
     fig.tight_layout()
+
+    # Save both PNG and SVG
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    fig.savefig(out_path.with_suffix(".svg"), bbox_inches="tight")
     plt.close(fig)
-    print(f"  Saved: {out_path}")
+    print(f"  Saved: {out_path.name} & .svg")
 
 
 # =============================================================================
@@ -478,6 +495,24 @@ def main():
 
     log = load_log(args.log)
     all_results = log["results"]
+
+    # --- ADJUST BIN LABELS FOR PERSIST ONLY ---
+    for r in all_results:
+        if r.get("method") == "persist":
+            params = r.get("params", {})
+            for k in ["bin", "bins"]:
+                if k in params:
+                    orig_val = params[k]
+                    try:
+                        new_val = int(orig_val) - 1
+                        params[k] = new_val
+                        if "variant_label" in r:
+                            r["variant_label"] = r["variant_label"].replace(
+                                f"{k}={orig_val}", f"{k}={new_val}"
+                            )
+                    except ValueError:
+                        pass
+    # ------------------------------------------
 
     print(f"Plotting run from: {log.get('timestamp', 'unknown')}")
     print(f"Total results:     {len(all_results)}")
