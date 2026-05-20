@@ -45,7 +45,7 @@ elif data_type == "ecg":
 
 
 # Parameter for Naiv
-symbols = 12
+symbols = 5
 
 # Parameter for TAG
 k_min = 4
@@ -107,9 +107,11 @@ elif(data_type == "ecg"):
 len_traces = len(train_raw_traces)  + 1
 start_traces = 1
 len_traces = 5
+# for trace_nr in range(start_traces, len_traces):
 
+trace_list = [1, 10, 20, 30, 40, 50]
 
-for trace_nr in range(start_traces, len_traces):
+for trace_nr in trace_list:
     # Paths
 
     if (data_type == "temp"):
