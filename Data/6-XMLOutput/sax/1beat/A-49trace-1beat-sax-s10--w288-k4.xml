@@ -1,0 +1,3964 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+<declaration>
+clock cl_local, cl_global;
+const int a = -72;
+const int b = -61;
+const int c = -49;
+const int d = -40;
+const int e = -32;
+const int f = -24;
+const int g = -16;
+const int h = -7;
+const int i = 4;
+const int j = 77;
+ 
+int temp = f;
+int prev_temp;
+const int spike_threshold = 20;
+const int flat_threshold = 6;
+const int flat_window = 78;
+const int spike_window = 13;
+</declaration>
+	<template>
+		<name x="5" y="5">TagModel</name>
+		<declaration>
+		</declaration>
+			<location id="id0">
+				<name>INIT</name>
+				<urgent/>
+			</location>
+			<location id="id2" x="1462" y="-24613">
+				<name x="1462" y="-24633">S0_S1_f</name>
+				<label kind="invariant">cl_local&lt;=25</label>
+			</location>
+			<location id="id3" x="1462" y="-24613">
+				<name x="1462" y="-24633">S0_S33_g</name>
+				<label kind="invariant">cl_local&lt;=11</label>
+			</location>
+			<location id="id4" x="1462" y="-24613">
+				<name x="1462" y="-24633">S0_S67_e</name>
+				<label kind="invariant">cl_local&lt;=6</label>
+			</location>
+			<location id="id5" x="1462" y="-24613">
+				<name x="1462" y="-24633">S0_S450_d</name>
+				<label kind="invariant">cl_local&lt;=81</label>
+			</location>
+			<location id="id6" x="1462" y="-24613">
+				<name x="1462" y="-24633">S0_S30_e</name>
+				<label kind="invariant">cl_local&lt;=92</label>
+			</location>
+			<location id="id8" x="1462" y="-23229">
+				<name x="1462" y="-23249">S1_S2_g</name>
+				<label kind="invariant">cl_local&lt;=8</label>
+			</location>
+			<location id="id9" x="1462" y="-23229">
+				<name x="1462" y="-23249">S1_S19_e</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id10" x="1462" y="-23229">
+				<name x="1462" y="-23249">S1_S31_e</name>
+				<label kind="invariant">cl_local&lt;=83</label>
+			</location>
+			<location id="id11" x="2351" y="-24041">
+				<name x="2351" y="-24061">S33</name>
+				<label kind="invariant">cl_local&lt;=19</label>
+			</location>
+			<location id="id12" x="424" y="-23635">
+				<name x="424" y="-23655">S67</name>
+				<label kind="invariant">cl_local&lt;=8</label>
+			</location>
+			<location id="id13" x="1796" y="-24041">
+				<name x="1796" y="-24061">S450</name>
+				<label kind="invariant">cl_local&lt;=5</label>
+			</location>
+			<location id="id15" x="729" y="-22631">
+				<name x="729" y="-22651">S30_S68_d</name>
+				<label kind="invariant">cl_local&lt;=89</label>
+			</location>
+			<location id="id16" x="729" y="-22631">
+				<name x="729" y="-22651">S30_S32_d</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id17" x="1462" y="-22631">
+				<name x="1462" y="-22651">S2</name>
+				<label kind="invariant">cl_local&lt;=14</label>
+			</location>
+			<location id="id18" x="140" y="-22250">
+				<name x="140" y="-22270">S19</name>
+				<label kind="invariant">cl_local&lt;=13</label>
+			</location>
+			<location id="id20" x="2501" y="-23229">
+				<name x="2501" y="-23249">S34_S35_e</name>
+				<label kind="invariant">cl_local&lt;=11</label>
+			</location>
+			<location id="id21" x="2501" y="-23229">
+				<name x="2501" y="-23249">S34_S39_e</name>
+				<label kind="invariant">cl_local&lt;=44</label>
+			</location>
+			<location id="id22" x="2501" y="-23229">
+				<name x="2501" y="-23249">S34_S42_e</name>
+				<label kind="invariant">cl_local&lt;=83</label>
+			</location>
+			<location id="id23" x="846" y="-21870">
+				<name x="846" y="-21890">S68</name>
+				<label kind="invariant">cl_local&lt;=11</label>
+			</location>
+			<location id="id24" x="1846" y="-23229">
+				<name x="1846" y="-23249">S451</name>
+				<label kind="invariant">cl_local&lt;=11</label>
+			</location>
+			<location id="id25" x="2201" y="-22250">
+				<name x="2201" y="-22270">S31</name>
+				<label kind="invariant">cl_local&lt;=83</label>
+			</location>
+			<location id="id26" x="440" y="-21870">
+				<name x="440" y="-21890">S32</name>
+				<label kind="invariant">cl_local&lt;=17</label>
+			</location>
+			<location id="id28" x="1451" y="-21870">
+				<name x="1451" y="-21890">S3_S4_e</name>
+				<label kind="invariant">cl_local&lt;=81</label>
+			</location>
+			<location id="id29" x="1451" y="-21870">
+				<name x="1451" y="-21890">S3_S8_c</name>
+				<label kind="invariant">cl_local&lt;=14</label>
+			</location>
+			<location id="id30" x="1451" y="-21870">
+				<name x="1451" y="-21890">S3_S5_c</name>
+				<label kind="invariant">cl_local&lt;=11</label>
+			</location>
+			<location id="id32" x="2490" y="-21032">
+				<name x="2490" y="-21052">S20_S8_c</name>
+				<label kind="invariant">cl_local&lt;=17</label>
+			</location>
+			<location id="id33" x="2490" y="-21032">
+				<name x="2490" y="-21052">S20_S37_e</name>
+				<label kind="invariant">cl_local&lt;=19</label>
+			</location>
+			<location id="id34" x="2490" y="-21032">
+				<name x="2490" y="-21052">S20_S40_c</name>
+				<label kind="invariant">cl_local&lt;=16</label>
+			</location>
+			<location id="id35" x="3357" y="-22631">
+				<name x="3357" y="-22651">S35</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id37" x="685" y="-21032">
+				<name x="685" y="-21052">S343_S126_b</name>
+				<label kind="invariant">cl_local&lt;=20</label>
+			</location>
+			<location id="id38" x="685" y="-21032">
+				<name x="685" y="-21052">S343_S38_d</name>
+				<label kind="invariant">cl_local&lt;=14</label>
+			</location>
+			<location id="id39" x="1857" y="-21464">
+				<name x="1857" y="-21484">S452</name>
+				<label kind="invariant">cl_local&lt;=6</label>
+			</location>
+			<location id="id41" x="1885" y="-9582">
+				<name x="1885" y="-9602">S37_S38_d</name>
+				<label kind="invariant">cl_local&lt;=117</label>
+			</location>
+			<location id="id42" x="1885" y="-9582">
+				<name x="1885" y="-9602">S37_S44_b</name>
+				<label kind="invariant">cl_local&lt;=19</label>
+			</location>
+			<location id="id44" x="2107" y="-789">
+				<name x="2107" y="-809">S38_S37_e</name>
+				<label kind="invariant">cl_local&lt;=58</label>
+			</location>
+			<location id="id45" x="2107" y="-789">
+				<name x="2107" y="-809">S38_S37_c</name>
+				<label kind="invariant">cl_local&lt;=114</label>
+			</location>
+			<location id="id46" x="1107" y="-22631">
+				<name x="1107" y="-22651">S39</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id48" x="2868" y="-22631">
+				<name x="2868" y="-22651">S42_S36_d</name>
+				<label kind="invariant">cl_local&lt;=9</label>
+			</location>
+			<location id="id49" x="2868" y="-22631">
+				<name x="2868" y="-22651">S42_S52_d</name>
+				<label kind="invariant">cl_local&lt;=6</label>
+			</location>
+			<location id="id50" x="1279" y="-21032">
+				<name x="1279" y="-21052">S4</name>
+				<label kind="invariant">cl_local&lt;=42</label>
+			</location>
+			<location id="id51" x="3696" y="-21464">
+				<name x="3696" y="-21484">S36</name>
+				<label kind="invariant">cl_local&lt;=16</label>
+			</location>
+			<location id="id52" x="4724" y="-20600">
+				<name x="4724" y="-20620">S682</name>
+				<label kind="invariant">cl_local&lt;=55</label>
+			</location>
+			<location id="id53" x="1557" y="-20168">
+				<name x="1557" y="-20188">S126</name>
+				<label kind="invariant">cl_local&lt;=6</label>
+			</location>
+			<location id="id54" x="3185" y="-19762">
+				<name x="3185" y="-19782">S40</name>
+				<label kind="invariant">cl_local&lt;=20</label>
+			</location>
+			<location id="id55" x="2868" y="-21870">
+				<name x="2868" y="-21890">S52</name>
+				<label kind="invariant">cl_local&lt;=8</label>
+			</location>
+			<location id="id56" x="2479" y="-20168">
+				<name x="2479" y="-20188">S8</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id58" x="3690" y="-14564">
+				<name x="3690" y="-14584">S22_S23_c</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id59" x="3690" y="-14564">
+				<name x="3690" y="-14584">S22_S251_d</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id60" x="2868" y="-21032">
+				<name x="2868" y="-21052">S55</name>
+				<label kind="invariant">cl_local&lt;=9</label>
+			</location>
+			<location id="id62" x="4235" y="-8770">
+				<name x="4235" y="-8790">S44_S45_c</name>
+				<label kind="invariant">cl_local&lt;=75</label>
+			</location>
+			<location id="id63" x="4235" y="-8770">
+				<name x="4235" y="-8790">S44_S324_d</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id64" x="6090" y="-15708">
+				<name x="6090" y="-15728">S15</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id65" x="5712" y="-20600">
+				<name x="5712" y="-20620">S51</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id67" x="2479" y="-19382">
+				<name x="2479" y="-19402">S9_S10_e</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id68" x="2479" y="-19382">
+				<name x="2479" y="-19402">S9_S9_d</name>
+				<label kind="invariant">cl_local&lt;=97</label>
+			</location>
+			<location id="id69" x="2479" y="-19382">
+				<name x="2479" y="-19402">S9_S129_f</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id71" x="4524" y="-13966">
+				<name x="4524" y="-13986">S23_S24_d</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id72" x="4524" y="-13966">
+				<name x="4524" y="-13986">S23_S219_e</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id74" x="5896" y="-19382">
+				<name x="5896" y="-19402">S56_S10_f</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id75" x="5896" y="-19382">
+				<name x="5896" y="-19402">S56_S699_e</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id77" x="2862" y="-20168">
+				<name x="2862" y="-20188">S250_S251_c</name>
+				<label kind="invariant">cl_local&lt;=2</label>
+			</location>
+			<location id="id78" x="2862" y="-20168">
+				<name x="2862" y="-20188">S250_S9_d</name>
+				<label kind="invariant">cl_local&lt;=2</label>
+			</location>
+			<location id="id80" x="4235" y="-8172">
+				<name x="4235" y="-8192">S45_S46_d</name>
+				<label kind="invariant">cl_local&lt;=6</label>
+			</location>
+			<location id="id81" x="4235" y="-8172">
+				<name x="4235" y="-8192">S45_S78_e</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id82" x="4235" y="-8172">
+				<name x="4235" y="-8192">S45_S129_f</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id83" x="3690" y="-13966">
+				<name x="3690" y="-13986">S251</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id84" x="6429" y="-15136">
+				<name x="6429" y="-15156">S16</name>
+				<label kind="invariant">cl_local&lt;=14</label>
+			</location>
+			<location id="id85" x="2212" y="-7549">
+				<name x="2212" y="-7569">S129</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id86" x="5896" y="-18810">
+				<name x="5896" y="-18830">S10</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id87" x="1607" y="-21032">
+				<name x="1607" y="-21052">S5</name>
+				<label kind="invariant">cl_local&lt;=11</label>
+			</location>
+			<location id="id89" x="4524" y="-13343">
+				<name x="4524" y="-13363">S24_S25_f</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id90" x="4524" y="-13343">
+				<name x="4524" y="-13363">S24_S639_e</name>
+				<label kind="invariant">cl_local&lt;=2</label>
+			</location>
+			<location id="id91" x="4524" y="-13343">
+				<name x="4524" y="-13363">S24_S57_e</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id92" x="5346" y="-12911">
+				<name x="5346" y="-12931">S219</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id94" x="5451" y="-8172">
+				<name x="5451" y="-8192">S324_S325_f</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id95" x="5451" y="-8172">
+				<name x="5451" y="-8192">S324_S393_e</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id96" x="6418" y="-18403">
+				<name x="6418" y="-18423">S699</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id98" x="4235" y="-7549">
+				<name x="4235" y="-7569">S46_S47_e</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id99" x="4235" y="-7549">
+				<name x="4235" y="-7569">S46_S119_f</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id100" x="4235" y="-7549">
+				<name x="4235" y="-7569">S46_S403_c</name>
+				<label kind="invariant">cl_local&lt;=97</label>
+			</location>
+			<location id="id101" x="3701" y="-13343">
+				<name x="3701" y="-13363">S252</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id102" x="6651" y="-14564">
+				<name x="6651" y="-14584">S17</name>
+				<label kind="invariant">cl_local&lt;=114</label>
+			</location>
+			<location id="id104" x="2212" y="-6926">
+				<name x="2212" y="-6946">S130_S131_j</name>
+				<label kind="invariant">cl_local&lt;=22</label>
+			</location>
+			<location id="id105" x="2212" y="-6926">
+				<name x="2212" y="-6946">S130_S142_i</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id106" x="6312" y="-17997">
+				<name x="6312" y="-18017">S11</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id107" x="4846" y="-12073">
+				<name x="4846" y="-12093">S25</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id109" x="7190" y="-6926">
+				<name x="7190" y="-6946">S220_S221_h</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id110" x="7190" y="-6926">
+				<name x="7190" y="-6946">S220_S221_i</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id111" x="5362" y="-7549">
+				<name x="5362" y="-7569">S325</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id112" x="4524" y="-12479">
+				<name x="4524" y="-12499">S639</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id114" x="8018" y="-6926">
+				<name x="8018" y="-6946">S47_S48_g</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id115" x="8018" y="-6926">
+				<name x="8018" y="-6946">S47_S458_f</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id116" x="1435" y="-6302">
+				<name x="1435" y="-6322">S142</name>
+				<label kind="invariant">cl_local&lt;=22</label>
+			</location>
+			<location id="id117" x="3707" y="-12479">
+				<name x="3707" y="-12499">S253</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id118" x="10246" y="-6302">
+				<name x="10246" y="-6322">S458</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id120" x="6624" y="-7549">
+				<name x="6624" y="-7569">S78_S79_g</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id121" x="6624" y="-7549">
+				<name x="6624" y="-7569">S78_S197_f</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id122" x="6651" y="-13966">
+				<name x="6651" y="-13986">S18</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id123" x="4118" y="-12479">
+				<name x="4118" y="-12499">S57</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id124" x="6374" y="-17425">
+				<name x="6374" y="-17445">S12</name>
+				<label kind="invariant">cl_local&lt;=25</label>
+			</location>
+			<location id="id126" x="4851" y="-6926">
+				<name x="4851" y="-6946">S26_S27_i</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id127" x="4851" y="-6926">
+				<name x="4851" y="-6946">S26_S597_j</name>
+				<label kind="invariant">cl_local&lt;=19</label>
+			</location>
+			<location id="id128" x="6746" y="-6302">
+				<name x="6746" y="-6322">S221</name>
+				<label kind="invariant">cl_local&lt;=22</label>
+			</location>
+			<location id="id130" x="5468" y="-6926">
+				<name x="5468" y="-6946">S326_S327_j</name>
+				<label kind="invariant">cl_local&lt;=22</label>
+			</location>
+			<location id="id131" x="5468" y="-6926">
+				<name x="5468" y="-6946">S326_S58_j</name>
+				<label kind="invariant">cl_local&lt;=25</label>
+			</location>
+			<location id="id132" x="3279" y="-11667">
+				<name x="3279" y="-11687">S640</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id133" x="4524" y="-11667">
+				<name x="4524" y="-11687">S654</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id135" x="2512" y="-6302">
+				<name x="2512" y="-6322">S131_S132_i</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id136" x="2512" y="-6302">
+				<name x="2512" y="-6322">S131_S37_g</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id137" x="1157" y="-5439">
+				<name x="1157" y="-5459">S143</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id139" x="6651" y="-13343">
+				<name x="6651" y="-13363">S165_S166_d</name>
+				<label kind="invariant">cl_local&lt;=69</label>
+			</location>
+			<location id="id140" x="6651" y="-13343">
+				<name x="6651" y="-13363">S165_S57_g</name>
+				<label kind="invariant">cl_local&lt;=2</label>
+			</location>
+			<location id="id142" x="3712" y="-11667">
+				<name x="3712" y="-11687">S254_S255_i</name>
+				<label kind="invariant">cl_local&lt;=2</label>
+			</location>
+			<location id="id143" x="3712" y="-11667">
+				<name x="3712" y="-11687">S254_S60_i</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id144" x="10257" y="-5439">
+				<name x="10257" y="-5459">S459</name>
+				<label kind="invariant">cl_local&lt;=19</label>
+			</location>
+			<location id="id146" x="8396" y="-6302">
+				<name x="8396" y="-6322">S79_S80_i</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id147" x="8396" y="-6302">
+				<name x="8396" y="-6322">S79_S235_h</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id149" x="6385" y="-16853">
+				<name x="6385" y="-16873">S13_S14_h</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id150" x="6385" y="-16853">
+				<name x="6385" y="-16873">S13_S61_i</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id151" x="6385" y="-16853">
+				<name x="6385" y="-16873">S13_S15_g</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id152" x="5007" y="-6302">
+				<name x="5007" y="-6322">S27</name>
+				<label kind="invariant">cl_local&lt;=16</label>
+			</location>
+			<location id="id153" x="6646" y="-5439">
+				<name x="6646" y="-5459">S222</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id154" x="7185" y="-6302">
+				<name x="7185" y="-6322">S327</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id155" x="4218" y="-5870">
+				<name x="4218" y="-5890">S597</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id156" x="3279" y="-11044">
+				<name x="3279" y="-11064">S641</name>
+				<label kind="invariant">cl_local&lt;=25</label>
+			</location>
+			<location id="id157" x="4524" y="-11044">
+				<name x="4524" y="-11064">S655</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id159" x="3612" y="-5439">
+				<name x="3612" y="-5459">S132_S133_e</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id160" x="3612" y="-5439">
+				<name x="3612" y="-5459">S132_S98_f</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id161" x="6324" y="-6926">
+				<name x="6324" y="-6946">S197</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id163" x="4235" y="-6926">
+				<name x="4235" y="-6946">S119_S120_h</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id164" x="4235" y="-6926">
+				<name x="4235" y="-6946">S119_S172_g</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id166" x="1157" y="-4575">
+				<name x="1157" y="-4595">S144_S145_f</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id167" x="1157" y="-4575">
+				<name x="1157" y="-4595">S144_S589_h</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id168" x="3712" y="-11044">
+				<name x="3712" y="-11064">S255</name>
+				<label kind="invariant">cl_local&lt;=31</label>
+			</location>
+			<location id="id169" x="10274" y="-4575">
+				<name x="10274" y="-4595">S460</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id170" x="9418" y="-5439">
+				<name x="9418" y="-5459">S80</name>
+				<label kind="invariant">cl_local&lt;=22</label>
+			</location>
+			<location id="id171" x="3774" y="-6302">
+				<name x="3774" y="-6322">S58</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id172" x="4118" y="-11044">
+				<name x="4118" y="-11064">S60</name>
+				<label kind="invariant">cl_local&lt;=22</label>
+			</location>
+			<location id="id174" x="6412" y="-16281">
+				<name x="6412" y="-16301">S14_S15_f</name>
+				<label kind="invariant">cl_local&lt;=2</label>
+			</location>
+			<location id="id175" x="6412" y="-16281">
+				<name x="6412" y="-16301">S14_S38_d</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id176" x="6412" y="-16281">
+				<name x="6412" y="-16301">S14_S16_e</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id177" x="5007" y="-5439">
+				<name x="5007" y="-5459">S28</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id178" x="10290" y="-3712">
+				<name x="10290" y="-3732">S61</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id179" x="6907" y="-4144">
+				<name x="6907" y="-4164">S223</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id180" x="2474" y="-5007">
+				<name x="2474" y="-5027">S328</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id181" x="4524" y="-10420">
+				<name x="4524" y="-10440">S656</name>
+				<label kind="invariant">cl_local&lt;=22</label>
+			</location>
+			<location id="id183" x="3824" y="-4575">
+				<name x="3824" y="-4595">S133_S134_c</name>
+				<label kind="invariant">cl_local&lt;=5</label>
+			</location>
+			<location id="id184" x="3824" y="-4575">
+				<name x="3824" y="-4595">S133_S38_d</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id185" x="5835" y="-6302">
+				<name x="5835" y="-6322">S198</name>
+				<label kind="invariant">cl_local&lt;=19</label>
+			</location>
+			<location id="id187" x="8018" y="-6302">
+				<name x="8018" y="-6322">S48_S49_i</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id188" x="8018" y="-6302">
+				<name x="8018" y="-6322">S48_S433_h</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id190" x="4179" y="-6302">
+				<name x="4179" y="-6322">S120_S121_i</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id191" x="4179" y="-6302">
+				<name x="4179" y="-6322">S120_S28_j</name>
+				<label kind="invariant">cl_local&lt;=19</label>
+			</location>
+			<location id="id192" x="4179" y="-6302">
+				<name x="4179" y="-6322">S120_S62_j</name>
+				<label kind="invariant">cl_local&lt;=22</label>
+			</location>
+			<location id="id194" x="740" y="-3712">
+				<name x="740" y="-3732">S145_S38_d</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id195" x="740" y="-3712">
+				<name x="740" y="-3732">S145_S37_c</name>
+				<label kind="invariant">cl_local&lt;=5</label>
+			</location>
+			<location id="id196" x="4229" y="-9988">
+				<name x="4229" y="-10008">S256</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id198" x="9762" y="-4575">
+				<name x="9762" y="-4595">S81_S61_i</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id199" x="9762" y="-4575">
+				<name x="9762" y="-4595">S81_S15_f</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id200" x="9762" y="-4575">
+				<name x="9762" y="-4595">S81_S319_e</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id201" x="9762" y="-4575">
+				<name x="9762" y="-4595">S81_S369_g</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id202" x="9762" y="-4575">
+				<name x="9762" y="-4595">S81_S404_h</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id203" x="4190" y="-2848">
+				<name x="4190" y="-2868">S97</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id204" x="3724" y="-2225">
+				<name x="3724" y="-2245">S98</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id205" x="3279" y="-10420">
+				<name x="3279" y="-10440">S59</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id206" x="5624" y="-4575">
+				<name x="5624" y="-4595">S29</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id207" x="9651" y="-3712">
+				<name x="9651" y="-3732">S369</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id208" x="5796" y="-7549">
+				<name x="5796" y="-7569">S393</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id209" x="9307" y="-3280">
+				<name x="9307" y="-3300">S404</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id210" x="3890" y="-9176">
+				<name x="3890" y="-9196">S657</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id212" x="5624" y="-5439">
+				<name x="5624" y="-5459">S199_S29_h</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id213" x="5624" y="-5439">
+				<name x="5624" y="-5459">S199_S15_g</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id214" x="6240" y="-5439">
+				<name x="6240" y="-5459">S49</name>
+				<label kind="invariant">cl_local&lt;=22</label>
+			</location>
+			<location id="id216" x="7079" y="-5439">
+				<name x="7079" y="-5459">S121_S122_j</name>
+				<label kind="invariant">cl_local&lt;=16</label>
+			</location>
+			<location id="id217" x="7079" y="-5439">
+				<name x="7079" y="-5459">S121_S63_j</name>
+				<label kind="invariant">cl_local&lt;=19</label>
+			</location>
+			<location id="id218" x="2518" y="-1413">
+				<name x="2518" y="-1433">S99</name>
+				<label kind="invariant">cl_local&lt;=5</label>
+			</location>
+			<location id="id220" x="8368" y="-2848">
+				<name x="8368" y="-2868">S370_S371_c</name>
+				<label kind="invariant">cl_local&lt;=5</label>
+			</location>
+			<location id="id221" x="8368" y="-2848">
+				<name x="8368" y="-2868">S370_S64_c</name>
+				<label kind="invariant">cl_local&lt;=2</label>
+			</location>
+			<location id="id222" x="6757" y="-6926">
+				<name x="6757" y="-6946">S394</name>
+				<label kind="invariant">cl_local&lt;=2</label>
+			</location>
+			<location id="id224" x="4485" y="-4575">
+				<name x="4485" y="-4595">S50_S15_f</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id225" x="4485" y="-4575">
+				<name x="4485" y="-4595">S50_S96_h</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id226" x="7946" y="-4575">
+				<name x="7946" y="-4595">S122</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id227" x="7096" y="-4575">
+				<name x="7096" y="-4595">S63</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id229" x="4485" y="-3712">
+				<name x="4485" y="-3732">S96_S97_e</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id230" x="4485" y="-3712">
+				<name x="4485" y="-3732">S96_S16_d</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id231" x="8362" y="-3712">
+				<name x="8362" y="-3732">S160</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id232" x="3157" y="-6302">
+				<name x="3157" y="-6322">S172</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id233" x="8368" y="-2225">
+				<name x="8368" y="-2245">S371</name>
+				<label kind="invariant">cl_local&lt;=114</label>
+			</location>
+			<location id="id234" x="7724" y="-5439">
+				<name x="7724" y="-5459">S492</name>
+				<label kind="invariant">cl_local&lt;=5</label>
+			</location>
+			<location id="id235" x="2951" y="-3712">
+				<name x="2951" y="-3732">S62</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id236" x="7529" y="-1819">
+				<name x="7529" y="-1839">S64</name>
+				<label kind="invariant">cl_local&lt;=9</label>
+			</location>
+			<location id="id237" x="2546" y="-5439">
+				<name x="2546" y="-5459">S173</name>
+				<label kind="invariant">cl_local&lt;=16</label>
+			</location>
+			<location id="id238" x="7512" y="-4575">
+				<name x="7512" y="-4595">S493</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id239" x="2757" y="-4575">
+				<name x="2757" y="-4595">S174</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id240" x="7929" y="-3712">
+				<name x="7929" y="-3732">S494</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id241" x="1174" y="-3712">
+				<name x="1174" y="-3732">S589</name>
+				<label kind="invariant">cl_local&lt;=2</label>
+			</location>
+			<location id="id242" x="4890" y="-3712">
+				<name x="4890" y="-3732">S134</name>
+				<label kind="invariant">cl_local&lt;=6</label>
+			</location>
+			<location id="id243" x="8157" y="-5439">
+				<name x="8157" y="-5459">S235</name>
+				<label kind="invariant">cl_local&lt;=19</label>
+			</location>
+			<location id="id244" x="9012" y="-5439">
+				<name x="9012" y="-5459">S433</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id245" x="7418" y="-2848">
+				<name x="7418" y="-2868">S495</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id246" x="3801" y="-6926">
+				<name x="3801" y="-6946">S403</name>
+			</location>
+			<location id="id247" x="6151" y="-2848">
+				<name x="6151" y="-2868">S135</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id248" x="9818" y="-2225">
+				<name x="9818" y="-2245">S319</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id249" x="9012" y="-4575">
+				<name x="9012" y="-4595">S434</name>
+				<label kind="invariant">cl_local&lt;=19</label>
+			</location>
+			<location id="id250" x="10496" y="-1413">
+				<name x="10496" y="-1433">S320</name>
+				<label kind="invariant">cl_local&lt;=5</label>
+			</location>
+			<location id="id251" x="9007" y="-3712">
+				<name x="9007" y="-3732">S435</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id252" x="6651" y="-12479">
+				<name x="6651" y="-12499">S166</name>
+			</location>
+			<location id="id253" x="10496" y="-789">
+				<name x="10496" y="-809">S321</name>
+				<label kind="invariant">cl_local&lt;=114</label>
+			</location>
+			<location id="id254" x="9368" y="-2848">
+				<name x="9368" y="-2868">S436</name>
+				<label kind="invariant">cl_local&lt;=3</label>
+			</location>
+			<location id="id255" x="10496" y="-166">
+				<name x="10496" y="-186">S322</name>
+			</location>
+			<location id="id256" x="8368" y="-1413">
+				<name x="8368" y="-1433">S425</name>
+			</location>
+			<branchpoint id="id1">
+			</branchpoint>
+			<branchpoint id="id7">
+			</branchpoint>
+			<branchpoint id="id14">
+			</branchpoint>
+			<branchpoint id="id19">
+			</branchpoint>
+			<branchpoint id="id27">
+			</branchpoint>
+			<branchpoint id="id31">
+			</branchpoint>
+			<branchpoint id="id36">
+			</branchpoint>
+			<branchpoint id="id40">
+			</branchpoint>
+			<branchpoint id="id43">
+			</branchpoint>
+			<branchpoint id="id47">
+			</branchpoint>
+			<branchpoint id="id57">
+			</branchpoint>
+			<branchpoint id="id61">
+			</branchpoint>
+			<branchpoint id="id66">
+			</branchpoint>
+			<branchpoint id="id70">
+			</branchpoint>
+			<branchpoint id="id73">
+			</branchpoint>
+			<branchpoint id="id76">
+			</branchpoint>
+			<branchpoint id="id79">
+			</branchpoint>
+			<branchpoint id="id88">
+			</branchpoint>
+			<branchpoint id="id93">
+			</branchpoint>
+			<branchpoint id="id97">
+			</branchpoint>
+			<branchpoint id="id103">
+			</branchpoint>
+			<branchpoint id="id108">
+			</branchpoint>
+			<branchpoint id="id113">
+			</branchpoint>
+			<branchpoint id="id119">
+			</branchpoint>
+			<branchpoint id="id125">
+			</branchpoint>
+			<branchpoint id="id129">
+			</branchpoint>
+			<branchpoint id="id134">
+			</branchpoint>
+			<branchpoint id="id138">
+			</branchpoint>
+			<branchpoint id="id141">
+			</branchpoint>
+			<branchpoint id="id145">
+			</branchpoint>
+			<branchpoint id="id148">
+			</branchpoint>
+			<branchpoint id="id158">
+			</branchpoint>
+			<branchpoint id="id162">
+			</branchpoint>
+			<branchpoint id="id165">
+			</branchpoint>
+			<branchpoint id="id173">
+			</branchpoint>
+			<branchpoint id="id182">
+			</branchpoint>
+			<branchpoint id="id186">
+			</branchpoint>
+			<branchpoint id="id189">
+			</branchpoint>
+			<branchpoint id="id193">
+			</branchpoint>
+			<branchpoint id="id197">
+			</branchpoint>
+			<branchpoint id="id211">
+			</branchpoint>
+			<branchpoint id="id215">
+			</branchpoint>
+			<branchpoint id="id219">
+			</branchpoint>
+			<branchpoint id="id223">
+			</branchpoint>
+			<branchpoint id="id228">
+			</branchpoint>
+			<init ref="id0"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="probability">57</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id7"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 25			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id3"/>
+			<label kind="probability">14</label>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id11"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 11			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id4"/>
+			<label kind="probability">8</label>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id12"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 6			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id5"/>
+			<label kind="probability">2</label>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id13"/>
+			<label kind="guard">
+cl_local &gt;= 81 &amp;&amp; cl_local &lt;= 81			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id6"/>
+			<label kind="probability">18</label>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id14"/>
+			<label kind="guard">
+cl_local &gt;= 8 &amp;&amp; cl_local &lt;= 92			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id8"/>
+			<label kind="probability">21</label>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id17"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 8			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id9"/>
+			<label kind="probability">4</label>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id18"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id10"/>
+			<label kind="probability">75</label>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id25"/>
+			<label kind="guard">
+cl_local &gt;= 8 &amp;&amp; cl_local &lt;= 83			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id19"/>
+			<label kind="guard">
+cl_local &gt;= 8 &amp;&amp; cl_local &lt;= 19			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id26"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 8			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id24"/>
+			<label kind="guard">
+cl_local &gt;= 5 &amp;&amp; cl_local &lt;= 5			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id15"/>
+			<label kind="probability">89</label>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id23"/>
+			<label kind="guard">
+cl_local &gt;= 5 &amp;&amp; cl_local &lt;= 89			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id16"/>
+			<label kind="probability">11</label>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id26"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id27"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 14			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id43"/>
+			<label kind="guard">
+cl_local &gt;= 13 &amp;&amp; cl_local &lt;= 13			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id20"/>
+			<label kind="probability">14</label>
+		</transition>
+		<transition>
+			<source ref="id20"/>
+			<target ref="id35"/>
+			<label kind="guard">
+cl_local &gt;= 11 &amp;&amp; cl_local &lt;= 11			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id21"/>
+			<label kind="probability">29</label>
+		</transition>
+		<transition>
+			<source ref="id21"/>
+			<target ref="id46"/>
+			<label kind="guard">
+cl_local &gt;= 39 &amp;&amp; cl_local &lt;= 44			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id22"/>
+			<label kind="probability">57</label>
+		</transition>
+		<transition>
+			<source ref="id22"/>
+			<target ref="id47"/>
+			<label kind="guard">
+cl_local &gt;= 72 &amp;&amp; cl_local &lt;= 83			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id23"/>
+			<target ref="id36"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 11			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id24"/>
+			<target ref="id39"/>
+			<label kind="guard">
+cl_local &gt;= 11 &amp;&amp; cl_local &lt;= 11			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = b,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id25"/>
+			<target ref="id31"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 83			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id26"/>
+			<target ref="id40"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 17			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id27"/>
+			<target ref="id28"/>
+			<label kind="probability">65</label>
+		</transition>
+		<transition>
+			<source ref="id28"/>
+			<target ref="id50"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 81			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id27"/>
+			<target ref="id29"/>
+			<label kind="probability">10</label>
+		</transition>
+		<transition>
+			<source ref="id29"/>
+			<target ref="id56"/>
+			<label kind="guard">
+cl_local &gt;= 13 &amp;&amp; cl_local &lt;= 14			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id27"/>
+			<target ref="id30"/>
+			<label kind="probability">25</label>
+		</transition>
+		<transition>
+			<source ref="id30"/>
+			<target ref="id87"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 11			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id31"/>
+			<target ref="id32"/>
+			<label kind="probability">5</label>
+		</transition>
+		<transition>
+			<source ref="id32"/>
+			<target ref="id56"/>
+			<label kind="guard">
+cl_local &gt;= 17 &amp;&amp; cl_local &lt;= 17			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id31"/>
+			<target ref="id33"/>
+			<label kind="probability">62</label>
+		</transition>
+		<transition>
+			<source ref="id33"/>
+			<target ref="id40"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 19			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id31"/>
+			<target ref="id34"/>
+			<label kind="probability">33</label>
+		</transition>
+		<transition>
+			<source ref="id34"/>
+			<target ref="id54"/>
+			<label kind="guard">
+cl_local &gt;= 5 &amp;&amp; cl_local &lt;= 16			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id35"/>
+			<target ref="id52"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id36"/>
+			<target ref="id37"/>
+			<label kind="probability">62</label>
+		</transition>
+		<transition>
+			<source ref="id37"/>
+			<target ref="id53"/>
+			<label kind="guard">
+cl_local &gt;= 6 &amp;&amp; cl_local &lt;= 20			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = b,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id36"/>
+			<target ref="id38"/>
+			<label kind="probability">38</label>
+		</transition>
+		<transition>
+			<source ref="id38"/>
+			<target ref="id43"/>
+			<label kind="guard">
+cl_local &gt;= 5 &amp;&amp; cl_local &lt;= 14			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id39"/>
+			<target ref="id40"/>
+			<label kind="guard">
+cl_local &gt;= 6 &amp;&amp; cl_local &lt;= 6			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = a,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id40"/>
+			<target ref="id41"/>
+			<label kind="probability">86</label>
+		</transition>
+		<transition>
+			<source ref="id41"/>
+			<target ref="id43"/>
+			<label kind="guard">
+cl_local &gt;= 0 &amp;&amp; cl_local &lt;= 117			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id40"/>
+			<target ref="id42"/>
+			<label kind="probability">14</label>
+		</transition>
+		<transition>
+			<source ref="id42"/>
+			<target ref="id61"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 19			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = b,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id43"/>
+			<target ref="id44"/>
+			<label kind="probability">33</label>
+		</transition>
+		<transition>
+			<source ref="id44"/>
+			<target ref="id40"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 58			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id43"/>
+			<target ref="id45"/>
+			<label kind="probability">67</label>
+		</transition>
+		<transition>
+			<source ref="id45"/>
+			<target ref="id40"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 114			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id46"/>
+			<target ref="id26"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id47"/>
+			<target ref="id48"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id48"/>
+			<target ref="id51"/>
+			<label kind="guard">
+cl_local &gt;= 8 &amp;&amp; cl_local &lt;= 9			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id47"/>
+			<target ref="id49"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id49"/>
+			<target ref="id55"/>
+			<label kind="guard">
+cl_local &gt;= 6 &amp;&amp; cl_local &lt;= 6			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id50"/>
+			<target ref="id27"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 42			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id51"/>
+			<target ref="id65"/>
+			<label kind="guard">
+cl_local &gt;= 11 &amp;&amp; cl_local &lt;= 16			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id52"/>
+			<target ref="id64"/>
+			<label kind="guard">
+cl_local &gt;= 55 &amp;&amp; cl_local &lt;= 55			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id53"/>
+			<target ref="id66"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 6			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id54"/>
+			<target ref="id57"/>
+			<label kind="guard">
+cl_local &gt;= 9 &amp;&amp; cl_local &lt;= 20			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = b,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id55"/>
+			<target ref="id60"/>
+			<label kind="guard">
+cl_local &gt;= 5 &amp;&amp; cl_local &lt;= 8			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id56"/>
+			<target ref="id66"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id57"/>
+			<target ref="id58"/>
+			<label kind="probability">86</label>
+		</transition>
+		<transition>
+			<source ref="id58"/>
+			<target ref="id70"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id57"/>
+			<target ref="id59"/>
+			<label kind="probability">14</label>
+		</transition>
+		<transition>
+			<source ref="id59"/>
+			<target ref="id83"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id60"/>
+			<target ref="id76"/>
+			<label kind="guard">
+cl_local &gt;= 9 &amp;&amp; cl_local &lt;= 9			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = b,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id61"/>
+			<target ref="id62"/>
+			<label kind="probability">89</label>
+		</transition>
+		<transition>
+			<source ref="id62"/>
+			<target ref="id79"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 75			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id61"/>
+			<target ref="id63"/>
+			<label kind="probability">11</label>
+		</transition>
+		<transition>
+			<source ref="id63"/>
+			<target ref="id93"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id64"/>
+			<target ref="id84"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id65"/>
+			<target ref="id73"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id66"/>
+			<target ref="id67"/>
+			<label kind="probability">32</label>
+		</transition>
+		<transition>
+			<source ref="id67"/>
+			<target ref="id86"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id66"/>
+			<target ref="id68"/>
+			<label kind="probability">32</label>
+		</transition>
+		<transition>
+			<source ref="id68"/>
+			<target ref="id66"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 97			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id66"/>
+			<target ref="id69"/>
+			<label kind="probability">37</label>
+		</transition>
+		<transition>
+			<source ref="id69"/>
+			<target ref="id85"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id70"/>
+			<target ref="id71"/>
+			<label kind="probability">67</label>
+		</transition>
+		<transition>
+			<source ref="id71"/>
+			<target ref="id88"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id70"/>
+			<target ref="id72"/>
+			<label kind="probability">33</label>
+		</transition>
+		<transition>
+			<source ref="id72"/>
+			<target ref="id92"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id73"/>
+			<target ref="id74"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id74"/>
+			<target ref="id86"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id73"/>
+			<target ref="id75"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id75"/>
+			<target ref="id96"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id76"/>
+			<target ref="id77"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id77"/>
+			<target ref="id83"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 2			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id76"/>
+			<target ref="id78"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id78"/>
+			<target ref="id66"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 2			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id79"/>
+			<target ref="id80"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id80"/>
+			<target ref="id97"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 6			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id79"/>
+			<target ref="id81"/>
+			<label kind="probability">46</label>
+		</transition>
+		<transition>
+			<source ref="id81"/>
+			<target ref="id119"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id79"/>
+			<target ref="id82"/>
+			<label kind="probability">4</label>
+		</transition>
+		<transition>
+			<source ref="id82"/>
+			<target ref="id85"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id83"/>
+			<target ref="id101"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id84"/>
+			<target ref="id102"/>
+			<label kind="guard">
+cl_local &gt;= 5 &amp;&amp; cl_local &lt;= 14			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id85"/>
+			<target ref="id103"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id86"/>
+			<target ref="id106"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id87"/>
+			<target ref="id53"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 11			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = b,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id88"/>
+			<target ref="id89"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id89"/>
+			<target ref="id107"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id88"/>
+			<target ref="id90"/>
+			<label kind="probability">25</label>
+		</transition>
+		<transition>
+			<source ref="id90"/>
+			<target ref="id112"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 2			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id88"/>
+			<target ref="id91"/>
+			<label kind="probability">25</label>
+		</transition>
+		<transition>
+			<source ref="id91"/>
+			<target ref="id123"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id92"/>
+			<target ref="id108"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id93"/>
+			<target ref="id94"/>
+			<label kind="probability">67</label>
+		</transition>
+		<transition>
+			<source ref="id94"/>
+			<target ref="id111"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id93"/>
+			<target ref="id95"/>
+			<label kind="probability">33</label>
+		</transition>
+		<transition>
+			<source ref="id95"/>
+			<target ref="id208"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id96"/>
+			<target ref="id118"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id97"/>
+			<target ref="id98"/>
+			<label kind="probability">42</label>
+		</transition>
+		<transition>
+			<source ref="id98"/>
+			<target ref="id113"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id97"/>
+			<target ref="id99"/>
+			<label kind="probability">42</label>
+		</transition>
+		<transition>
+			<source ref="id99"/>
+			<target ref="id162"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id97"/>
+			<target ref="id100"/>
+			<label kind="probability">17</label>
+		</transition>
+		<transition>
+			<source ref="id100"/>
+			<target ref="id246"/>
+			<label kind="guard">
+cl_local &gt;= 33 &amp;&amp; cl_local &lt;= 97			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id101"/>
+			<target ref="id117"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id102"/>
+			<target ref="id122"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 114			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id103"/>
+			<target ref="id104"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id104"/>
+			<target ref="id134"/>
+			<label kind="guard">
+cl_local &gt;= 16 &amp;&amp; cl_local &lt;= 22			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id103"/>
+			<target ref="id105"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id105"/>
+			<target ref="id116"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id106"/>
+			<target ref="id124"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id107"/>
+			<target ref="id125"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id108"/>
+			<target ref="id109"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id109"/>
+			<target ref="id128"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id108"/>
+			<target ref="id110"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id110"/>
+			<target ref="id128"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id111"/>
+			<target ref="id129"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id112"/>
+			<target ref="id133"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id113"/>
+			<target ref="id114"/>
+			<label kind="probability">80</label>
+		</transition>
+		<transition>
+			<source ref="id114"/>
+			<target ref="id186"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id113"/>
+			<target ref="id115"/>
+			<label kind="probability">20</label>
+		</transition>
+		<transition>
+			<source ref="id115"/>
+			<target ref="id118"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id116"/>
+			<target ref="id137"/>
+			<label kind="guard">
+cl_local &gt;= 16 &amp;&amp; cl_local &lt;= 22			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id117"/>
+			<target ref="id141"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id118"/>
+			<target ref="id144"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id119"/>
+			<target ref="id120"/>
+			<label kind="probability">82</label>
+		</transition>
+		<transition>
+			<source ref="id120"/>
+			<target ref="id145"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id119"/>
+			<target ref="id121"/>
+			<label kind="probability">18</label>
+		</transition>
+		<transition>
+			<source ref="id121"/>
+			<target ref="id161"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id122"/>
+			<target ref="id138"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id123"/>
+			<target ref="id132"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id124"/>
+			<target ref="id148"/>
+			<label kind="guard">
+cl_local &gt;= 16 &amp;&amp; cl_local &lt;= 25			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id125"/>
+			<target ref="id126"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id126"/>
+			<target ref="id152"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id125"/>
+			<target ref="id127"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id127"/>
+			<target ref="id155"/>
+			<label kind="guard">
+cl_local &gt;= 19 &amp;&amp; cl_local &lt;= 19			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id128"/>
+			<target ref="id153"/>
+			<label kind="guard">
+cl_local &gt;= 17 &amp;&amp; cl_local &lt;= 22			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id129"/>
+			<target ref="id130"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id130"/>
+			<target ref="id154"/>
+			<label kind="guard">
+cl_local &gt;= 22 &amp;&amp; cl_local &lt;= 22			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id129"/>
+			<target ref="id131"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id131"/>
+			<target ref="id171"/>
+			<label kind="guard">
+cl_local &gt;= 25 &amp;&amp; cl_local &lt;= 25			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id132"/>
+			<target ref="id156"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id133"/>
+			<target ref="id157"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id134"/>
+			<target ref="id135"/>
+			<label kind="probability">75</label>
+		</transition>
+		<transition>
+			<source ref="id135"/>
+			<target ref="id158"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id134"/>
+			<target ref="id136"/>
+			<label kind="probability">25</label>
+		</transition>
+		<transition>
+			<source ref="id136"/>
+			<target ref="id40"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id137"/>
+			<target ref="id165"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id138"/>
+			<target ref="id139"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id139"/>
+			<target ref="id252"/>
+			<label kind="guard">
+cl_local &gt;= 69 &amp;&amp; cl_local &lt;= 69			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id138"/>
+			<target ref="id140"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id140"/>
+			<target ref="id123"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 2			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id141"/>
+			<target ref="id142"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id142"/>
+			<target ref="id168"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 2			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id141"/>
+			<target ref="id143"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id143"/>
+			<target ref="id172"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id144"/>
+			<target ref="id169"/>
+			<label kind="guard">
+cl_local &gt;= 19 &amp;&amp; cl_local &lt;= 19			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id145"/>
+			<target ref="id146"/>
+			<label kind="probability">89</label>
+		</transition>
+		<transition>
+			<source ref="id146"/>
+			<target ref="id170"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id145"/>
+			<target ref="id147"/>
+			<label kind="probability">11</label>
+		</transition>
+		<transition>
+			<source ref="id147"/>
+			<target ref="id243"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id148"/>
+			<target ref="id149"/>
+			<label kind="probability">57</label>
+		</transition>
+		<transition>
+			<source ref="id149"/>
+			<target ref="id173"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id148"/>
+			<target ref="id150"/>
+			<label kind="probability">29</label>
+		</transition>
+		<transition>
+			<source ref="id150"/>
+			<target ref="id178"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id148"/>
+			<target ref="id151"/>
+			<label kind="probability">14</label>
+		</transition>
+		<transition>
+			<source ref="id151"/>
+			<target ref="id64"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id152"/>
+			<target ref="id177"/>
+			<label kind="guard">
+cl_local &gt;= 16 &amp;&amp; cl_local &lt;= 16			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id153"/>
+			<target ref="id179"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id154"/>
+			<target ref="id234"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id155"/>
+			<target ref="id203"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id156"/>
+			<target ref="id205"/>
+			<label kind="guard">
+cl_local &gt;= 19 &amp;&amp; cl_local &lt;= 25			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id157"/>
+			<target ref="id181"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id158"/>
+			<target ref="id159"/>
+			<label kind="probability">67</label>
+		</transition>
+		<transition>
+			<source ref="id159"/>
+			<target ref="id182"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id158"/>
+			<target ref="id160"/>
+			<label kind="probability">33</label>
+		</transition>
+		<transition>
+			<source ref="id160"/>
+			<target ref="id204"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id161"/>
+			<target ref="id185"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id162"/>
+			<target ref="id163"/>
+			<label kind="probability">80</label>
+		</transition>
+		<transition>
+			<source ref="id163"/>
+			<target ref="id189"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id162"/>
+			<target ref="id164"/>
+			<label kind="probability">20</label>
+		</transition>
+		<transition>
+			<source ref="id164"/>
+			<target ref="id232"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id165"/>
+			<target ref="id166"/>
+			<label kind="probability">75</label>
+		</transition>
+		<transition>
+			<source ref="id166"/>
+			<target ref="id193"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id165"/>
+			<target ref="id167"/>
+			<label kind="probability">25</label>
+		</transition>
+		<transition>
+			<source ref="id167"/>
+			<target ref="id241"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id168"/>
+			<target ref="id205"/>
+			<label kind="guard">
+cl_local &gt;= 31 &amp;&amp; cl_local &lt;= 31			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id169"/>
+			<target ref="id178"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id170"/>
+			<target ref="id197"/>
+			<label kind="guard">
+cl_local &gt;= 16 &amp;&amp; cl_local &lt;= 22			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id171"/>
+			<target ref="id180"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id172"/>
+			<target ref="id196"/>
+			<label kind="guard">
+cl_local &gt;= 22 &amp;&amp; cl_local &lt;= 22			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id173"/>
+			<target ref="id174"/>
+			<label kind="probability">25</label>
+		</transition>
+		<transition>
+			<source ref="id174"/>
+			<target ref="id64"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 2			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id173"/>
+			<target ref="id175"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id175"/>
+			<target ref="id43"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id173"/>
+			<target ref="id176"/>
+			<label kind="probability">25</label>
+		</transition>
+		<transition>
+			<source ref="id176"/>
+			<target ref="id84"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id177"/>
+			<target ref="id206"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id178"/>
+			<target ref="id43"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id179"/>
+			<target ref="id43"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id180"/>
+			<target ref="id218"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id181"/>
+			<target ref="id210"/>
+			<label kind="guard">
+cl_local &gt;= 22 &amp;&amp; cl_local &lt;= 22			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id182"/>
+			<target ref="id183"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id183"/>
+			<target ref="id242"/>
+			<label kind="guard">
+cl_local &gt;= 5 &amp;&amp; cl_local &lt;= 5			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id182"/>
+			<target ref="id184"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id184"/>
+			<target ref="id43"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id185"/>
+			<target ref="id211"/>
+			<label kind="guard">
+cl_local &gt;= 19 &amp;&amp; cl_local &lt;= 19			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id186"/>
+			<target ref="id187"/>
+			<label kind="probability">75</label>
+		</transition>
+		<transition>
+			<source ref="id187"/>
+			<target ref="id214"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id186"/>
+			<target ref="id188"/>
+			<label kind="probability">25</label>
+		</transition>
+		<transition>
+			<source ref="id188"/>
+			<target ref="id244"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id189"/>
+			<target ref="id190"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id190"/>
+			<target ref="id215"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id189"/>
+			<target ref="id191"/>
+			<label kind="probability">25</label>
+		</transition>
+		<transition>
+			<source ref="id191"/>
+			<target ref="id177"/>
+			<label kind="guard">
+cl_local &gt;= 19 &amp;&amp; cl_local &lt;= 19			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id189"/>
+			<target ref="id192"/>
+			<label kind="probability">25</label>
+		</transition>
+		<transition>
+			<source ref="id192"/>
+			<target ref="id235"/>
+			<label kind="guard">
+cl_local &gt;= 22 &amp;&amp; cl_local &lt;= 22			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id193"/>
+			<target ref="id194"/>
+			<label kind="probability">67</label>
+		</transition>
+		<transition>
+			<source ref="id194"/>
+			<target ref="id43"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id193"/>
+			<target ref="id195"/>
+			<label kind="probability">33</label>
+		</transition>
+		<transition>
+			<source ref="id195"/>
+			<target ref="id40"/>
+			<label kind="guard">
+cl_local &gt;= 5 &amp;&amp; cl_local &lt;= 5			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id196"/>
+			<target ref="id204"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id197"/>
+			<target ref="id198"/>
+			<label kind="probability">25</label>
+		</transition>
+		<transition>
+			<source ref="id198"/>
+			<target ref="id178"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id197"/>
+			<target ref="id199"/>
+			<label kind="probability">12</label>
+		</transition>
+		<transition>
+			<source ref="id199"/>
+			<target ref="id64"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id197"/>
+			<target ref="id200"/>
+			<label kind="probability">12</label>
+		</transition>
+		<transition>
+			<source ref="id200"/>
+			<target ref="id248"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id197"/>
+			<target ref="id201"/>
+			<label kind="probability">25</label>
+		</transition>
+		<transition>
+			<source ref="id201"/>
+			<target ref="id207"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id197"/>
+			<target ref="id202"/>
+			<label kind="probability">25</label>
+		</transition>
+		<transition>
+			<source ref="id202"/>
+			<target ref="id209"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id203"/>
+			<target ref="id204"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id204"/>
+			<target ref="id218"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id205"/>
+			<target ref="id40"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id206"/>
+			<target ref="id84"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id207"/>
+			<target ref="id219"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id208"/>
+			<target ref="id222"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id209"/>
+			<target ref="id204"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id210"/>
+			<target ref="id204"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id211"/>
+			<target ref="id212"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id212"/>
+			<target ref="id206"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id211"/>
+			<target ref="id213"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id213"/>
+			<target ref="id64"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id214"/>
+			<target ref="id223"/>
+			<label kind="guard">
+cl_local &gt;= 19 &amp;&amp; cl_local &lt;= 22			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id215"/>
+			<target ref="id216"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id216"/>
+			<target ref="id226"/>
+			<label kind="guard">
+cl_local &gt;= 16 &amp;&amp; cl_local &lt;= 16			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id215"/>
+			<target ref="id217"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id217"/>
+			<target ref="id227"/>
+			<label kind="guard">
+cl_local &gt;= 19 &amp;&amp; cl_local &lt;= 19			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id218"/>
+			<target ref="id43"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 5			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = b,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id219"/>
+			<target ref="id220"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id220"/>
+			<target ref="id233"/>
+			<label kind="guard">
+cl_local &gt;= 5 &amp;&amp; cl_local &lt;= 5			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id219"/>
+			<target ref="id221"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id221"/>
+			<target ref="id236"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 2			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id222"/>
+			<target ref="id128"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 2			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id223"/>
+			<target ref="id224"/>
+			<label kind="probability">33</label>
+		</transition>
+		<transition>
+			<source ref="id224"/>
+			<target ref="id64"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id223"/>
+			<target ref="id225"/>
+			<label kind="probability">67</label>
+		</transition>
+		<transition>
+			<source ref="id225"/>
+			<target ref="id228"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id226"/>
+			<target ref="id231"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id227"/>
+			<target ref="id84"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id228"/>
+			<target ref="id229"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id229"/>
+			<target ref="id203"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id228"/>
+			<target ref="id230"/>
+			<label kind="probability">50</label>
+		</transition>
+		<transition>
+			<source ref="id230"/>
+			<target ref="id84"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id231"/>
+			<target ref="id64"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id232"/>
+			<target ref="id237"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id233"/>
+			<target ref="id256"/>
+			<label kind="guard">
+cl_local &gt;= 114 &amp;&amp; cl_local &lt;= 114			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id234"/>
+			<target ref="id238"/>
+			<label kind="guard">
+cl_local &gt;= 5 &amp;&amp; cl_local &lt;= 5			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id235"/>
+			<target ref="id64"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = g,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id236"/>
+			<target ref="id43"/>
+			<label kind="guard">
+cl_local &gt;= 9 &amp;&amp; cl_local &lt;= 9			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = b,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id237"/>
+			<target ref="id239"/>
+			<label kind="guard">
+cl_local &gt;= 16 &amp;&amp; cl_local &lt;= 16			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id238"/>
+			<target ref="id240"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = b,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id239"/>
+			<target ref="id235"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id240"/>
+			<target ref="id245"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id241"/>
+			<target ref="id27"/>
+			<label kind="guard">
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 2			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = f,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id242"/>
+			<target ref="id247"/>
+			<label kind="guard">
+cl_local &gt;= 6 &amp;&amp; cl_local &lt;= 6			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = d,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id243"/>
+			<target ref="id226"/>
+			<label kind="guard">
+cl_local &gt;= 19 &amp;&amp; cl_local &lt;= 19			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id244"/>
+			<target ref="id249"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = i,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id245"/>
+			<target ref="id84"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = b,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id247"/>
+			<target ref="id102"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id248"/>
+			<target ref="id250"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id249"/>
+			<target ref="id251"/>
+			<label kind="guard">
+cl_local &gt;= 19 &amp;&amp; cl_local &lt;= 19			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = j,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id250"/>
+			<target ref="id253"/>
+			<label kind="guard">
+cl_local &gt;= 5 &amp;&amp; cl_local &lt;= 5			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = b,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id251"/>
+			<target ref="id254"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = h,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id253"/>
+			<target ref="id255"/>
+			<label kind="guard">
+cl_local &gt;= 114 &amp;&amp; cl_local &lt;= 114			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = c,
+cl_local = 0
+			</label>
+		</transition>
+		<transition>
+			<source ref="id254"/>
+			<target ref="id248"/>
+			<label kind="guard">
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = e,
+cl_local = 0
+			</label>
+		</transition>
+	</template>	<template>
+		<name>TagObserver</name>
+		<declaration>
+clock cl_observer,cl_spike,cl_flat;
+bool SPIKE_seen = false;
+		</declaration>
+			<location id="id257" x="0" y="0">
+				<name x="0" y="-20">START</name>
+			</location>
+		<label kind="invariant">cl_observer &lt;= 0</label>
+			<location id="id258" x="300" y="300">
+				<name x="300" y="280">FLAT</name>
+			</location>
+		<label kind="invariant">cl_observer &lt;= 1</label>
+			<location id="id259" x="900" y="0">
+				<name x="900" y="-20">SPIKE</name>
+			</location>
+		<label kind="invariant">cl_observer &lt;= 1</label>
+		<init ref="id257"/>
+		<transition>
+			<source ref="id257"/>
+			<target ref="id258"/>
+			<label kind="guard">(temp &lt;= flat_threshold)</label>
+			<label kind="assignment">cl_observer = 0, cl_flat = 0, cl_spike = 0</label>
+		</transition>
+		<transition>
+			<source ref="id258"/>
+			<target ref="id258"/>
+			<label kind="guard">(temp &lt;= flat_threshold &amp;&amp; cl_observer &gt;= 1 ) </label>
+			<label kind="assignment">cl_observer = 0</label>
+		</transition>
+		<transition>
+			<source ref="id258"/>
+			<target ref="id259"/>
+			<label kind="guard">(temp &gt;= spike_threshold)</label>
+			<label kind="assignment">cl_observer = 0, cl_flat = 0, cl_spike = 0,SPIKE_seen = true</label>
+		</transition>
+		<transition>
+			<source ref="id259"/>
+			<target ref="id259"/>
+			<label kind="guard">(temp &gt;= spike_threshold) &amp;&amp; cl_observer &gt;= 1</label>
+			<label kind="assignment">cl_observer = 0</label>
+		</transition>
+		<transition>
+			<source ref="id259"/>
+			<target ref="id258"/>
+			<label kind="guard">(temp &lt;= flat_threshold)</label>
+			<label kind="assignment">cl_observer = 0,cl_flat = 0, cl_spike = 0</label>
+		</transition>
+	</template>
+	<system>
+Automaton = TagModel();
+Observer = TagObserver();
+system Automaton, Observer;
+	</system>
+	<queries>
+
+		<query>
+			<formula>simulate [&lt;=275; 10000] { temp } </formula>
+			<comment>Generate simulation traces of the temperature signal for visual inspection of spike and flat behavior</comment>
+		</query>
+
+		<query>
+		</query>
+
+		<query>
+			<formula>E&lt;&gt; Automaton.S37 || Automaton.S38 || Automaton.S9 || Automaton.S18 || Automaton.S403 || Automaton.S166 || Automaton.S322 || Automaton.S425</formula>
+			<comment>Check that the model can reach an accepting state</comment>
+		</query>
+
+		<query>
+			<formula>E&lt;&gt; Observer.SPIKE</formula>
+			<comment>Verify that at least one spike event is possible</comment>
+		</query>
+
+		<query>
+			<formula>E&lt;&gt; Observer.FLAT &amp;&amp; Observer.SPIKE_seen</formula>
+			<comment>Verify that the system can return to a flat region after a spike</comment>
+		</query>
+
+		<query>
+			<formula>E&lt;&gt; Observer.FLAT &amp;&amp; !Observer.SPIKE_seen</formula>
+			<comment>Verify that a flat region can exist before the first spike</comment>
+		</query>
+
+		<query>
+			<formula>E&lt;&gt; Observer.FLAT &amp;&amp; !Observer.SPIKE_seen &amp;&amp; Observer.cl_flat &gt;= flat_window</formula>
+			<comment>Check that the initial flat region lasts at least flat_window time units</comment>
+		</query>
+
+		<query>
+			<formula>E&lt;&gt; Observer.FLAT &amp;&amp; Observer.SPIKE_seen &amp;&amp; Observer.cl_flat &gt;= flat_window</formula>
+			<comment>Check that the recovery flat region after a spike lasts at least flat_window time units</comment>
+		</query>
+
+		<query>
+			<formula>E&lt;&gt; Observer.SPIKE &amp;&amp; Observer.cl_spike &gt;= spike_window</formula>
+			<comment>Check that a spike can last at least spike_window time units</comment>
+		</query>
+
+		<query>
+		</query>
+
+		<query>
+			<formula>A[] not deadlock</formula>
+			<comment>Ensure that the model is deadlock-free in all reachable states</comment>
+		</query>
+
+		<query>
+		</query>
+
+		<query>
+			<formula>A&lt;&gt; Automaton.S37 || Automaton.S38 || Automaton.S9 || Automaton.S18 || Automaton.S403 || Automaton.S166 || Automaton.S322 || Automaton.S425</formula>
+			<comment>Check that the model can reach an accepting state for all paths</comment>
+		</query>
+
+		<query>
+			<formula>A&lt;&gt; Observer.SPIKE</formula>
+			<comment>Every execution eventually reaches a spike</comment>
+		</query>
+
+		<query>
+			<formula>A&lt;&gt; Observer.FLAT &amp;&amp; Observer.SPIKE_seen</formula>
+			<comment>Every execution eventually goes through a spike and reaches a recovery flat</comment>
+		</query>
+
+		<query>
+			<formula>A&lt;&gt; Observer.FLAT &amp;&amp; !Observer.SPIKE_seen</formula>
+			<comment>Every execution eventually reaches an initial flat before spike</comment>
+		</query>
+
+		<query>
+			<formula>A&lt;&gt; Observer.FLAT &amp;&amp; !Observer.SPIKE_seen &amp;&amp; Observer.cl_flat &gt;= flat_window</formula>
+			<comment>Every execution eventually has initial flat lasting at least flat_window</comment>
+		</query>
+
+		<query>
+			<formula>A&lt;&gt; Observer.FLAT &amp;&amp; Observer.SPIKE_seen &amp;&amp; Observer.cl_flat &gt;= flat_window</formula>
+			<comment>Every execution eventually has recovery flat lasting at least flat_window</comment>
+		</query>
+
+		<query>
+			<formula>A&lt;&gt; Observer.SPIKE &amp;&amp; Observer.cl_spike &gt;= spike_window</formula>
+			<comment>Every execution eventually has a spike lasting at least spike_window</comment>
+		</query>
+
+		<query>
+		</query>
+
+		<query>
+			<formula>Pr[&lt;=275; 10000] (&lt;&gt; (Automaton.S37 || Automaton.S38 || Automaton.S9 || Automaton.S18 || Automaton.S403 || Automaton.S166 || Automaton.S322 || Automaton.S425)) </formula>
+			<comment>Probability that accept state reached during the simulation time</comment>
+		</query>
+
+		<query>
+			<formula>Pr[&lt;=275; 10000] (&lt;&gt; (Observer.SPIKE)) </formula>
+			<comment>Probability that at least one spike occurs within the simulation time</comment>
+		</query>
+
+		<query>
+			<formula>Pr[&lt;=275; 10000] (&lt;&gt; (Observer.FLAT &amp;&amp; Observer.SPIKE_seen)) </formula>
+			<comment>Probability that a full cycle (flat->spike->flat) occurs</comment>
+		</query>
+
+		<query>
+			<formula>Pr[&lt;=275; 10000] (&lt;&gt; (Observer.FLAT &amp;&amp; !Observer.SPIKE_seen)) </formula>
+			<comment>Probability that an initial flat region occurs before any spike</comment>
+		</query>
+
+		<query>
+			<formula>Pr[&lt;=275; 10000] (&lt;&gt; (Observer.FLAT &amp;&amp; Observer.SPIKE_seen &amp;&amp; Observer.cl_flat &gt;= flat_window)) </formula>
+			<comment>Probability that flat region lasts at least flat_window time units after a spike</comment>
+		</query>
+
+		<query>
+			<formula>Pr[&lt;=275; 10000] (&lt;&gt; (Observer.FLAT &amp;&amp; !Observer.SPIKE_seen &amp;&amp; Observer.cl_flat &gt;= flat_window)) </formula>
+			<comment>Probability that flat region lasts at least flat_window time units before a spike</comment>
+		</query>
+
+		<query>
+			<formula>Pr[&lt;=275; 10000] (&lt;&gt; (Observer.SPIKE &amp;&amp; Observer.cl_spike &gt;= spike_window)) </formula>
+			<comment>Probability that spike lasts at least spike_window time units</comment>
+		</query>
+
+	</queries>
+</nta>

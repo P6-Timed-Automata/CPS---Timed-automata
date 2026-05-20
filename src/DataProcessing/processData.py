@@ -130,7 +130,7 @@ def extract_time_intervals(input_file, output_folder, output_prefix, trace_days=
 
     print(f"Saved {trace_idx - 1} traces of {trace_days} day(s).")
 
-
+from natsort import natsorted
 def get_trace_files(folder_path, extension=".csv", max_files=None,):
     files = []
 
@@ -138,6 +138,7 @@ def get_trace_files(folder_path, extension=".csv", max_files=None,):
         if f.endswith(extension):
             full_path = os.path.join(folder_path, f)
             files.append(full_path)
+
 
     if max_files is not None:
         files = files[:max_files]

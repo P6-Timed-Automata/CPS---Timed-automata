@@ -29,9 +29,10 @@ from DataProcessing.processData import (
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # PARAMETERS SETTINGS
-data_type ="temp"
+data_type ="ecg"
 room = "A"
 discretization_method = "persist"
+sim_nr = 10000
 period_nr = 1
 
 if data_type == "temp":
@@ -39,12 +40,12 @@ if data_type == "temp":
     time = 86400
 elif data_type == "ecg":
     period = "1beat"
-    time = 250
+    time = 275
 
 
 
 #Parameters for Persist
-break_max = 10
+break_max = 15
 break_min = 2
 skip_min = 4
 skip_max = 4
@@ -71,8 +72,7 @@ p = Persist(x = ts, break_min=break_min, break_max=break_max, divergence="w", ca
 bins = get_best_bins(p, ts)
 symbols = len(bins) - 1
 
-print("bins",bins)
-print("symbols", symbols)
+
 
 train_traces = discretize_traces_with_bins(train_raw_lists, bins)
 symbolic_train_trace, symbol_map, mapping = map_bins_to_symbols(train_traces, bins)
@@ -102,15 +102,15 @@ elif(data_type == "ecg"):
     log_data_path = BASE_DIR /"Data" /"8-LoggedData" /"metrics"/ f"{discretization_method}-ecg-log.csv"
 
 # Parameter for nr of Traces
-#len_traces = len(train_raw_traces)  + 1
-#start_traces = 1
-#len_traces = 2
+len_traces = len(train_raw_traces)  + 1
+start_traces = 1
+len_traces = 51
 
-trace_list = [1, 10, 20, 30, 40, 50]
+trace_list = [500,600,700,800,900,1000]
 
 
 
-for trace_nr in trace_list:
+for trace_nr in trace_list: #range(start_traces, len_traces):
 
     # Paths
     discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
@@ -141,8 +141,8 @@ for trace_nr in trace_list:
 
         # Transform to TA
         learner = TALearner(tss_path=discretinize_data_path, display=False, k=k)
-        learner.ta.show(title = title, savePng = True, output_path = TA_output_path)
-        learner.ta.export_ta(ta=learner.ta, path=xml_path, symbol_map=symbol_map, data_type = data_type, time = time)
+        # learner.ta.show(title = title, savePng = True, output_path = TA_output_path)
+        learner.ta.export_ta(ta=learner.ta, path=xml_path, symbol_map=symbol_map, data_type = data_type, time = time, sim_nr=sim_nr)
 
         # Compute metrics
         metrics = learner.ta.evaluate_classifier(positive_tss = test_positive_traces_lists, negative_tss = test_negative_traces_lists,  save_path = log_data_path, run_id= run_id, timed=True)
