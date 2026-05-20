@@ -21,7 +21,16 @@ GRAPH_DIR.mkdir(parents=True, exist_ok=True)
 REAL_TRAIN_DIR = DATA_DIR / "3-ExtractInterval" / "1day-experiment" / "A-train"
 REAL_TEST_DIR = DATA_DIR / "3-ExtractInterval" / "1day-experiment" / "A-test" / "positive"
 
-SIMULATION_FILE = DATA_DIR / "7-ExtractedUppaalGraphData" / "1kSimulationsTemp.csv"
+SIMULATION_FILE = DATA_DIR / "7-ExtractedUppaalGraphData" / "SAX" /"1kSimulationsTemp.csv"
+
+SIM_NAME = "1k-sims"
+
+#outpufiler
+SIM_RESULTS_DIR = RESULTS_DIR / SIM_NAME
+SIM_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+
+SIM_GRAPH_DIR = GRAPH_DIR / SIM_NAME
+SIM_GRAPH_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ======================================================
@@ -175,9 +184,12 @@ results = pd.DataFrame([train_result, test_result])
 # SAVE RESULTS
 # ======================================================
 
-results.to_csv(RESULTS_DIR / "validation_summary_1k.csv", index=False)
+results.to_csv(
+    SIM_RESULTS_DIR / f"validation_summary_{SIM_NAME}.csv",
+    index=False
+)
 
-print("\nSaved: validation_summary_1k.csv")
+print(f"\nSaved: validation_summary_{SIM_NAME}.csv")
 
 
 # ======================================================
@@ -209,7 +221,11 @@ plt.title("Temperature Distribution: Train vs Test vs Simulation")
 plt.legend()
 plt.grid()
 
-plt.savefig(GRAPH_DIR / "histogram_train_test_sim-1k.png", dpi=300, bbox_inches="tight")
+plt.savefig(
+    SIM_GRAPH_DIR / f"histogram_train_test_sim_{SIM_NAME}.png",
+    dpi=300,
+    bbox_inches="tight"
+)
 plt.close()
 
 
@@ -243,7 +259,11 @@ plt.title("Time Series: Train vs Simulation")
 plt.legend()
 plt.grid()
 
-plt.savefig(GRAPH_DIR / "timeseries_train_vs_sim-1k.png", dpi=300, bbox_inches="tight")
+plt.savefig(
+    SIM_GRAPH_DIR / f"timeseries_train_vs_sim_{SIM_NAME}.png",
+    dpi=300,
+    bbox_inches="tight"
+)
 plt.close()
 
 
@@ -274,5 +294,9 @@ plt.xticks(np.arange(0, 25, 2))
 plt.legend()
 plt.grid()
 
-plt.savefig(GRAPH_DIR / "timeseries_test_vs_sim-1k.png", dpi=300, bbox_inches="tight")
+plt.savefig(
+    SIM_GRAPH_DIR / f"timeseries_test_vs_sim_{SIM_NAME}.png",
+    dpi=300,
+    bbox_inches="tight"
+)
 plt.close()
