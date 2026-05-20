@@ -32,7 +32,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # PARAMETERS SETTINGS
-data_type ="ecg"
+data_type ="temp"
 room = "A"
 discretization_method = "sax"
 sim_nr = 10000
@@ -51,7 +51,7 @@ elif data_type == "ecg":
 # Parameter for SAX
 symbols = 15
 # w = 200
-w_values = [24,48,288]
+w_values = [24]
 
 # Parameter for TAG
 k_min = 4
@@ -134,7 +134,7 @@ len_traces = len(train_raw_traces)  + 1
 start_traces = 1
 len_traces = 51
 
-trace_list = [500,600,800,900,1000]
+# trace_list = [500,600,800,900,1000]
 
 
 
@@ -166,7 +166,7 @@ for w in w_values:
 
 
 
-    for trace_nr in  trace_list: #range(start_traces, len_traces):
+    for trace_nr in range(start_traces, len_traces):
         # Paths
         discretinize_data_path = (BASE_DIR/ "Data"/ "4-DiscretizationData"/ discretization_method / period
                                   / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
