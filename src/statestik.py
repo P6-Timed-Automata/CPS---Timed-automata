@@ -428,7 +428,7 @@ for sim_file in simulation_files:
     # OUTPUT STRUCTURE
     # ======================================================
 
-    GROUP_RESULTS_DIR = RESULTS_DIR / method / TEMP_GROUP / SCENARIO
+    GROUP_RESULTS_DIR = RESULTS_DIR / method 
     GROUP_GRAPH_DIR = GRAPH_DIR / method / TEMP_GROUP / SCENARIO
 
     GROUP_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
