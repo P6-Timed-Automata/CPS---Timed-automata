@@ -68,7 +68,7 @@ symbolic_train_trace, symbol_map, mapping = map_bins_to_symbols(train_traces, bi
 #Prepare test traces (positive and negative samples)
 if (data_type == "temp"):
     test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/positive"
-    test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/negative"
+    test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/negative/combined"
 elif(data_type == "ecg"):
     test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" /  "ecg" / f"{period}-experiment"/ f"{period}-test/positive"
     test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{period}-experiment"/f"{period}-test/negative"
@@ -80,7 +80,7 @@ test_positive_raw_lists = csv_to_temp_time_list(input_files=test_positive_raw_tr
 test_negative_raw_lists = csv_to_temp_time_list(input_files=test_negative_raw_traces)
 
 
-test_positive_traces_lists = preprocess_test_traces(test_traces = test_positive_raw_lists, bins = bins )
+test_positive_traces_lists = preprocess_test_traces(test_traces = test_positive_raw_lists, bins = bins)
 test_negative_traces_lists = preprocess_test_traces(test_traces = test_negative_raw_lists, bins = bins)
 
 
@@ -106,12 +106,13 @@ elif(data_type == "ecg"):
 # Parameter for nr of Traces
 len_traces = len(train_raw_traces)  + 1
 start_traces = 1
-len_traces = 5
-# for trace_nr in range(start_traces, len_traces):
+len_traces = 2
 
-trace_list = [1, 10, 20, 30, 40, 50]
+trace_list = [100,200,300,400,500]
 
-for trace_nr in trace_list:
+for trace_nr in  trace_list:  #(start_traces, len_traces):
+
+
     # Paths
 
     if (data_type == "temp"):
@@ -129,6 +130,7 @@ for trace_nr in trace_list:
 
 
 
+
     # Loop over varying K-future
     for k in range(k_min, k_max + 1, k_increment):
 
@@ -141,7 +143,7 @@ for trace_nr in trace_list:
 
         # Tranform to TA
         learner = TALearner(tss_path=discretinize_data_path,display=False,k=k )
-        learner.ta.show(title=title,savePng=True,output_path=TA_output_path)
+        # learner.ta.show(title=title,savePng=True,output_path=TA_output_path)
         learner.ta.export_ta(ta = learner.ta, path=xml_path, symbol_map=symbol_map, data_type = data_type, time = time, sim_nr = sim_nr )
 
         # Compute metrics

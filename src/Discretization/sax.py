@@ -104,18 +104,33 @@ def sax_discretization_multi(data_lists, w, k):
         ])
 
     # ---- SAFE BIN CONSTRUCTION ----
-    all_norm_vals = np.array(all_norm_vals)
+    # all_norm_vals = np.array(all_norm_vals)
+    #
+    # if len(all_norm_vals) == 0:
+    #     bins = breakpoints
+    # else:
+    #     bins = np.concatenate((
+    #         [np.min(all_norm_vals)],
+    #         breakpoints,
+    #         [np.max(all_norm_vals)]
+    #     ))
 
-    if len(all_norm_vals) == 0:
-        bins = breakpoints
-    else:
-        bins = np.concatenate((
-            [np.min(all_norm_vals)],
-            breakpoints,
-            [np.max(all_norm_vals)]
-        ))
+    # convert z-space breakpoints into value-space bins
+    # bins = (breakpoints * global_std) + global_mean
 
-    return discretized, bins, global_mean, global_std
+    data_min = np.min(all_v)
+    data_max = np.max(all_v)
+
+    bins = np.concatenate((
+        [data_min],
+        (breakpoints * global_std) + global_mean,
+        [data_max]
+    ))
+
+
+
+    return discretized, bins, breakpoints, global_mean, global_std
+
 
 def sax_discretization(trace1, trace2, w, k):
     """
