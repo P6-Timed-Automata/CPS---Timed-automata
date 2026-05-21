@@ -89,21 +89,13 @@ def _write_collapsed(symbolic_traces, output_path):
     with open(output_path, "w") as f:
         f.write("\n".join(lines))
 
-
-def _preprocess_test(test_data_list, bins, n_symbols):
+def _preprocess_test(test_data_list, bins, n_symbols, mark_out_of_range=True):
     """
-    Discretise test traces using training bins and return collapsed timed strings.
-
-    Parameters
-    ----------
-    test_data_list : [[(temp, time), ...], ...]
-    bins           : bin edges (length n_symbols + 1)
-    n_symbols      : number of symbols
-
-    Returns
-    -------
-    list of timed-string lists, e.g. [["a:600", "b:300"], ...]
+    Discretise test traces with training bins. Values outside [bins[0], bins[-1]]
+    become OUT_OF_RANGE_SYMBOL='?' instead of being clipped, so any OOD sample
+    causes alphabet mismatch in the learned TA.
     """
+    OUT_OF_RANGE_SYMBOL = '?'
     alphabet = list(string.ascii_lowercase)[:n_symbols]
     mapping  = {i: alphabet[i] for i in range(n_symbols)}
     k        = len(bins) - 1
@@ -113,22 +105,66 @@ def _preprocess_test(test_data_list, bins, n_symbols):
         values = np.array([v for v, _ in trace])
         times  = np.array([t for _, t in trace], dtype=float)
 
+        # digitize: -1 for v<bins[0], k for v>=bins[-1], i for in-range bin i.
         labels = np.digitize(values, bins) - 1
-        labels = np.clip(labels, 0, k - 1)
+        # The top edge belongs to the top bin, not to "out of range above".
+        labels = np.where(values == bins[-1], k - 1, labels)
 
-        # Build (symbol, time) pairs then collapse
-        sym_time = [(mapping[l], int(times[i])) for i, l in enumerate(labels)]
+        if mark_out_of_range:
+            in_range = (labels >= 0) & (labels < k)
+            sym_time = [
+                (mapping[int(l)] if ok else OUT_OF_RANGE_SYMBOL, int(times[i]))
+                for i, (l, ok) in enumerate(zip(labels, in_range))
+            ]
+        else:
+            labels   = np.clip(labels, 0, k - 1)
+            sym_time = [(mapping[int(l)], int(times[i])) for i, l in enumerate(labels)]
+
         result.append(_collapse_symbolic(sym_time))
 
     return result
+# def _preprocess_test(test_data_list, bins, n_symbols):
+#     """
+#     Discretise test traces using training bins and return collapsed timed strings.
+#
+#     Parameters
+#     ----------
+#     test_data_list : [[(temp, time), ...], ...]
+#     bins           : bin edges (length n_symbols + 1)
+#     n_symbols      : number of symbols
+#
+#     Returns
+#     -------
+#     list of timed-string lists, e.g. [["a:600", "b:300"], ...]
+#     """
+#     alphabet = list(string.ascii_lowercase)[:n_symbols]
+#     mapping  = {i: alphabet[i] for i in range(n_symbols)}
+#     k        = len(bins) - 1
+#
+#     result = []
+#     for trace in test_data_list:
+#         values = np.array([v for v, _ in trace])
+#         times  = np.array([t for _, t in trace], dtype=float)
+#
+#         labels = np.digitize(values, bins) - 1
+#         labels = np.clip(labels, 0, k - 1)
+#
+#         # Build (symbol, time) pairs then collapse
+#         sym_time = [(mapping[l], int(times[i])) for i, l in enumerate(labels)]
+#         result.append(_collapse_symbolic(sym_time))
+#
+#     return result
 
 
 def _preprocess_test_sax(test_data_list, w, n_symbols, breakpoints,
-                         global_mean, global_std):
+                         global_mean, global_std,
+                         value_range=None, mark_out_of_range=True):
     """
-    SAX test preprocessing using training global stats and breakpoints.
-    Applies same global normalisation + PAA as training, then collapses.
+    SAX test preprocessing. If value_range=(min_train, max_train) is given and
+    mark_out_of_range=True, PAA segments whose raw mean falls outside the
+    training value range are emitted as '?' rather than digitized.
     """
+    OUT_OF_RANGE_SYMBOL = '?'
     alphabet = list(string.ascii_lowercase)[:n_symbols]
     mapping  = {i: alphabet[i] for i in range(n_symbols)}
 
@@ -137,19 +173,29 @@ def _preprocess_test_sax(test_data_list, w, n_symbols, breakpoints,
         v = np.array([val for val, _ in trace], dtype=float)
         t = np.array([tim for _, tim in trace], dtype=float)
 
-        # Global normalisation (same as training)
         v_norm = (v - global_mean) / global_std if global_std != 0 else np.zeros_like(v)
 
-        # PAA
-        v_segs  = np.array_split(v_norm, w)
-        t_segs  = np.array_split(t, w)
-        paa_v   = np.array([seg.mean() for seg in v_segs])
-        paa_t   = np.array([int(seg.mean()) for seg in t_segs])
+        # PAA in both raw and z-space — raw is needed for OOD detection,
+        # z-space for digitization against Gaussian breakpoints.
+        v_segs_raw  = np.array_split(v,      w)
+        v_segs_norm = np.array_split(v_norm, w)
+        t_segs      = np.array_split(t,      w)
 
-        labels  = np.digitize(paa_v, breakpoints, right=False)
-        labels  = np.clip(labels, 0, n_symbols - 1)
+        paa_v_raw  = np.array([seg.mean() for seg in v_segs_raw])
+        paa_v_norm = np.array([seg.mean() for seg in v_segs_norm])
+        paa_t      = np.array([int(seg.mean()) for seg in t_segs])
 
-        sym_time = [(mapping[l], int(paa_t[i])) for i, l in enumerate(labels)]
+        labels = np.digitize(paa_v_norm, breakpoints, right=False)
+        labels = np.clip(labels, 0, n_symbols - 1)
+
+        sym_time = []
+        for i, l in enumerate(labels):
+            oor = (mark_out_of_range and value_range is not None
+                   and (paa_v_raw[i] < value_range[0]
+                        or paa_v_raw[i] > value_range[1]))
+            sym = OUT_OF_RANGE_SYMBOL if oor else mapping[int(l)]
+            sym_time.append((sym, int(paa_t[i])))
+
         result.append(_collapse_symbolic(sym_time))
 
     return result
@@ -212,6 +258,7 @@ def run_pipeline(
         all_v        = np.concatenate([np.array([v for v, _ in tr]) for tr in train_list])
         global_mean  = float(all_v.mean())
         global_std   = float(all_v.std()) if all_v.std() != 0 else 1.0
+        value_range = (float(all_v.min()), float(all_v.max()))
 
         traces_disc, bins_z, _, _ = sax_discretization_multi(
             train_list, w=w, k=k
@@ -223,9 +270,15 @@ def run_pipeline(
         _write_collapsed(sym_train, tmp_path)
 
         pos_strings = _preprocess_test_sax(pos_list, w, n_symbols,
-                                           breakpoints, global_mean, global_std)
+                                           breakpoints, global_mean, global_std,
+                                           value_range=value_range)
         neg_strings = _preprocess_test_sax(neg_list, w, n_symbols,
-                                           breakpoints, global_mean, global_std)
+                                           breakpoints, global_mean, global_std,
+                                           value_range=value_range)
+        # pos_strings = _preprocess_test_sax(pos_list, w, n_symbols,
+        #                                    breakpoints, global_mean, global_std)
+        # neg_strings = _preprocess_test_sax(neg_list, w, n_symbols,
+        #                                    breakpoints, global_mean, global_std)
 
     elif method == "persist":
         ts           = flatten_traces_to_ts(train_list)
