@@ -211,14 +211,16 @@ def get_negatives_inline(clean_trace, seed: int = 42):
 # ============================================================
 # FIGURE 1 - Single clean + single noisy trace
 # ============================================================
-
-def fig1_single_traces(clean_traces, noisy_traces, out_path):
-    fig, axes = plt.subplots(1, 2, figsize=(14, 4))
-
-    for ax, trace, color, title in [
-        (axes[0], clean_traces[0], COLOR_CLEAN, "Clean synthetic trace - example"),
-        (axes[1], noisy_traces[0], COLOR_NOISY, "Noisy synthetic trace - example"),
-    ]:
+def fig1_single_traces(clean_traces, noisy_traces, out_dir):
+    """Save the clean example and the noisy example as separate SVGs."""
+    panels = [
+        (clean_traces[0], COLOR_CLEAN, "Clean synthetic trace - example",
+         "fig1_clean_trace.svg"),
+        (noisy_traces[0], COLOR_NOISY, "Noisy synthetic trace - example",
+         "fig1_noisy_trace.svg"),
+    ]
+    for trace, color, title, fname in panels:
+        fig, ax = plt.subplots(figsize=(8, 4))
         t, v = extract(trace)
         ax.plot(t, v, color=color, linewidth=0.9)
         ax.set_xlabel("Time (hours)")
@@ -226,27 +228,45 @@ def fig1_single_traces(clean_traces, noisy_traces, out_path):
         ax.set_title(title)
         ax.set_xlim(0, 24)
         ax.grid(True, linestyle="--", alpha=0.4)
-
-    fig.tight_layout()
-    fig.savefig(out_path, dpi=200, bbox_inches="tight")
-    plt.close(fig)
-    print(f"  Saved: {out_path}")
+        fig.tight_layout()
+        out_path = out_dir / fname
+        fig.savefig(out_path, bbox_inches="tight")
+        plt.close(fig)
+        print(f"  Saved: {out_path}")
+# def fig1_single_traces(clean_traces, noisy_traces, out_path):
+#     fig, axes = plt.subplots(1, 2, figsize=(14, 4))
+#
+#     for ax, trace, color, title in [
+#         (axes[0], clean_traces[0], COLOR_CLEAN, "Clean synthetic trace - example"),
+#         (axes[1], noisy_traces[0], COLOR_NOISY, "Noisy synthetic trace - example"),
+#     ]:
+#         t, v = extract(trace)
+#         ax.plot(t, v, color=color, linewidth=0.9)
+#         ax.set_xlabel("Time (hours)")
+#         ax.set_ylabel("Temperature (°C)")
+#         ax.set_title(title)
+#         ax.set_xlim(0, 24)
+#         ax.grid(True, linestyle="--", alpha=0.4)
+#
+#     fig.tight_layout()
+#     fig.savefig(out_path, dpi=200, bbox_inches="tight")
+#     plt.close(fig)
+#     print(f"  Saved: {out_path}")
 
 
 # ============================================================
 # FIGURE 2 - All clean vs all noisy overlaid
 # ============================================================
-
-def fig2_training_overview(clean_traces, noisy_traces, out_path):
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-    fig.suptitle("Training data: clean vs noisy", fontsize=13)
-
+def fig2_training_overview(clean_traces, noisy_traces, out_dir):
+    """Save the clean overlay and the noisy overlay as separate SVGs."""
     panels = [
-        (axes[0], clean_traces, plt.cm.YlGn,  f"Clean (n={len(clean_traces)})"),
-        (axes[1], noisy_traces, plt.cm.Blues,  f"Noisy (n={len(noisy_traces)})"),
+        (clean_traces, plt.cm.YlGn,  "Clean", "fig2_clean_overview.svg"),
+        (noisy_traces, plt.cm.Blues, "Noisy", "fig2_noisy_overview.svg"),
     ]
 
-    for ax, traces, cmap, title in panels:
+    for traces, cmap, label, fname in panels:
+        fig, ax = plt.subplots(figsize=(10, 5))
+
         colors   = cmap(np.linspace(0.4, 0.85, len(traces)))
         all_vals = []
         ref_t    = None
@@ -265,15 +285,53 @@ def fig2_training_overview(clean_traces, noisy_traces, out_path):
 
         ax.set_xlabel("Time (hours)")
         ax.set_ylabel("Temperature (°C)")
-        ax.set_title(title)
+        ax.set_title(f"Training data: {label} (n={len(traces)})")
         ax.set_xlim(0, 24)
         ax.legend(loc="upper right")
         ax.grid(True, linestyle="--", alpha=0.3)
 
-    fig.tight_layout()
-    fig.savefig(out_path, dpi=200, bbox_inches="tight")
-    plt.close(fig)
-    print(f"  Saved: {out_path}")
+        fig.tight_layout()
+        out_path = out_dir / fname
+        fig.savefig(out_path, bbox_inches="tight")
+        plt.close(fig)
+        print(f"  Saved: {out_path}")
+# def fig2_training_overview(clean_traces, noisy_traces, out_path):
+#     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+#     fig.suptitle("Training data: clean vs noisy", fontsize=13)
+#
+#     panels = [
+#         (axes[0], clean_traces, plt.cm.YlGn,  f"Clean (n={len(clean_traces)})"),
+#         (axes[1], noisy_traces, plt.cm.Blues,  f"Noisy (n={len(noisy_traces)})"),
+#     ]
+#
+#     for ax, traces, cmap, title in panels:
+#         colors   = cmap(np.linspace(0.4, 0.85, len(traces)))
+#         all_vals = []
+#         ref_t    = None
+#
+#         for trace, c in zip(traces, colors):
+#             t, v = extract(trace)
+#             ax.plot(t, v, color=c, alpha=0.35, linewidth=0.5)
+#             all_vals.append(v)
+#             if ref_t is None:
+#                 ref_t = t
+#
+#         min_len = min(len(v) for v in all_vals)
+#         mean_v  = np.mean([v[:min_len] for v in all_vals], axis=0)
+#         ax.plot(ref_t[:min_len], mean_v, color="black", linewidth=1.8,
+#                 linestyle="--", label="Mean", zorder=5)
+#
+#         ax.set_xlabel("Time (hours)")
+#         ax.set_ylabel("Temperature (°C)")
+#         ax.set_title(title)
+#         ax.set_xlim(0, 24)
+#         ax.legend(loc="upper right")
+#         ax.grid(True, linestyle="--", alpha=0.3)
+#
+#     fig.tight_layout()
+#     fig.savefig(out_path, dpi=200, bbox_inches="tight")
+#     plt.close(fig)
+#     print(f"  Saved: {out_path}")
 
 
 # ============================================================
@@ -367,15 +425,28 @@ if __name__ == "__main__":
 
     fig1_single_traces(
         clean_traces, noisy_traces,
-        OUT_DIR / "fig1_single_traces.png"
+        OUT_DIR,
     )
     fig2_training_overview(
         clean_traces, noisy_traces,
-        OUT_DIR / "fig2_training_overview.png"
+        OUT_DIR,
     )
     fig3_test_cases(
         clean_traces, neg_traces,
-        OUT_DIR / "fig3_test_cases.png"
-    )
+        OUT_DIR / "fig3_test_cases.svg",
+        )
+
+    # fig1_single_traces(
+    #     clean_traces, noisy_traces,
+    #     OUT_DIR / "fig1_single_traces.png"
+    # )
+    # fig2_training_overview(
+    #     clean_traces, noisy_traces,
+    #     OUT_DIR / "fig2_training_overview.png"
+    # )
+    # fig3_test_cases(
+    #     clean_traces, neg_traces,
+    #     OUT_DIR / "fig3_test_cases.png"
+    # )
 
     print(f"\nDone. All figures saved to {OUT_DIR}")
