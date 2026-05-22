@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 
+
 # ============================================================
 # PATHS
 # ============================================================
@@ -206,6 +207,72 @@ def save_table(df, title, output_path):
     plt.close()
 
     print(f"Saved: {output_path}")
+
+# ============================================================
+# QUALITY SCORE
+# lower KS + lower error + higher coverage
+# ============================================================
+
+    df["quality_score"] = (
+        (1 - df["ks_stat"]) * 0.5 +
+        (1 / (1 + df["mean_error"])) * 0.3 +
+        (df["coverage"]) * 0.2
+    )
+
+    best_configs = df.sort_values(
+        by="quality_score",
+        ascending=False
+    ).head(10)
+
+    print(best_configs[
+        [
+            "dataset",
+            "quality_score",
+            "ks_stat",
+            "mean_error",
+            "coverage"
+        ]
+    ])
+
+
+# ============================================================
+# PLOT KS STATISTIC
+# ============================================================
+
+for window in [24, 48]:
+
+    subset = df[
+        (df["Type"] == "test") &
+        (df["Window"] == window)
+    ]
+
+    plt.figure(figsize=(8,5))
+
+    for s in sorted(subset["Symbols"].unique()):
+
+        temp = subset[subset["Symbols"] == s]
+
+        plt.plot(
+            temp["Time"],
+            temp["ks_stat"],
+            marker="o",
+            label=f"s={s}"
+        )
+
+    plt.xlabel("Time Horizon")
+    plt.ylabel("KS Statistic")
+    plt.title(f"KS Statistic vs Time Horizon (Window={window})")
+    plt.legend()
+
+    plt.grid(True)
+
+    plt.savefig(
+        OUTPUT_DIR / f"ks_window_{window}.png",
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+    plt.close()
 
 # ============================================================
 # SAVE ALL TABLES
