@@ -1,3 +1,4 @@
+import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -11,21 +12,23 @@ BASE_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = BASE_DIR.parent
 
 RESULTS_DIR = PROJECT_DIR / "Results"
-METHOD = "sax"
+DEFAULT_METHOD = "naiv"
 
+parser = argparse.ArgumentParser(
+    description="Plot benchmark statistics for a given method folder in Results"
+)
+parser.add_argument(
+    "--method",
+    default=DEFAULT_METHOD,
+    help="Method subdirectory under Results (e.g. sax, persist, naiv)",
+)
+args = parser.parse_args()
+
+METHOD = args.method
 INPUT_DIR = RESULTS_DIR / METHOD
 
-OUTPUT_DIR = RESULTS_DIR / "PNG" / METHOD
+OUTPUT_DIR = RESULTS_DIR / "SVG" / METHOD
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
-# ============================================================
-# OUTPUT FILES
-# ============================================================
-
-train_24_output = OUTPUT_DIR / "train_window24.png"
-train_48_output = OUTPUT_DIR / "train_window48.png"
-test_24_output = OUTPUT_DIR / "test_window24.png"
-test_48_output = OUTPUT_DIR / "test_window48.png"
 
 # ============================================================
 # LOAD ALL CSV FILES
@@ -49,15 +52,31 @@ df["mean_error"] = (df["real_mean"] - df["sim_mean"]).abs()
 
 # ============================================================
 # PARSE DATASET NAME
-# Example: train-10t-sax-s5-w24
+# Examples:
+#   train-10t-sax-s5-w24
+#   train-10t-persist-s10
+#   test-20t-naiv-s15
 # ============================================================
 
-parts = df["dataset"].str.extract(r"(train|test)-(\d+)t-sax-s(\d+)-w(\d+)")
+pattern = r"^(train|test)-(\d+)t-([^\s-]+)-s(\d+)(?:-w(\d+))?$"
+parts = df["dataset"].str.extract(pattern)
+parts.columns = ["Type", "Time", "Method", "Symbols", "Window"]
 
-df["Type"] = parts[0]
-df["Time"] = parts[1].astype(int)
-df["Symbols"] = parts[2].astype(int)
-df["Window"] = parts[3].astype(int)
+invalid = df[parts["Type"].isna() | parts["Time"].isna(
+) | parts["Method"].isna() | parts["Symbols"].isna()]
+if not invalid.empty:
+    raise ValueError(
+        "Unable to parse the following dataset names: "
+        + ", ".join(invalid["dataset"].astype(str).unique()[:10])
+    )
+
+# Cast columns to the correct type
+parts["Time"] = parts["Time"].astype(int)
+parts["Symbols"] = parts["Symbols"].astype(int)
+parts["Window"] = parts["Window"].astype("Int64")
+
+for col in ["Type", "Time", "Symbols", "Method", "Window"]:
+    df[col] = parts[col]
 
 # Clean label for display
 df["Dataset"] = df["Time"].astype(str) + "t"
@@ -66,9 +85,8 @@ df["Dataset"] = df["Time"].astype(str) + "t"
 # SORT DATA (IMPORTANT)
 # ============================================================
 
-df = df.sort_values(
-    by=["Type", "Window", "Time", "Symbols"]
-).reset_index(drop=True)
+sort_columns = ["Type", "Method", "Window", "Time", "Symbols"]
+df = df.sort_values(by=sort_columns, na_position="last").reset_index(drop=True)
 
 # ============================================================
 # FORMAT TABLE
@@ -98,45 +116,28 @@ display_df = display_df.rename(columns={
     "coverage": "Coverage",
 })
 
-display_df = display_df[
-    [
-        "Type",
-        "Window",
-        "Dataset",
-        "Symbols",
-        "μ Real",
-        "σ Real",
-        "μ Sim",
-        "Mean Error",
-        "KS Stat",
-        "KS p-value",
-        "Coverage",
-    ]
+selected_cols = ["Type"]
+if "Window" in display_df.columns and display_df["Window"].notna().any():
+    selected_cols.append("Window")
+
+selected_cols += [
+    "Dataset",
+    "Symbols",
+    "μ Real",
+    "σ Real",
+    "μ Sim",
+    "Mean Error",
+    "KS Stat",
+    "KS p-value",
+    "Coverage",
 ]
 
-# ============================================================
-# SPLIT INTO 4 GROUPS
-# ============================================================
-
-train_24 = display_df[
-    (display_df["Type"] == "train") & (display_df["Window"] == 24)
-].drop(columns=["Type", "Window"])
-
-train_48 = display_df[
-    (display_df["Type"] == "train") & (display_df["Window"] == 48)
-].drop(columns=["Type", "Window"])
-
-test_24 = display_df[
-    (display_df["Type"] == "test") & (display_df["Window"] == 24)
-].drop(columns=["Type", "Window"])
-
-test_48 = display_df[
-    (display_df["Type"] == "test") & (display_df["Window"] == 48)
-].drop(columns=["Type", "Window"])
+display_df = display_df[selected_cols]
 
 # ============================================================
 # SAFE TABLE FUNCTION
 # ============================================================
+
 
 def save_table(df, title, output_path):
 
@@ -155,20 +156,34 @@ def save_table(df, title, output_path):
         colLabels=df.columns,
         loc="center",
         cellLoc="center",
+        colLoc="center",
+        edges="closed",
     )
 
     table.auto_set_font_size(False)
-    table.set_fontsize(9)
-    table.scale(1, 1.3)
+    table.set_fontsize(10)
+    table.scale(1, 1.4)
 
     # Column index map (CRITICAL FIX)
     col_index = {name: i for i, name in enumerate(df.columns)}
 
     # Header styling
+    header_color = "#f9d34b"
     for col in range(len(df.columns)):
         cell = table[(0, col)]
         cell.set_text_props(weight='bold')
-        cell.set_facecolor("#d9d9d9")
+        cell.set_facecolor(header_color)
+        cell.set_edgecolor("black")
+        cell.set_linewidth(1.0)
+
+    # Body styling
+    for row in range(1, n_rows + 1):
+        for col in range(len(df.columns)):
+            cell = table[(row, col)]
+            cell.set_edgecolor("black")
+            cell.set_linewidth(0.8)
+            cell.set_text_props(ha="center", va="center")
+            cell.set_facecolor("white")
 
     # ========================================================
     # COLORING
@@ -213,45 +228,47 @@ def save_table(df, title, output_path):
 # lower KS + lower error + higher coverage
 # ============================================================
 
-    df["quality_score"] = (
-        (1 - df["ks_stat"]) * 0.5 +
-        (1 / (1 + df["mean_error"])) * 0.3 +
-        (df["coverage"]) * 0.2
-    )
 
-    best_configs = df.sort_values(
-        by="quality_score",
-        ascending=False
-    ).head(10)
+df["quality_score"] = (
+    (1 - df["ks_stat"]) * 0.5 +
+    (1 / (1 + df["mean_error"])) * 0.3 +
+    (df["coverage"]) * 0.2
+)
 
-    print(best_configs[
-        [
-            "dataset",
-            "quality_score",
-            "ks_stat",
-            "mean_error",
-            "coverage"
-        ]
-    ])
-
+best_configs = df.sort_values(by="quality_score", ascending=False).head(10)
+print("Top 10 quality configs:")
+print(best_configs[["dataset", "quality_score",
+      "ks_stat", "mean_error", "coverage"]])
 
 # ============================================================
 # PLOT KS STATISTIC
 # ============================================================
 
-for window in [24, 48]:
+has_window = "Window" in df.columns and df["Window"].notna().any()
 
-    subset = df[
-        (df["Type"] == "test") &
-        (df["Window"] == window)
-    ]
+if has_window:
+    windows = sorted(df["Window"].dropna().unique())
+else:
+    windows = [None]
 
-    plt.figure(figsize=(8,5))
+for window in windows:
+    if window is None:
+        subset = df[df["Type"] == "test"]
+        output_name = "ks.svg"
+        title = "KS Statistic vs Time Horizon"
+    else:
+        subset = df[(df["Type"] == "test") & (df["Window"] == window)]
+        output_name = f"ks_window_{window}.svg"
+        title = f"KS Statistic vs Time Horizon (Window={window})"
+
+    if subset.empty:
+        print(f"Skipping KS plot for {title}: no rows")
+        continue
+
+    plt.figure(figsize=(8, 5))
 
     for s in sorted(subset["Symbols"].unique()):
-
         temp = subset[subset["Symbols"] == s]
-
         plt.plot(
             temp["Time"],
             temp["ks_stat"],
@@ -261,25 +278,44 @@ for window in [24, 48]:
 
     plt.xlabel("Time Horizon")
     plt.ylabel("KS Statistic")
-    plt.title(f"KS Statistic vs Time Horizon (Window={window})")
+    plt.title(title)
     plt.legend()
-
     plt.grid(True)
-
-    plt.savefig(
-        OUTPUT_DIR / f"ks_window_{window}.png",
-        dpi=300,
-        bbox_inches="tight"
-    )
-
+    plt.savefig(OUTPUT_DIR / output_name, dpi=300, bbox_inches="tight")
     plt.close()
 
 # ============================================================
 # SAVE ALL TABLES
 # ============================================================
 
-save_table(train_24, "SAX Benchmark (TRAIN, Window=24)", train_24_output)
-save_table(train_48, "SAX Benchmark (TRAIN, Window=48)", train_48_output)
 
-save_table(test_24, "SAX Benchmark (TEST, Window=24)", test_24_output)
-save_table(test_48, "SAX Benchmark (TEST, Window=48)", test_48_output)
+def build_groups(display_df):
+    groups = []
+    has_window = "Window" in display_df.columns and display_df["Window"].notna(
+    ).any()
+
+    for dataset_type in ["train", "test"]:
+        if has_window:
+            for window in sorted(display_df["Window"].dropna().unique()):
+                subset = display_df[
+                    (display_df["Type"] == dataset_type) &
+                    (display_df["Window"] == window)
+                ].drop(columns=["Type", "Window"])
+                groups.append((dataset_type, window, subset))
+        else:
+            subset = display_df[display_df["Type"] ==
+                                dataset_type].drop(columns=["Type"])
+            groups.append((dataset_type, None, subset))
+
+    return groups
+
+
+for dataset_type, window, table in build_groups(display_df):
+    if window is None:
+        title = f"{METHOD.upper()} Benchmark ({dataset_type.upper()})"
+        output_file = OUTPUT_DIR / f"{dataset_type}.svg"
+    else:
+        title = f"{METHOD.upper()} Benchmark ({dataset_type.upper()}, Window={window})"
+        output_file = OUTPUT_DIR / f"{dataset_type}_window{window}.svg"
+
+    save_table(table, title, output_file)
