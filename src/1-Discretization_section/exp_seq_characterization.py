@@ -15,10 +15,10 @@ Output (timestamped folder under Graphs/SeqCharacterization/):
   config.txt
   results.json
   table_summary.csv
-  symbol_frequency_<method>.png             — single trace
-  symbol_frequency_<method>_multitrace.png  — aggregated across all traces
-  run_length_<method>.png                   — single trace
-  discretization_<method>.png               — single trace
+  symbol_frequency_<method>.png/.svg             — single trace
+  symbol_frequency_<method>_multitrace.png/.svg  — aggregated across all traces
+  run_length_<method>.png/.svg                   — single trace
+  discretization_<method>.png/.svg               — single trace
 """
 
 import csv
@@ -56,9 +56,9 @@ from Discretization.persist import (
 # =============================================================================
 
 METHODS = [
-    ("naive",   {"bins": 15}),
-    ("sax",     {"w": 48, "bins": 15}),
-    ("persist", {"bins": 16}),
+    ("naive",   {"bins": 10}),
+    ("sax",     {"w": 48, "bins": 10}),
+    ("persist", {"bins": 10}),
 ]
 
 TRAINING_CONDITION = "clean"
@@ -110,12 +110,12 @@ def _discretize(method, params, traces_list):
         )
 
     elif method == "sax":
-        traces_disc, bins_z, mean_, std_ = sax_discretization_multi(
+        # Capture all 5 returns. The 2nd return is already the original-space bins.
+        traces_disc, bins, breakpoints_z, mean_, std_ = sax_discretization_multi(
             traces_list,
             w=params["w"],
             k=params["bins"]
         )
-        bins = sax_bins_in_original_space(bins_z, mean_, std_)
 
     elif method == "persist":
         ts = flatten_traces_to_ts(traces_list)
@@ -210,7 +210,7 @@ def run_length_distribution(symbolic_traces):
 # PLOTS
 # =============================================================================
 
-def plot_symbol_frequency(method_name, params, freq_dict, out_path,
+def plot_symbol_frequency(method_name, params, freq_dict, out_path_base,
                           subtitle=None):
     """
     Plot symbol frequency as a bar chart.
@@ -223,7 +223,8 @@ def plot_symbol_frequency(method_name, params, freq_dict, out_path,
         Method parameters, appended to the title.
     freq_dict : dict[str, int]
         Symbol -> count.
-    out_path : Path or str
+    out_path_base : Path
+        Base path for the output file (no extension).
     subtitle : str, optional
         Extra context line under the main title (e.g. "1 trace" or "20 traces").
     """
@@ -256,14 +257,19 @@ def plot_symbol_frequency(method_name, params, freq_dict, out_path,
     ax.grid(True, axis="y", linestyle="--", alpha=0.5)
 
     fig.tight_layout()
-    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+
+    png_path = out_path_base.with_suffix(".png")
+    svg_path = out_path_base.with_suffix(".svg")
+
+    fig.savefig(png_path, dpi=150, bbox_inches="tight")
+    fig.savefig(svg_path, bbox_inches="tight")
 
     plt.close(fig)
 
-    print(f"  Saved: {out_path}")
+    print(f"  Saved: {png_path.name} and {svg_path.name}")
 
 
-def plot_run_length_distribution(method_name, params, run_lengths, out_path,
+def plot_run_length_distribution(method_name, params, run_lengths, out_path_base,
                                  subtitle=None):
     fig, ax = plt.subplots(figsize=(8, 4))
 
@@ -305,11 +311,16 @@ def plot_run_length_distribution(method_name, params, run_lengths, out_path,
     ax.grid(True, axis="y", linestyle="--", alpha=0.4)
 
     fig.tight_layout()
-    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+
+    png_path = out_path_base.with_suffix(".png")
+    svg_path = out_path_base.with_suffix(".svg")
+
+    fig.savefig(png_path, dpi=150, bbox_inches="tight")
+    fig.savefig(svg_path, bbox_inches="tight")
 
     plt.close(fig)
 
-    print(f"  Saved: {out_path}")
+    print(f"  Saved: {png_path.name} and {svg_path.name}")
 
 
 def plot_discretization(
@@ -317,7 +328,7 @@ def plot_discretization(
         original_trace,
         discretized_trace,
         bins,
-        out_path,
+        out_path_base,
         subtitle=None,
 ):
     """
@@ -381,11 +392,16 @@ def plot_discretization(
     ax.grid(True, linestyle="--", alpha=0.4)
 
     fig.tight_layout()
-    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+
+    png_path = out_path_base.with_suffix(".png")
+    svg_path = out_path_base.with_suffix(".svg")
+
+    fig.savefig(png_path, dpi=150, bbox_inches="tight")
+    fig.savefig(svg_path, bbox_inches="tight")
 
     plt.close(fig)
 
-    print(f"  Saved: {out_path}")
+    print(f"  Saved: {png_path.name} and {svg_path.name}")
 
 
 # =============================================================================
@@ -428,7 +444,7 @@ def save_summary_table(per_method_results, out_dir):
                 f"{mt['usage_rate']:.2f}" if mt else "-",
             ])
 
-    print(f"  Saved: {csv_path}")
+    print(f"  Saved: {csv_path.name}")
 
 
 # =============================================================================
@@ -475,7 +491,7 @@ def _save_config(out_dir, training_condition, n_multitrace):
 
     (out_dir / "config.txt").write_text("\n".join(lines))
 
-    print(f"  Saved: {out_dir / 'config.txt'}")
+    print(f"  Saved: config.txt")
 
 
 # =============================================================================
@@ -610,7 +626,7 @@ if __name__ == "__main__":
             method,
             params,
             alphabet_info_single["freq_raw"],
-            out_dir / f"symbol_frequency_{method}.png",
+            out_dir / f"symbol_frequency_{method}",
             subtitle=f"single trace (index {TRACE_INDEX})",
             )
 
@@ -619,7 +635,7 @@ if __name__ == "__main__":
             method,
             params,
             alphabet_info_multi["freq_raw"],
-            out_dir / f"symbol_frequency_{method}_multitrace.png",
+            out_dir / f"symbol_frequency_{method}_multitrace",
             subtitle=f"aggregated across {n_multitrace} {TRAINING_CONDITION} training traces",
             )
 
@@ -628,7 +644,7 @@ if __name__ == "__main__":
             method,
             params,
             run_lengths,
-            out_dir / f"run_length_{method}.png",
+            out_dir / f"run_length_{method}",
             subtitle=f"single trace (index {TRACE_INDEX})",
             )
 
@@ -639,7 +655,7 @@ if __name__ == "__main__":
             original_trace,
             traces_disc_single[0],
             bins_single,
-            out_dir / f"discretization_{method}.png",
+            out_dir / f"discretization_{method}",
             subtitle=f"single trace (index {TRACE_INDEX})",
             )
 
@@ -650,7 +666,7 @@ if __name__ == "__main__":
     with open(out_dir / "results.json", "w") as f:
         json.dump(log, f, indent=2)
 
-    print(f"  Saved: {out_dir / 'results.json'}")
+    print(f"  Saved: results.json")
 
     save_summary_table(per_method_results, out_dir)
 

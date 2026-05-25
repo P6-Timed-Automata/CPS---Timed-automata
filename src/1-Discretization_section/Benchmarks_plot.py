@@ -475,10 +475,12 @@ def plot_combined(method_name, results, output_folder):
                       ha="center", fontsize=8, clip_on=False,
                       transform=ax_table.transAxes, color="gray")
 
-    out = os.path.join(output_folder, f"{method_name}_TA_Benchmark.png")
-    plt.savefig(out, bbox_inches="tight", dpi=300)
+    base_name = os.path.join(output_folder, f"{method_name}_TA_Benchmark")
+
+    plt.savefig(f"{base_name}.png", bbox_inches="tight", dpi=300)
+    plt.savefig(f"{base_name}.svg", bbox_inches="tight") # DPI is ignored for pure SVGs
     plt.close(fig)
-    print(f"  Saved: {out}")
+    print(f"  Saved: {base_name}.png / .svg")
 
 
 # ---------------------------------------------------------------------------
