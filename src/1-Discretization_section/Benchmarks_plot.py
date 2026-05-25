@@ -574,6 +574,7 @@ def _structure_table_cols(columns_kind):
     }[columns_kind]
 
 
+
 def plot_structure_table_full(method_name, results, output_folder):
     n_traces = next((r["n_total"] for r in results if _ok(r)), None)
     rows, failed_idx = _structure_table_rows(results, "full")
@@ -607,6 +608,8 @@ def plot_structure_table_compact(method_name, results, output_folder):
                 failed_row_indices=failed_idx)
 
 
+import os
+
 def plot_structure_table_with_time(method_name, results, output_folder):
     n_traces = next((r["n_total"] for r in results if _ok(r)), None)
     rows, failed_idx = _structure_table_rows(results, "with_time")
@@ -616,13 +619,18 @@ def plot_structure_table_with_time(method_name, results, output_folder):
     if failed_idx:
         footnote_parts.append(f"{len(failed_idx)} failed variants in red")
 
-    _save_table(method_name, rows, cols, output_folder,
-                suffix="_table_with_time",
-                n_traces=n_traces,
-                footnote=" | ".join(footnote_parts) if footnote_parts else None,
-                highlight_best=False,
-                failed_row_indices=failed_idx)
+    # Define base path
+    base_filename = f"{method_name}_table_with_time"
 
+    # Trigger the saving mechanism for multiple formats
+    # Ensure your _save_table implementation supports passing a format/extension
+    for fmt in ['png', 'svg']:
+        _save_table(method_name, rows, cols, output_folder,
+                    suffix=f"_table_with_time.{fmt}", # Explicitly include format
+                    n_traces=n_traces,
+                    footnote=" | ".join(footnote_parts) if footnote_parts else None,
+                    highlight_best=False,
+                    failed_row_indices=failed_idx)
 
 # ---------------------------------------------------------------------------
 # Summary table

@@ -627,7 +627,6 @@ if __name__ == "__main__":
             params,
             alphabet_info_single["freq_raw"],
             out_dir / f"symbol_frequency_{method}",
-            subtitle=f"single trace (index {TRACE_INDEX})",
             )
 
         # Multi-trace symbol frequency
@@ -645,7 +644,6 @@ if __name__ == "__main__":
             params,
             run_lengths,
             out_dir / f"run_length_{method}",
-            subtitle=f"single trace (index {TRACE_INDEX})",
             )
 
         # Single-trace discretization comparison
@@ -656,7 +654,6 @@ if __name__ == "__main__":
             traces_disc_single[0],
             bins_single,
             out_dir / f"discretization_{method}",
-            subtitle=f"single trace (index {TRACE_INDEX})",
             )
 
         print()
