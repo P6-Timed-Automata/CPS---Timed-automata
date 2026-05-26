@@ -76,10 +76,7 @@ elif(data_type == "ecg"):
     test_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{period}-experiment"/f"{period}-test"/"negative"
 
 test_positive_raw_traces = get_trace_files(folder_path = test_positive_folder)
-
 test_negative_raw_traces = get_trace_files(folder_path = test_negative_folder)
-
-
 
 test_positive_raw_lists = csv_to_temp_time_list(input_files=test_positive_raw_traces)
 test_negative_raw_lists = csv_to_temp_time_list(input_files=test_negative_raw_traces)
@@ -92,8 +89,6 @@ if (data_type == "temp"):
 elif(data_type == "ecg"):
     log_data_path = BASE_DIR /"Data" /"8-LoggedData" / "metrics"/ f"{discretization_method}-ecg-log.csv"
 
-
-
 # Parameter for nr of Traces
 len_traces = len(train_raw_traces)  + 1
 start_traces = 1
@@ -102,7 +97,6 @@ len_traces = 51
 trace_list = [700]
 
 #700
-
 
 for w in w_values:
 
@@ -117,7 +111,6 @@ for w in w_values:
         global_std
     )
 
-
     test_negative_traces_lists = sax_preprocess_traces(
         test_negative_raw_lists,
         w,
@@ -125,8 +118,6 @@ for w in w_values:
         global_mean,
         global_std
     )
-
-
 
     for trace_nr in range(start_traces, len_traces):
         # Paths
@@ -136,7 +127,6 @@ for w in w_values:
         symbolic_train_trace_subset = symbolic_train_trace[:trace_nr ]
 
         format_output(symbolic_traces=symbolic_train_trace_subset, output_path=discretinize_data_path)
-
 
         # Loop over varying K-future
         for k in range(k_min, k_max + 1, k_increment):
