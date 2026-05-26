@@ -26,6 +26,32 @@ import numpy as np
 from matplotlib.gridspec import GridSpec
 
 
+ROOT = os.path.normpath(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "..", "..",
+))
+
+
+def _rename_label(label):
+    """Display 'k=' as 'bins=' in tables. Leaves other tokens (w=, etc.) intact."""
+    return label.replace("k=", "bins=")
+
+
+def _translate_path(stored_path):
+    """
+    Stored absolute paths from a remote (SLURM/Linux) run won't resolve on
+    other machines. Rebuild relative to the local project ROOT by anchoring
+    at the 'Data/' segment.
+    """
+    s = str(stored_path).replace("\\", "/")
+    idx = s.find("/Data/")
+    if idx != -1:
+        return os.path.normpath(os.path.join(ROOT, s[idx + 1:]))
+    if s.startswith("Data/"):
+        return os.path.normpath(os.path.join(ROOT, s))
+    return stored_path
+
+
 # ---------------------------------------------------------------------------
 # Status filtering
 # ---------------------------------------------------------------------------
@@ -43,7 +69,7 @@ def _failed_results(results):
 
 
 # ---------------------------------------------------------------------------
-# Variant pickers / bin-varying checks
+# Variant pickers
 # ---------------------------------------------------------------------------
 
 def _pick_variant_for_target_bins(results, target_bins):
@@ -69,25 +95,6 @@ def _pick_best_variant(results):
     """Return the ok variant with lowest median MAE, or None."""
     ok = _ok_results(results)
     return ok[0] if ok else None
-
-
-def _has_varying_bins(results):
-    """True if any ok variant has a per-trace bin count that varies."""
-    for r in results:
-        if not _ok(r):
-            continue
-        bin_vals = [pt["actual_bins"] for pt in r["per_trace"]]
-        if len(set(bin_vals)) > 1:
-            return True
-    return False
-
-
-def _has_varying_bins_in_result(r):
-    """Single-variant version of _has_varying_bins."""
-    if not _ok(r):
-        return False
-    bin_vals = [pt["actual_bins"] for pt in r["per_trace"]]
-    return len(set(bin_vals)) > 1
 
 
 # ---------------------------------------------------------------------------
@@ -140,15 +147,6 @@ def _color_failed_row(tab, row_idx, n_cols, color="#FFCCCC"):
         tab[(row_idx + 1, j)].set_facecolor(color)
 
 
-def _bins_display(r):
-    if not _ok(r):
-        return "-"
-    bin_vals = [pt["actual_bins"] for pt in r["per_trace"]]
-    dominant = max(set(bin_vals), key=bin_vals.count)
-    suffix = "*" if len(set(bin_vals)) > 1 else ""
-    return f"{dominant}{suffix}"
-
-
 def _fmt_states(r):
     if not _ok(r):
         return "FAILED"
@@ -191,12 +189,13 @@ def _consistency_cell(r):
 
 
 def _load_raw_for_variant(r):
-    path = r["plot_trace_path"]
+    path = _translate_path(r["plot_trace_path"])
     data = np.genfromtxt(path, delimiter=";", skip_header=1)
     return data[:, 0], data[:, 1]
 
 
 def _load_raw_for_path(path):
+    path = _translate_path(path)
     data = np.genfromtxt(path, delimiter=";", skip_header=1)
     return data[:, 0], data[:, 1]
 
@@ -215,7 +214,7 @@ def _save_table(method_name, rows, cols, output_folder, suffix,
     title_h = 0.30
     footer_h = 0.30
     fig_h = (n_data + 1) * row_h + title_h + footer_h
-    fig_w = max(7, 2.0 * n_cols)   # was 1.8
+    fig_w = max(7, 2.0 * n_cols)
 
     fig, ax = plt.subplots(figsize=(fig_w, fig_h))
     ax.axis("off")
@@ -266,7 +265,7 @@ def _save_table(method_name, rows, cols, output_folder, suffix,
 
 def plot_combined_for_variant_and_reference(
         method_name, variant, all_results, output_folder,
-        ref_slot, ref_index, variant_descriptor,
+        ref_slot, variant_descriptor,
 ):
     if variant is None:
         print(f"  Skipping {method_name}_{variant_descriptor}_ref{ref_slot} — no matching variant")
@@ -284,7 +283,7 @@ def plot_combined_for_variant_and_reference(
     resids = np.array(ref["resids"])
 
     fig = plt.figure(figsize=(18, 8))
-    gs = GridSpec(2, 2, width_ratios=[4.2, 3.2],   # was [4.5, 2.8]
+    gs = GridSpec(2, 2, width_ratios=[4.2, 3.2],
                   height_ratios=[3, 1], hspace=0.28, wspace=0.18)
 
     ax_top = fig.add_subplot(gs[0, 0])
@@ -294,15 +293,11 @@ def plot_combined_for_variant_and_reference(
 
     ax_top.plot(np.array(t_raw) / 3600, v_raw, alpha=0.5, label="Raw")
     ax_top.step(t_d / 3600, v_d, where="post", label="Discretized")
-    trace_basename = os.path.basename(ref["trace_path"])
 
-    title_descriptor = {
-        "best": "lowest median MAE",
-    }.get(variant_descriptor, variant_descriptor)
+    descriptor_str = "" if variant_descriptor == "best" else f"{variant_descriptor}: "
     ax_top.set_title(
-        f"{method_name} — {title_descriptor}: {variant['label']}{_consistency_marker(variant)}\n"
-        f"Reference trace #{ref_index}: {trace_basename} "
-        f"(MAE on this trace: {ref['mae']:.3f})"
+        f"{method_name} — {descriptor_str}{_rename_label(variant['label'])}"
+        f"{_consistency_marker(variant)}"
     )
     ax_top.set_ylabel("Temperature")
     ax_top.legend()
@@ -312,27 +307,18 @@ def plot_combined_for_variant_and_reference(
     ax_bot.set_xlabel("Time (hours)")
     ax_bot.set_ylabel("Residual")
 
-    is_persist = (method_name == "Persist")
     failed_row_indices = []
     highlighted_idx = None
     table_data = []
     for i, r in enumerate(all_results):
-        if is_persist:
-            row = [r["label"] + _consistency_marker(r),
-                   _bins_display(r), _fmt_mae(r), _fmt_time(r)]
-        else:
-            row = [r["label"] + _consistency_marker(r),
-                   _fmt_mae(r), _fmt_time(r)]
+        row = [_rename_label(r["label"]) + _consistency_marker(r), _fmt_mae(r)]
         table_data.append(row)
         if not _ok(r):
             failed_row_indices.append(i)
         if r is variant:
             highlighted_idx = i
 
-    if is_persist:
-        cols = ["Parameter", "Bins/trace", "MAE\n(median, min-max)", "Time"]
-    else:
-        cols = ["Parameter", "MAE\n(median, min-max)", "Time"]
+    cols = ["Parameter", "MAE\n(median, min-max)"]
 
     n_cols = len(cols)
     tab = ax_table.table(
@@ -363,7 +349,7 @@ def plot_combined_for_variant_and_reference(
 
 def plot_signal_for_variant_and_reference(
         method_name, variant, output_folder,
-        ref_slot, ref_index, variant_descriptor,
+        ref_slot, variant_descriptor,
 ):
     if variant is None:
         return
@@ -386,16 +372,12 @@ def plot_signal_for_variant_and_reference(
 
     ax_top.plot(np.array(t_raw) / 3600, v_raw, alpha=0.5, label="Raw")
     ax_top.step(t_d / 3600, v_d, where="post",
-                label=f"Discretized ({variant['label']})")
-    trace_basename = os.path.basename(ref["trace_path"])
+                label=f"Discretized ({_rename_label(variant['label'])})")
 
-    title_descriptor = {
-        "best": "lowest median MAE",
-    }.get(variant_descriptor, variant_descriptor)
+    descriptor_str = "" if variant_descriptor == "best" else f"{variant_descriptor}: "
     ax_top.set_title(
-        f"{method_name} — {title_descriptor}: {variant['label']}{_consistency_marker(variant)}\n"
-        f"Reference trace #{ref_index}: {trace_basename} "
-        f"(MAE on this trace: {ref['mae']:.3f})"
+        f"{method_name} — {descriptor_str}{_rename_label(variant['label'])}"
+        f"{_consistency_marker(variant)}"
     )
     ax_top.set_ylabel("Temperature")
     ax_top.legend()
@@ -415,7 +397,7 @@ def plot_signal_for_variant_and_reference(
 
 
 # ---------------------------------------------------------------------------
-# Combined signal + table (original — uses per-method median trace)
+# Combined signal + table (best variant; uses shared reference trace if available)
 # ---------------------------------------------------------------------------
 
 def plot_combined(method_name, results, output_folder):
@@ -424,16 +406,25 @@ def plot_combined(method_name, results, output_folder):
         print(f"  Skipping {method_name}_TA_Benchmark.png — no successful variants")
         return
 
-    is_persist = (method_name == "Persist")
     best = ok[0]
 
-    t_raw, v_raw = _load_raw_for_variant(best)
-    t_d = np.array(best["plot_t_d"])
-    v_d = np.array(best["plot_v_d"])
-    resids = np.array(best["plot_resids"])
+    # Prefer the first shared reference trace so all methods show the same
+    # raw trace. Fall back to per-variant median-MAE trace for older logs.
+    ref_traces = best.get("reference_traces", [])
+    if ref_traces:
+        ref = ref_traces[0]
+        t_raw, v_raw = _load_raw_for_path(ref["trace_path"])
+        t_d = np.array(ref["t_d"])
+        v_d = np.array(ref["v_d"])
+        resids = np.array(ref["resids"])
+    else:
+        t_raw, v_raw = _load_raw_for_variant(best)
+        t_d = np.array(best["plot_t_d"])
+        v_d = np.array(best["plot_v_d"])
+        resids = np.array(best["plot_resids"])
 
     fig = plt.figure(figsize=(18, 8))
-    gs = GridSpec(2, 2, width_ratios=[4.2, 3.2],   # was [4.5, 2.8]
+    gs = GridSpec(2, 2, width_ratios=[4.2, 3.2],
                   height_ratios=[3, 1], hspace=0.28, wspace=0.18)
 
     ax_top = fig.add_subplot(gs[0, 0])
@@ -443,10 +434,9 @@ def plot_combined(method_name, results, output_folder):
 
     ax_top.plot(np.array(t_raw) / 3600, v_raw, alpha=0.5, label="Raw")
     ax_top.step(t_d / 3600, v_d, where="post", label="Discretized")
-    trace_basename = os.path.basename(best["plot_trace_path"])
     ax_top.set_title(
-        f"{method_name} — lowest median MAE: {best['label']}{_consistency_marker(best)}\n"
-        f"Representative trace: {trace_basename} (median MAE)"
+        f"{method_name} — {_rename_label(best['label'])}"
+        f"{_consistency_marker(best)}"
     )
     ax_top.set_ylabel("Temperature")
     ax_top.legend()
@@ -457,24 +447,13 @@ def plot_combined(method_name, results, output_folder):
     ax_bot.set_ylabel("Residual")
 
     failed_row_indices = []
-    if is_persist:
-        table_data = []
-        for i, r in enumerate(results):
-            row = [r["label"] + _consistency_marker(r),
-                   _bins_display(r), _fmt_mae(r), _fmt_time(r)]
-            table_data.append(row)
-            if not _ok(r):
-                failed_row_indices.append(i)
-        cols = ["Parameter", "Bins/trace", "MAE\n(median, min-max)", "Time"]
-    else:
-        table_data = []
-        for i, r in enumerate(results):
-            row = [r["label"] + _consistency_marker(r),
-                   _fmt_mae(r), _fmt_time(r)]
-            table_data.append(row)
-            if not _ok(r):
-                failed_row_indices.append(i)
-        cols = ["Parameter", "MAE\n(median, min-max)", "Time"]
+    table_data = []
+    for i, r in enumerate(results):
+        row = [_rename_label(r["label"]) + _consistency_marker(r), _fmt_mae(r)]
+        table_data.append(row)
+        if not _ok(r):
+            failed_row_indices.append(i)
+    cols = ["Parameter", "MAE\n(median, min-max)"]
 
     n_cols = len(cols)
     tab = ax_table.table(
@@ -489,8 +468,6 @@ def plot_combined(method_name, results, output_folder):
         _color_failed_row(tab, idx, n_cols)
 
     footnote_parts = []
-    if is_persist and _has_varying_bins(results):
-        footnote_parts.append("* = bin count varied across traces")
     if failed_row_indices:
         footnote_parts.append(f"{len(failed_row_indices)} failed variants in red")
     if footnote_parts:
@@ -498,14 +475,16 @@ def plot_combined(method_name, results, output_folder):
                       ha="center", fontsize=8, clip_on=False,
                       transform=ax_table.transAxes, color="gray")
 
-    out = os.path.join(output_folder, f"{method_name}_TA_Benchmark.png")
-    plt.savefig(out, bbox_inches="tight", dpi=300)
+    base_name = os.path.join(output_folder, f"{method_name}_TA_Benchmark")
+
+    plt.savefig(f"{base_name}.png", bbox_inches="tight", dpi=300)
+    plt.savefig(f"{base_name}.svg", bbox_inches="tight") # DPI is ignored for pure SVGs
     plt.close(fig)
-    print(f"  Saved: {out}")
+    print(f"  Saved: {base_name}.png / .svg")
 
 
 # ---------------------------------------------------------------------------
-# Signal-only plots
+# Signal-only plot (best variant)
 # ---------------------------------------------------------------------------
 
 def plot_signal(method_name, results, output_folder):
@@ -515,10 +494,19 @@ def plot_signal(method_name, results, output_folder):
         return
 
     best = ok[0]
-    t_raw, v_raw = _load_raw_for_variant(best)
-    t_d = np.array(best["plot_t_d"])
-    v_d = np.array(best["plot_v_d"])
-    resids = np.array(best["plot_resids"])
+
+    ref_traces = best.get("reference_traces", [])
+    if ref_traces:
+        ref = ref_traces[0]
+        t_raw, v_raw = _load_raw_for_path(ref["trace_path"])
+        t_d = np.array(ref["t_d"])
+        v_d = np.array(ref["v_d"])
+        resids = np.array(ref["resids"])
+    else:
+        t_raw, v_raw = _load_raw_for_variant(best)
+        t_d = np.array(best["plot_t_d"])
+        v_d = np.array(best["plot_v_d"])
+        resids = np.array(best["plot_resids"])
 
     fig = plt.figure(figsize=(12, 6))
     gs = GridSpec(2, 1, height_ratios=[3, 1], hspace=0.25)
@@ -528,11 +516,10 @@ def plot_signal(method_name, results, output_folder):
 
     ax_top.plot(np.array(t_raw) / 3600, v_raw, alpha=0.5, label="Raw")
     ax_top.step(t_d / 3600, v_d, where="post",
-                label=f"Discretized (lowest median MAE: {best['label']})")
-    trace_basename = os.path.basename(best["plot_trace_path"])
+                label=f"Discretized ({_rename_label(best['label'])})")
     ax_top.set_title(
-        f"{method_name} — lowest median MAE: {best['label']}{_consistency_marker(best)}\n"
-        f"Representative trace: {trace_basename} (median MAE)"
+        f"{method_name} — {_rename_label(best['label'])}"
+        f"{_consistency_marker(best)}"
     )
     ax_top.set_ylabel("Temperature")
     ax_top.legend()
@@ -552,25 +539,19 @@ def plot_signal(method_name, results, output_folder):
 # Structure tables
 # ---------------------------------------------------------------------------
 
-def _structure_table_rows(results, is_persist, columns_kind):
+def _structure_table_rows(results, columns_kind):
     rows = []
     failed_row_indices = []
     for i, r in enumerate(results):
+        label = _rename_label(r["label"])
         if columns_kind == "full":
-            cells = [r["label"], _fmt_mae(r),
+            cells = [label, _fmt_mae(r),
                      _fmt_states(r), _fmt_edges(r),
                      _fmt_time(r), _consistency_cell(r)]
-            if is_persist:
-                cells.insert(1, _bins_display(r))
         elif columns_kind == "compact":
-            cells = [r["label"], _fmt_states(r), _fmt_edges(r), _consistency_cell(r)]
-            if is_persist:
-                cells.insert(1, _bins_display(r))
+            cells = [label, _fmt_states(r), _fmt_edges(r), _consistency_cell(r)]
         elif columns_kind == "with_time":
-            cells = [r["label"], _fmt_states(r), _fmt_edges(r),
-                     _fmt_time(r), _consistency_cell(r)]
-            if is_persist:
-                cells.insert(1, _bins_display(r))
+            cells = [label, _fmt_states(r), _fmt_edges(r), _fmt_time(r)]
         else:
             raise ValueError(f"Unknown columns_kind: {columns_kind}")
         rows.append(cells)
@@ -579,32 +560,27 @@ def _structure_table_rows(results, is_persist, columns_kind):
     return rows, failed_row_indices
 
 
-def _structure_table_cols(is_persist, columns_kind):
-    base = {
+def _structure_table_cols(columns_kind):
+    return {
         "full":      ["Parameter", "MAE\n(median, min-max)",
                       "States\n(median, min-max)", "Edges\n(median, min-max)",
-                      "Time", "Consistent"],
+                      "TA training Time(s)", "Consistent"],
         "compact":   ["Parameter",
                       "States\n(median, min-max)", "Edges\n(median, min-max)",
                       "Consistent"],
         "with_time": ["Parameter",
                       "States\n(median, min-max)", "Edges\n(median, min-max)",
-                      "Time", "Consistent"],
+                      "TA training Time(s)"],
     }[columns_kind]
-    if is_persist:
-        base = [base[0]] + ["Bins/trace"] + base[1:]
-    return base
+
 
 
 def plot_structure_table_full(method_name, results, output_folder):
-    is_persist = (method_name == "Persist")
     n_traces = next((r["n_total"] for r in results if _ok(r)), None)
-    rows, failed_idx = _structure_table_rows(results, is_persist, "full")
-    cols = _structure_table_cols(is_persist, "full")
+    rows, failed_idx = _structure_table_rows(results, "full")
+    cols = _structure_table_cols("full")
 
     footnote_parts = []
-    if is_persist and _has_varying_bins(results):
-        footnote_parts.append("* = bin count varied across traces")
     if failed_idx:
         footnote_parts.append(f"{len(failed_idx)} failed variants in red")
 
@@ -616,14 +592,11 @@ def plot_structure_table_full(method_name, results, output_folder):
 
 
 def plot_structure_table_compact(method_name, results, output_folder):
-    is_persist = (method_name == "Persist")
     n_traces = next((r["n_total"] for r in results if _ok(r)), None)
-    rows, failed_idx = _structure_table_rows(results, is_persist, "compact")
-    cols = _structure_table_cols(is_persist, "compact")
+    rows, failed_idx = _structure_table_rows(results, "compact")
+    cols = _structure_table_cols("compact")
 
     footnote_parts = []
-    if is_persist and _has_varying_bins(results):
-        footnote_parts.append("* = bin count varied across traces")
     if failed_idx:
         footnote_parts.append(f"{len(failed_idx)} failed variants in red")
 
@@ -635,52 +608,50 @@ def plot_structure_table_compact(method_name, results, output_folder):
                 failed_row_indices=failed_idx)
 
 
+import os
+
 def plot_structure_table_with_time(method_name, results, output_folder):
-    is_persist = (method_name == "Persist")
     n_traces = next((r["n_total"] for r in results if _ok(r)), None)
-    rows, failed_idx = _structure_table_rows(results, is_persist, "with_time")
-    cols = _structure_table_cols(is_persist, "with_time")
+    rows, failed_idx = _structure_table_rows(results, "with_time")
+    cols = _structure_table_cols("with_time")
 
     footnote_parts = []
-    if is_persist and _has_varying_bins(results):
-        footnote_parts.append("* = bin count varied across traces")
     if failed_idx:
         footnote_parts.append(f"{len(failed_idx)} failed variants in red")
 
-    _save_table(method_name, rows, cols, output_folder,
-                suffix="_table_with_time",
-                n_traces=n_traces,
-                footnote=" | ".join(footnote_parts) if footnote_parts else None,
-                highlight_best=False,
-                failed_row_indices=failed_idx)
+    # Define base path
+    base_filename = f"{method_name}_table_with_time"
 
+    # Trigger the saving mechanism for multiple formats
+    # Ensure your _save_table implementation supports passing a format/extension
+    for fmt in ['png', 'svg']:
+        _save_table(method_name, rows, cols, output_folder,
+                    suffix=f"_table_with_time.{fmt}", # Explicitly include format
+                    n_traces=n_traces,
+                    footnote=" | ".join(footnote_parts) if footnote_parts else None,
+                    highlight_best=False,
+                    failed_row_indices=failed_idx)
 
 # ---------------------------------------------------------------------------
 # Summary table
 # ---------------------------------------------------------------------------
 
 def plot_summary_table(log, output_folder):
-    cols = ["Method", "Parameter", "Bins/trace", "MAE\n(median, min-max)",
+    cols = ["Method", "Parameter", "MAE\n(median, min-max)",
             "States\n(median, min-max)", "Edges\n(median, min-max)",
-            "Time", "Consistent"]
+            "TA training Time(s)", "Consistent"]
     rows = []
-
-    any_varying = False
 
     for method_name, results in log["methods"].items():
         ok = _ok_results(results)
         if not ok:
             rows.append([method_name, "all variants failed",
-                         "-", "-", "-", "-", "-",
+                         "-", "-", "-", "-",
                          f"0/{len(results)}"])
             continue
         best = ok[0]
-        is_persist = (method_name == "Persist")
-        bins_col = _bins_display(best) if is_persist else "-"
-        if is_persist and _has_varying_bins_in_result(best):
-            any_varying = True
         rows.append([
-            method_name, best["label"], bins_col,
+            method_name, _rename_label(best["label"]),
             _fmt_mae(best), _fmt_states(best), _fmt_edges(best),
             _fmt_time(best), _consistency_cell(best),
         ])
@@ -694,8 +665,6 @@ def plot_summary_table(log, output_folder):
     tag_k = log.get("tag_k", "?")
 
     footnote_text = "Best variant (lowest median MAE) per method shown."
-    if any_varying:
-        footnote_text += " * = bin count varied across traces."
 
     _save_table(f"All methods (k={tag_k})", rows, cols, output_folder,
                 suffix="_summary", n_traces=n_traces,
@@ -752,7 +721,7 @@ def _draw_tradeoff_ax(ax, states, maes, labels, colors, groups, n_traces,
     ki = _knee_index(states, maes, _all_s, _all_m)
     ax.scatter(states[ki], maes[ki], marker="o", s=220, zorder=5,
                facecolors="none", edgecolors="red", linewidths=1.25,
-               label=f"Knee: {labels[ki]}")
+               label=f"Knee: {_rename_label(labels[ki])}")
     ax.axvline(states[ki], color="red", linewidth=0.6, linestyle=":", alpha=0.4)
     ax.axhline(maes[ki], color="red", linewidth=0.6, linestyle=":", alpha=0.4)
 
@@ -808,7 +777,7 @@ def plot_tradeoff(log, output_folder):
     fig, ax = plt.subplots(figsize=(10, 7))
     _draw_tradeoff_ax(ax, all_states, all_maes, all_labels, all_colors,
                       groups=groups, n_traces=n_traces,
-                      title=f"MAE vs. TA Complexity — All Methods (k={log.get('tag_k', '?')})",
+                      title=f"MAE vs. TA Complexity — All Methods (k-future={log.get('tag_k', '?')})",
                       all_states=all_states, all_maes=all_maes)
     fig.tight_layout()
     out = os.path.join(output_folder, "tradeoff_combined.png")
@@ -821,7 +790,7 @@ def plot_tradeoff(log, output_folder):
         _draw_tradeoff_ax(ax, d["states"], d["maes"], d["labels"],
                           colors=d["colors"], groups=[(method_name, d["color"])],
                           n_traces=n_traces,
-                          title=f"MAE vs. TA Complexity — {method_name} (k={log.get('tag_k', '?')})",
+                          title=f"MAE vs. TA Complexity — {method_name} (k-future={log.get('tag_k', '?')})",
                           all_states=all_states, all_maes=all_maes)
         fig.tight_layout()
         out = os.path.join(output_folder, f"tradeoff_{method_name}.png")
@@ -850,7 +819,7 @@ def plot_failure_summary(log, output_folder):
 
     cols = ["Method", "Variant", "Error type", "Error message (truncated)"]
     rows = [
-        [f["method"], f["label"], f["error_type"], f["error_msg"]]
+        [f["method"], _rename_label(f["label"]), f["error_type"], f["error_msg"]]
         for f in all_failed
     ]
 
@@ -958,14 +927,14 @@ def main():
                     variant_pairs.append((picked, descriptor))
 
                 for variant, descriptor in variant_pairs:
-                    for ref_slot, ref_index in enumerate(reference_indices):
+                    for ref_slot in range(len(reference_indices)):
                         plot_combined_for_variant_and_reference(
                             method_name, variant, results, k_out_dir,
-                            ref_slot, ref_index, descriptor,
+                            ref_slot, descriptor,
                         )
                         plot_signal_for_variant_and_reference(
                             method_name, variant, k_out_dir,
-                            ref_slot, ref_index, descriptor,
+                            ref_slot, descriptor,
                         )
 
         plot_summary_table(log, k_out_dir)

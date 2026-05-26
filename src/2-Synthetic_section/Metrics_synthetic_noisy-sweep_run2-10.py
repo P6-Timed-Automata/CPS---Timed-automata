@@ -57,10 +57,10 @@ from Pipeline import run_pipeline
 
 N_TRAIN = CONFIG["n_train"]
 
-NOISE_LEVELS = [0.02, 0.05, 0.1, 0.15, 0.2, 0.25,0.3,0.4,0.5]
+NOISE_LEVELS = [0.02, 0.05, 0.1, 0.15, 0.2, 0.25,0.3]
 
 # Number of seeds per (method, noise_level). Multiplies runtime by this factor.
-N_SEEDS = 3
+N_SEEDS = 5
 
 F1_THRESHOLD = 0.7
 

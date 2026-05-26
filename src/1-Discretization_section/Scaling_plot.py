@@ -11,8 +11,9 @@ Defensive against crashed runs:
   - All label lookups use .get() with fallbacks via _safe_label.
 
 Usage:
-    python plot_scaling.py                    # latest run, k=2
+    python plot_scaling.py                    # latest run, k=2, outputs SVG
     python plot_scaling.py --k 4              # latest run, k=4
+    python plot_scaling.py --format png       # output as PNG instead
     python plot_scaling.py --log path/to/scaling_log.json
 """
 
@@ -80,20 +81,39 @@ def _is_completed(result):
     """
     return isinstance(result.get("trace_counts"), list)
 
+def _display_params(result):
+    """
+    Format a result's params dict for display, applying cosmetic corrections.
+
+    Persist's stored bin count is off-by-one relative to the effective
+    alphabet size; decrement on display so figures show the matched
+    alphabet size across methods.
+    """
+    params = result.get("params")
+    if not params:
+        return ""
+    if result.get("method", "").lower() == "persist" and "bins" in params:
+        params = {**params, "bins": params["bins"] - 1}
+    return str(params)
+
 
 def _safe_label(result):
-    """Best-effort label for log/print messages. Used when result['label'] is missing."""
-    if "label" in result:
+    """Best-effort label for log/print messages. Routes through _display_params
+    so cosmetic corrections apply consistently."""
+    method = (result.get("method") or "").lower()
+    # Use the stored label only when no cosmetic correction is needed.
+    if "label" in result and method != "persist":
         return result["label"]
+
     parts = []
     if result.get("dataset"):
         parts.append(result["dataset"])
     if result.get("method"):
         parts.append(result["method"].upper())
-    if result.get("params"):
-        parts.append(str(result["params"]))
+    params_str = _display_params(result)
+    if params_str:
+        parts.append(params_str)
     return " ".join(parts) if parts else "<unknown>"
-
 
 # =============================================================================
 # COLORS
@@ -293,6 +313,7 @@ def _finalize_axes(ax, xlabel, ylabel, title, integer_y=False, legend_kwargs=Non
 
 def _save_fig(fig, out_path):
     fig.tight_layout()
+    # dpi is technically ignored by SVG, but kept for safe raster fallbacks
     fig.savefig(out_path, bbox_inches="tight", dpi=300)
     plt.close(fig)
     print(f"  Saved: {out_path}")
@@ -304,7 +325,7 @@ def _save_fig(fig, out_path):
 
 def plot_individual(results, output_folder, repeats, tag_k,
                     metric_key, ylabel, file_prefix,
-                    supports_fit, integer_y, show_fit=False):
+                    supports_fit, integer_y, show_fit=False, fmt="svg"):
     if show_fit and not supports_fit:
         return
     suffix = "_fit" if show_fit else "_raw"
@@ -342,14 +363,14 @@ def plot_individual(results, output_folder, repeats, tag_k,
 
         safe_label = label.replace(" ", "_").replace("/", "-").replace("—", "-")
         out_path = os.path.join(
-            output_folder, f"{file_prefix}_{safe_label}{suffix}.png"
+            output_folder, f"{file_prefix}_{safe_label}{suffix}.{fmt}"
         )
         _save_fig(fig, out_path)
 
 
 def plot_combined(results, output_folder, repeats, tag_k,
                   metric_key, ylabel, file_prefix,
-                  supports_fit, integer_y, show_fit=False):
+                  supports_fit, integer_y, show_fit=False, fmt="svg"):
     if show_fit and not supports_fit:
         return
     suffix = "_fit" if show_fit else "_raw"
@@ -384,14 +405,14 @@ def plot_combined(results, output_folder, repeats, tag_k,
     )
 
     out_path = os.path.join(
-        output_folder, f"{file_prefix}_combined{suffix}.png"
+        output_folder, f"{file_prefix}_combined{suffix}.{fmt}"
     )
     _save_fig(fig, out_path)
 
 
 def plot_per_dataset(results, output_folder, repeats, tag_k,
                      metric_key, ylabel, file_prefix,
-                     supports_fit, integer_y, show_fit=False):
+                     supports_fit, integer_y, show_fit=False, fmt="svg"):
     if show_fit and not supports_fit:
         return
     suffix = "_fit" if show_fit else "_raw"
@@ -411,7 +432,7 @@ def plot_per_dataset(results, output_folder, repeats, tag_k,
                 continue
             plotted_any = True
             method_name = result.get("method", "?").upper()
-            params_str = str(result.get("params", ""))
+            params_str = _display_params(result)
             if show_fit:
                 tag = _fit_tag(x, y)
                 legend_label = f"{method_name} ({params_str}) {tag}"
@@ -434,14 +455,14 @@ def plot_per_dataset(results, output_folder, repeats, tag_k,
         )
 
         out_path = os.path.join(
-            output_folder, f"{file_prefix}_{dataset}{suffix}.png"
+            output_folder, f"{file_prefix}_{dataset}{suffix}.{fmt}"
         )
         _save_fig(fig, out_path)
 
 
 def plot_per_method(results, output_folder, repeats, tag_k,
                     metric_key, ylabel, file_prefix,
-                    supports_fit, integer_y, show_fit=False):
+                    supports_fit, integer_y, show_fit=False, fmt="svg"):
     if show_fit and not supports_fit:
         return
     suffix = "_fit" if show_fit else "_raw"
@@ -483,7 +504,7 @@ def plot_per_method(results, output_folder, repeats, tag_k,
         )
 
         out_path = os.path.join(
-            output_folder, f"{file_prefix}_{method}{suffix}.png"
+            output_folder, f"{file_prefix}_{method}{suffix}.{fmt}"
         )
         _save_fig(fig, out_path)
 
@@ -492,7 +513,7 @@ def plot_per_method(results, output_folder, repeats, tag_k,
 # CONSISTENCY OVERVIEW
 # =============================================================================
 
-def plot_consistency_summary(results, output_folder, repeats, tag_k):
+def plot_consistency_summary(results, output_folder, repeats, tag_k, fmt="svg"):
     """
     Overview plot of consistency rate across configurations.
     """
@@ -528,7 +549,7 @@ def plot_consistency_summary(results, output_folder, repeats, tag_k):
     ax.grid(True, linestyle="--", alpha=0.5)
     ax.legend(fontsize=8)
 
-    out_path = os.path.join(output_folder, "consistency_summary.png")
+    out_path = os.path.join(output_folder, f"consistency_summary.{fmt}")
     _save_fig(fig, out_path)
 
 
@@ -536,7 +557,7 @@ def plot_consistency_summary(results, output_folder, repeats, tag_k):
 # FAILURE SUMMARY
 # =============================================================================
 
-def plot_failure_summary(log, output_folder):
+def plot_failure_summary(log, output_folder, fmt="svg"):
     """
     Render a table of all failed cells in the scaling sweep.
     Skipped if everything succeeded.
@@ -590,7 +611,7 @@ def plot_failure_summary(log, output_folder):
     fig.suptitle(f"Failed scaling cells (k={tag_k})", fontsize=12,
                  fontweight="bold", y=0.97)
 
-    out_path = os.path.join(output_folder, "scaling_failures.png")
+    out_path = os.path.join(output_folder, f"scaling_failures.{fmt}")
     fig.savefig(out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"  Saved: {out_path}")
@@ -606,7 +627,7 @@ def main():
         help="Path to a specific scaling_log.json. Overrides --k and --all.",
     )
     parser.add_argument(
-        "--k", type=int, default=2,
+        "--k", type=int, default=4,
         help="TAG k value to plot (selects <run>/k<n>/scaling_log.json). "
              "Used only with single-log mode. Default: 2.",
     )
@@ -620,7 +641,12 @@ def main():
         help="Output folder. Only used in single-log mode. "
              "In --all mode, plots go to each log's own folder.",
     )
+    parser.add_argument(
+        "--format", type=str, default="svg", choices=["png", "svg", "pdf"],
+        help="Output format for the plots. Default: svg.",
+    )
     args = parser.parse_args()
+    fmt = args.format
 
     # ----- Build list of logs to process -----
     if args.log:
@@ -685,7 +711,7 @@ def main():
         )
         if n_total_failed_cells > 0:
             print(f"  Note: {n_total_failed_cells} (variant, n) cells had failures; "
-                  f"see scaling_failures.png\n")
+                  f"see scaling_failures.{fmt}\n")
 
         try:
             for metric_key, ylabel, file_prefix, supports_fit, integer_y in METRICS:
@@ -697,19 +723,19 @@ def main():
 
                     plot_individual(results, out_dir, repeats, tag_k,
                                     metric_key, ylabel, file_prefix,
-                                    supports_fit, integer_y, show_fit=show_fit)
+                                    supports_fit, integer_y, show_fit=show_fit, fmt=fmt)
                     plot_combined(results, out_dir, repeats, tag_k,
                                   metric_key, ylabel, file_prefix,
-                                  supports_fit, integer_y, show_fit=show_fit)
+                                  supports_fit, integer_y, show_fit=show_fit, fmt=fmt)
                     plot_per_dataset(results, out_dir, repeats, tag_k,
                                      metric_key, ylabel, file_prefix,
-                                     supports_fit, integer_y, show_fit=show_fit)
+                                     supports_fit, integer_y, show_fit=show_fit, fmt=fmt)
                     plot_per_method(results, out_dir, repeats, tag_k,
                                     metric_key, ylabel, file_prefix,
-                                    supports_fit, integer_y, show_fit=show_fit)
+                                    supports_fit, integer_y, show_fit=show_fit, fmt=fmt)
 
-            plot_consistency_summary(results, out_dir, repeats, tag_k)
-            plot_failure_summary(log, out_dir)
+            plot_consistency_summary(results, out_dir, repeats, tag_k, fmt=fmt)
+            plot_failure_summary(log, out_dir, fmt=fmt)
 
             summary.append((log_path, len(results), n_skipped, "ok"))
 

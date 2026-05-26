@@ -327,9 +327,9 @@ REAL_TRAIN_DIR = DATA_DIR / "3-ExtractInterval" / "1day-experiment" / "A-train"
 REAL_TEST_DIR = DATA_DIR / "3-ExtractInterval" / \
     "1day-experiment" / "A-test" / "positive"
 
-method = "sax"
+method = "persist"  # "naiv", "persist", "sax"
 
-SIMULATION_FOLDER = DATA_DIR / "7-ExtractedUppaalGraphData"/ method
+SIMULATION_FOLDER = DATA_DIR / "7-ExtractedUppaalGraphData"/ method / "temp"
 simulation_files = list(SIMULATION_FOLDER.glob("*.csv"))
 
 print(f"Found {len(simulation_files)} simulation files")
@@ -428,7 +428,7 @@ for sim_file in simulation_files:
     # OUTPUT STRUCTURE
     # ======================================================
 
-    GROUP_RESULTS_DIR = RESULTS_DIR / method / TEMP_GROUP / SCENARIO
+    GROUP_RESULTS_DIR = RESULTS_DIR / method 
     GROUP_GRAPH_DIR = GRAPH_DIR / method / TEMP_GROUP / SCENARIO
 
     GROUP_RESULTS_DIR.mkdir(parents=True, exist_ok=True)

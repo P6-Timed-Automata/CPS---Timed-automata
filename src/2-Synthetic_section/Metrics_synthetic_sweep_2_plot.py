@@ -35,6 +35,14 @@ METHOD_COLORS = {
     "persist": "seagreen",
 }
 
+def _save_fig(fig, out_path):
+    """Save figure as both PNG and SVG. out_path should end in .png."""
+    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    svg_path = out_path.with_suffix(".svg")
+    fig.savefig(svg_path, bbox_inches="tight")
+    print(f"  Saved: {out_path}")
+    print(f"  Saved: {svg_path}")
+
 
 # =============================================================================
 # STATUS FILTERING (same schema as exp_53_plot)
@@ -152,7 +160,7 @@ def plot_metric_vs_test_noise(log, metric, ylabel, title, out_path):
         fontsize=12,
     )
     fig.tight_layout()
-    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    _save_fig(fig, out_path)
     plt.close(fig)
     print(f"  Saved: {out_path}")
 

@@ -60,6 +60,81 @@ DATASETS["temperature_train"] = {
     "x_label":       "Time (hours)",
     "y_label":       "Temperature (°C)",
 }
+def fig_overlay_raw(folder, out_path, *, title, xlabel, ylabel):
+    """
+    Overlay every CSV in folder using its raw time column verbatim —
+    no cropping, no unit conversion, no normalization. Files whose length
+    differs from the modal length are drawn in red so any time-axis
+    inconsistency between files becomes visually obvious.
+    """
+    from collections import Counter
+
+    csvs = sorted(folder.glob("*.csv"))
+    if not csvs:
+        return
+
+    raw_traces = []
+    for path in csvs:
+        try:
+            t, v = load_csv(path)
+            raw_traces.append((path.name, t, v))
+        except Exception as e:
+            print(f"  Warning: failed to load {path.name}: {e}")
+
+    mode_len   = Counter(len(t) for _, t, _ in raw_traces).most_common(1)[0][0]
+    n_outliers = 0
+
+    fig, ax = plt.subplots(figsize=(14, 5))
+    for name, t, v in raw_traces:
+        if len(t) == mode_len:
+            ax.plot(t, v, color="#1565C0", linewidth=0.5, alpha=0.25)
+        else:
+            ax.plot(t, v, color="#E53935", linewidth=1.2, alpha=0.9,
+                    label=f"{name} (n={len(t)})")
+            n_outliers += 1
+
+    suffix = f", {n_outliers} length-outliers in red" if n_outliers else ""
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(f"{title}  (n={len(raw_traces)} traces, "
+                 f"mode length={mode_len}{suffix})")
+    ax.grid(True, linestyle="--", alpha=0.35)
+    if n_outliers:
+        ax.legend(loc="upper right", fontsize=8)
+    fig.tight_layout()
+    fig.savefig(out_path, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  Saved: {out_path}")
+
+def fig_individual(traces, out_dir, prefix, *, title, xlabel, ylabel):
+    """
+    Save each trace as its own SVG. Per-trace inspection at full
+    resolution, with a shared y-range so amplitudes are visually
+    comparable across files.
+    """
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Shared y-range for fair visual comparison across files.
+    all_v = np.concatenate([v for _, _, v in traces])
+    y_lo, y_hi = float(np.nanmin(all_v)), float(np.nanmax(all_v))
+    y_pad = 0.05 * (y_hi - y_lo) if y_hi > y_lo else 1.0
+
+    for i, (name, t, v) in enumerate(traces):
+        fig, ax = plt.subplots(figsize=(8, 3))
+        ax.plot(t, v, color="#1565C0", linewidth=0.8)
+        ax.set_ylim(y_lo - y_pad, y_hi + y_pad)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.set_title(f"{title} — #{i}: {name}", fontsize=10)
+        ax.grid(True, linestyle="--", alpha=0.3)
+        fig.tight_layout()
+
+        out_path = out_dir / f"{prefix}_{i:03d}_{Path(name).stem}.svg"
+        fig.savefig(out_path, format="svg", bbox_inches="tight")
+        plt.close(fig)
+
+    print(f"  Saved: {len(traces)} individual SVGs to {out_dir}")
 
 
 # ============================================================
@@ -204,16 +279,22 @@ def process_dataset(name, cfg, out_dir):
         return
     print(f"  Loaded: {len(traces)} traces")
 
-    fig_grid_all(
-        traces, out_dir / f"{name}_grid.png",
-        title=f"{name}: all positive traces",
+    # One SVG per trace, in a per-dataset subfolder so the output stays tidy.
+    fig_individual(
+        traces, out_dir / name, prefix=name,
+        title=f"{name}: positive trace",
         xlabel=cfg["x_label"], ylabel=cfg["y_label"],
                 )
     fig_overlay_all(
-        traces, out_dir / f"{name}_overlay.png",
+        traces, out_dir / f"{name}_overlay.svg",
         title=f"{name}: all positive traces (overlay)",
         xlabel=cfg["x_label"], ylabel=cfg["y_label"],
                 )
+    fig_overlay_raw(
+        cfg["pos_folder"], out_dir / f"{name}_overlay_raw.svg",
+        title=f"{name}: all positive traces (raw x-axis)",
+        xlabel="Raw time (from CSV)", ylabel=cfg["y_label"],
+                           )
 
 
 # ============================================================

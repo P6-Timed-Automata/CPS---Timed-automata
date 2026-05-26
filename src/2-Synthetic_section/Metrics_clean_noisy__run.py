@@ -39,13 +39,13 @@ TAG_K = 4
 # best for each method to characterise robustness.
 METHOD_VARIANTS = {
     "naive": [
-        {"bins": 5},
+        {"bins": 10},
     ],
     "sax": [
-        {"w": 24,  "bins": 5},
+        {"w": 48,  "bins": 10},
     ],
     "persist": [
-        {"bins": 6},
+        {"bins": 11},
     ],
 }
 
