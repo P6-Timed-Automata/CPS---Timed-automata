@@ -22,11 +22,11 @@ const int spike_window = 13;
 		</declaration>
 			<location id="id0" x="217" y="-2199">
 				<name x="217" y="-2219">S0</name>
-				<label kind="invariant">cl_local&lt;=88</label>
+				<label kind="invariant">cl_local&lt;=28</label>
 			</location>
 			<location id="id1" x="217" y="-1678">
 				<name x="217" y="-1698">S1</name>
-				<label kind="invariant">cl_local&lt;=33</label>
+				<label kind="invariant">cl_local&lt;=93</label>
 			</location>
 			<location id="id2" x="217" y="-1157">
 				<name x="217" y="-1177">S2</name>
@@ -44,7 +44,7 @@ const int spike_window = 13;
 			<source ref="id0"/>
 			<target ref="id1"/>
 			<label kind="guard">
-cl_local &gt;= 88 &amp;&amp; cl_local &lt;= 88			</label>
+cl_local &gt;= 28 &amp;&amp; cl_local &lt;= 28			</label>
 			<label kind="assignment">
 prev_temp = temp,
 temp = c,
@@ -55,7 +55,7 @@ cl_local = 0
 			<source ref="id1"/>
 			<target ref="id2"/>
 			<label kind="guard">
-cl_local &gt;= 33 &amp;&amp; cl_local &lt;= 33			</label>
+cl_local &gt;= 93 &amp;&amp; cl_local &lt;= 93			</label>
 			<label kind="assignment">
 prev_temp = temp,
 temp = b,
@@ -97,11 +97,15 @@ bool SPIKE_seen = false;
 			<location id="id6" x="300" y="300">
 				<name x="300" y="280">FLAT</name>
 			</location>
-		<label kind="invariant">cl_observer &lt;= 1</label>
-			<location id="id7" x="900" y="0">
-				<name x="900" y="-20">SPIKE</name>
+		<label kind="invariant">cl_observer &lt;= 3</label>
+			<location id="id7" x="900" y="300">
+				<name x="900" y="280">TRANSITION</name>
 			</location>
-		<label kind="invariant">cl_observer &lt;= 1</label>
+		<label kind="invariant">cl_observer &lt;= 3</label>
+			<location id="id8" x="900" y="-300">
+				<name x="900" y="-320">SPIKE</name>
+			</location>
+		<label kind="invariant">cl_observer &lt;= 3</label>
 		<init ref="id5"/>
 		<transition>
 			<source ref="id5"/>
@@ -112,26 +116,56 @@ bool SPIKE_seen = false;
 		<transition>
 			<source ref="id6"/>
 			<target ref="id6"/>
-			<label kind="guard">(temp &lt;= flat_threshold &amp;&amp; cl_observer &gt;= 1 ) </label>
+			<label kind="guard">(temp &lt;= flat_threshold) &amp;&amp; (cl_observer &gt;= 3) </label>
 			<label kind="assignment">cl_observer = 0</label>
 		</transition>
 		<transition>
 			<source ref="id6"/>
-			<target ref="id7"/>
+			<target ref="id8"/>
 			<label kind="guard">(temp &gt;= spike_threshold)</label>
 			<label kind="assignment">cl_observer = 0, cl_flat = 0, cl_spike = 0,SPIKE_seen = true</label>
 		</transition>
 		<transition>
+			<source ref="id6"/>
+			<target ref="id7"/>
+			<label kind="guard">(temp &gt; flat_threshold)  &amp;&amp; (temp &lt; spike_threshold)</label>
+			<label kind="assignment">cl_observer = 0, cl_spike = 0</label>
+		</transition>
+		<transition>
 			<source ref="id7"/>
 			<target ref="id7"/>
-			<label kind="guard">(temp &gt;= spike_threshold) &amp;&amp; cl_observer &gt;= 1</label>
+			<label kind="guard">(temp &gt; flat_threshold)  &amp;&amp; (temp &lt; spike_threshold) &amp;&amp; (cl_observer &gt;= 3 )</label>
 			<label kind="assignment">cl_observer = 0</label>
 		</transition>
 		<transition>
 			<source ref="id7"/>
 			<target ref="id6"/>
+			<label kind="guard">temp &lt;= flat_threshold</label>
+			<label kind="assignment">cl_observer = 0, cl_spike = 0</label>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id8"/>
+			<label kind="guard"> temp &gt;= spike_threshold</label>
+			<label kind="assignment">cl_observer = 0, cl_flat = 0, SPIKE_seen = true</label>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id8"/>
+			<label kind="guard">(temp &gt;= spike_threshold) &amp;&amp; ( cl_observer &gt;= 3)</label>
+			<label kind="assignment">cl_observer = 0</label>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id6"/>
 			<label kind="guard">(temp &lt;= flat_threshold)</label>
 			<label kind="assignment">cl_observer = 0,cl_flat = 0, cl_spike = 0</label>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id7"/>
+			<label kind="guard"> (temp &gt; flat_threshold)  &amp;&amp; (temp &lt; spike_threshold)</label>
+			<label kind="assignment">cl_observer = 0, cl_flat = 0</label>
 		</transition>
 	</template>
 	<system>
