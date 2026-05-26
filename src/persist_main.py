@@ -42,8 +42,6 @@ elif data_type == "ecg":
     period = "1beat"
     time = 275
 
-
-
 #Parameters for Persist
 break_max = 15
 break_min = 2
@@ -55,7 +53,6 @@ k_min = 4
 k_max = 4
 k_increment = 2
 
-#Prepare train traces
 #Prepare train traces
 if (data_type == "temp"):
     train_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/ f"{room}-train"
@@ -71,7 +68,6 @@ p = Persist(x = ts, break_min=break_min, break_max=break_max, divergence="w", ca
 # best breakpoints
 bins = get_best_bins(p, ts)
 symbols = len(bins) - 1
-
 
 
 train_traces = discretize_traces_with_bins(train_raw_lists, bins)
@@ -107,8 +103,6 @@ start_traces = 1
 len_traces = 51
 
 # trace_list = [500,600,700,800,900,1000]
-
-
 
 for trace_nr in range(start_traces, len_traces):
 
