@@ -20,45 +20,47 @@ const int spike_window = 13;
 		<name x="5" y="5">TagModel</name>
 		<declaration>
 		</declaration>
-			<location id="id0" x="217" y="-3497">
-				<name x="217" y="-3517">S0</name>
-				<label kind="invariant">cl_local&lt;=42</label>
+			<location id="id0" x="217" y="-4283">
+				<name x="217" y="-4303">S0</name>
+				<label kind="invariant">cl_local&lt;=17</label>
 			</location>
-			<location id="id2" x="217" y="-2976">
-				<name x="217" y="-2996">S1_S0_a</name>
-				<label kind="invariant">cl_local&lt;=30</label>
+			<location id="id1" x="217" y="-3762">
+				<name x="217" y="-3782">S1</name>
+				<label kind="invariant">cl_local&lt;=105</label>
 			</location>
-			<location id="id3" x="217" y="-2976">
-				<name x="217" y="-2996">S1_S10_c</name>
-				<label kind="invariant">cl_local&lt;=5</label>
+			<location id="id2" x="217" y="-3241">
+				<name x="217" y="-3261">S2</name>
+				<label kind="invariant">cl_local&lt;=9</label>
 			</location>
-			<location id="id4" x="217" y="-2429">
-				<name x="217" y="-2449">S10</name>
+			<location id="id3" x="217" y="-2720">
+				<name x="217" y="-2740">S3</name>
+				<label kind="invariant">cl_local&lt;=2</label>
+			</location>
+			<location id="id4" x="217" y="-2199">
+				<name x="217" y="-2219">S4</name>
 				<label kind="invariant">cl_local&lt;=14</label>
 			</location>
-			<location id="id5" x="217" y="-1857">
-				<name x="217" y="-1877">S11</name>
-				<label kind="invariant">cl_local&lt;=6</label>
+			<location id="id5" x="217" y="-1678">
+				<name x="217" y="-1698">S5</name>
+				<label kind="invariant">cl_local&lt;=3</label>
 			</location>
-			<location id="id6" x="217" y="-1285">
-				<name x="217" y="-1305">S12</name>
-				<label kind="invariant">cl_local&lt;=5</label>
+			<location id="id6" x="217" y="-1157">
+				<name x="217" y="-1177">S6</name>
+				<label kind="invariant">cl_local&lt;=3</label>
 			</location>
-			<location id="id7" x="217" y="-712">
-				<name x="217" y="-732">S13</name>
-				<label kind="invariant">cl_local&lt;=117</label>
+			<location id="id7" x="217" y="-636">
+				<name x="217" y="-656">S7</name>
+				<label kind="invariant">cl_local&lt;=122</label>
 			</location>
-			<location id="id8" x="217" y="-140">
-				<name x="217" y="-160">S14</name>
+			<location id="id8" x="217" y="-115">
+				<name x="217" y="-135">S8</name>
 			</location>
-			<branchpoint id="id1">
-			</branchpoint>
 			<init ref="id0"/>
 		<transition>
 			<source ref="id0"/>
 			<target ref="id1"/>
 			<label kind="guard">
-cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 42			</label>
+cl_local &gt;= 17 &amp;&amp; cl_local &lt;= 17			</label>
 			<label kind="assignment">
 prev_temp = temp,
 temp = b,
@@ -68,13 +70,8 @@ cl_local = 0
 		<transition>
 			<source ref="id1"/>
 			<target ref="id2"/>
-			<label kind="probability">80</label>
-		</transition>
-		<transition>
-			<source ref="id2"/>
-			<target ref="id0"/>
 			<label kind="guard">
-cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 30			</label>
+cl_local &gt;= 105 &amp;&amp; cl_local &lt;= 105			</label>
 			<label kind="assignment">
 prev_temp = temp,
 temp = a,
@@ -82,15 +79,21 @@ cl_local = 0
 			</label>
 		</transition>
 		<transition>
-			<source ref="id1"/>
+			<source ref="id2"/>
 			<target ref="id3"/>
-			<label kind="probability">20</label>
+			<label kind="guard">
+cl_local &gt;= 9 &amp;&amp; cl_local &lt;= 9			</label>
+			<label kind="assignment">
+prev_temp = temp,
+temp = b,
+cl_local = 0
+			</label>
 		</transition>
 		<transition>
 			<source ref="id3"/>
 			<target ref="id4"/>
 			<label kind="guard">
-cl_local &gt;= 5 &amp;&amp; cl_local &lt;= 5			</label>
+cl_local &gt;= 2 &amp;&amp; cl_local &lt;= 2			</label>
 			<label kind="assignment">
 prev_temp = temp,
 temp = c,
@@ -112,7 +115,7 @@ cl_local = 0
 			<source ref="id5"/>
 			<target ref="id6"/>
 			<label kind="guard">
-cl_local &gt;= 6 &amp;&amp; cl_local &lt;= 6			</label>
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
 			<label kind="assignment">
 prev_temp = temp,
 temp = c,
@@ -123,7 +126,7 @@ cl_local = 0
 			<source ref="id6"/>
 			<target ref="id7"/>
 			<label kind="guard">
-cl_local &gt;= 5 &amp;&amp; cl_local &lt;= 5			</label>
+cl_local &gt;= 3 &amp;&amp; cl_local &lt;= 3			</label>
 			<label kind="assignment">
 prev_temp = temp,
 temp = b,
@@ -134,7 +137,7 @@ cl_local = 0
 			<source ref="id7"/>
 			<target ref="id8"/>
 			<label kind="guard">
-cl_local &gt;= 117 &amp;&amp; cl_local &lt;= 117			</label>
+cl_local &gt;= 122 &amp;&amp; cl_local &lt;= 122			</label>
 			<label kind="assignment">
 prev_temp = temp,
 temp = a,
@@ -154,11 +157,15 @@ bool SPIKE_seen = false;
 			<location id="id10" x="300" y="300">
 				<name x="300" y="280">FLAT</name>
 			</location>
-		<label kind="invariant">cl_observer &lt;= 1</label>
-			<location id="id11" x="900" y="0">
-				<name x="900" y="-20">SPIKE</name>
+		<label kind="invariant">cl_observer &lt;= 3</label>
+			<location id="id11" x="900" y="300">
+				<name x="900" y="280">TRANSITION</name>
 			</location>
-		<label kind="invariant">cl_observer &lt;= 1</label>
+		<label kind="invariant">cl_observer &lt;= 3</label>
+			<location id="id12" x="900" y="-300">
+				<name x="900" y="-320">SPIKE</name>
+			</location>
+		<label kind="invariant">cl_observer &lt;= 3</label>
 		<init ref="id9"/>
 		<transition>
 			<source ref="id9"/>
@@ -169,26 +176,56 @@ bool SPIKE_seen = false;
 		<transition>
 			<source ref="id10"/>
 			<target ref="id10"/>
-			<label kind="guard">(temp &lt;= flat_threshold &amp;&amp; cl_observer &gt;= 1 ) </label>
+			<label kind="guard">(temp &lt;= flat_threshold) &amp;&amp; (cl_observer &gt;= 3) </label>
 			<label kind="assignment">cl_observer = 0</label>
 		</transition>
 		<transition>
 			<source ref="id10"/>
-			<target ref="id11"/>
+			<target ref="id12"/>
 			<label kind="guard">(temp &gt;= spike_threshold)</label>
 			<label kind="assignment">cl_observer = 0, cl_flat = 0, cl_spike = 0,SPIKE_seen = true</label>
 		</transition>
 		<transition>
+			<source ref="id10"/>
+			<target ref="id11"/>
+			<label kind="guard">(temp &gt; flat_threshold)  &amp;&amp; (temp &lt; spike_threshold)</label>
+			<label kind="assignment">cl_observer = 0, cl_spike = 0</label>
+		</transition>
+		<transition>
 			<source ref="id11"/>
 			<target ref="id11"/>
-			<label kind="guard">(temp &gt;= spike_threshold) &amp;&amp; cl_observer &gt;= 1</label>
+			<label kind="guard">(temp &gt; flat_threshold)  &amp;&amp; (temp &lt; spike_threshold) &amp;&amp; (cl_observer &gt;= 3 )</label>
 			<label kind="assignment">cl_observer = 0</label>
 		</transition>
 		<transition>
 			<source ref="id11"/>
 			<target ref="id10"/>
+			<label kind="guard">temp &lt;= flat_threshold</label>
+			<label kind="assignment">cl_observer = 0, cl_spike = 0</label>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id12"/>
+			<label kind="guard"> temp &gt;= spike_threshold</label>
+			<label kind="assignment">cl_observer = 0, cl_flat = 0, SPIKE_seen = true</label>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id12"/>
+			<label kind="guard">(temp &gt;= spike_threshold) &amp;&amp; ( cl_observer &gt;= 3)</label>
+			<label kind="assignment">cl_observer = 0</label>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id10"/>
 			<label kind="guard">(temp &lt;= flat_threshold)</label>
 			<label kind="assignment">cl_observer = 0,cl_flat = 0, cl_spike = 0</label>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id11"/>
+			<label kind="guard"> (temp &gt; flat_threshold)  &amp;&amp; (temp &lt; spike_threshold)</label>
+			<label kind="assignment">cl_observer = 0, cl_flat = 0</label>
 		</transition>
 	</template>
 	<system>
@@ -207,7 +244,7 @@ system Automaton, Observer;
 		</query>
 
 		<query>
-			<formula>E&lt;&gt; Automaton.S14</formula>
+			<formula>E&lt;&gt; Automaton.S8</formula>
 			<comment>Check that the model can reach an accepting state</comment>
 		</query>
 
@@ -253,7 +290,7 @@ system Automaton, Observer;
 		</query>
 
 		<query>
-			<formula>A&lt;&gt; Automaton.S14</formula>
+			<formula>A&lt;&gt; Automaton.S8</formula>
 			<comment>Check that the model can reach an accepting state for all paths</comment>
 		</query>
 
@@ -291,7 +328,7 @@ system Automaton, Observer;
 		</query>
 
 		<query>
-			<formula>Pr[&lt;=275; 10000] (&lt;&gt; (Automaton.S14)) </formula>
+			<formula>Pr[&lt;=275; 10000] (&lt;&gt; (Automaton.S8)) </formula>
 			<comment>Probability that accept state reached during the simulation time</comment>
 		</query>
 

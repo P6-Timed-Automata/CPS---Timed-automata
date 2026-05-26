@@ -32,7 +32,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # PARAMETERS SETTINGS
-data_type ="temp"
+data_type ="ecg"
 room = "A"
 discretization_method = "sax"
 sim_nr = 10000
@@ -49,9 +49,9 @@ elif data_type == "ecg":
 
 
 # Parameter for SAX
-symbols = 15
+symbols = 10
 # w = 200
-w_values = [24]
+w_values = [24, 48]
 
 # Parameter for TAG
 k_min = 4
@@ -134,9 +134,9 @@ len_traces = len(train_raw_traces)  + 1
 start_traces = 1
 len_traces = 51
 
-# trace_list = [500,600,800,900,1000]
+trace_list = [700]
 
-
+#700
 
 
 for w in w_values:
@@ -190,7 +190,7 @@ for w in w_values:
 
             # Tranform to TA
             learner = TALearner(tss_path=discretinize_data_path,display=False,k=k)
-            # learner.ta.show(title=title,savePng=True,output_path=TA_output_path)
+            learner.ta.show(title=title,savePng=True,output_path=TA_output_path)
             learner.ta.export_ta( ta=learner.ta, path=xml_path, symbol_map=symbol_map, data_type = data_type, time = time, sim_nr=sim_nr)
 
             # Compute metrics

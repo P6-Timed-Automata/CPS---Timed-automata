@@ -1,0 +1,32 @@
+digraph G {
+START [style=invisible]
+graph [fontname = "helvetica"]
+node [fontname = "helvetica"]
+edge [fontname = "helvetica"]
+labelloc="t"
+label="A-2trace-1beat-sax-s10-w24-k4-ta"
+S2 [shape="circle"]
+S3 [shape="circle"]
+S0 [shape="circle"]
+S8 [shape="circle"]
+S11 [shape="circle"]
+S4 [shape="circle"]
+S10 [shape="circle"]
+S5 [shape="circle"]
+S9 [shape="doublecircle"]
+S1 [shape="circle"]
+S6 [shape="circle"]
+START -> S0
+S0 -> S1 [label="f [14, 14] t[14, 14] p=0.5"]
+S0 -> S10 [label="g [14, 14] t[14, 14] p=0.5"]
+S1 -> S2 [label="e [14, 60] t[28, 88] p=1.0"]
+S10 -> S1 [label="f [14, 14] t[28, 28] p=1.0"]
+S2 -> S3 [label="d [11, 71] t[99, 99] p=1.0"]
+S3 -> S4 [label="c [22, 22] t[121, 121] p=1.0"]
+S4 -> S5 [label="i [11, 11] t[132, 132] p=1.0"]
+S5 -> S6 [label="j [22, 22] t[154, 154] p=0.5"]
+S5 -> S11 [label="j [11, 11] t[143, 143] p=0.5"]
+S6 -> S8 [label="c [11, 11] t[165, 165] p=1.0"]
+S11 -> S6 [label="i [11, 11] t[154, 154] p=1.0"]
+S8 -> S9 [label="d [100, 100] t[265, 265] p=1.0"]
+}

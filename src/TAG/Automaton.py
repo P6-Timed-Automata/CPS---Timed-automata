@@ -1394,6 +1394,7 @@ class Automaton:
 
 
         elif data_type == "ecg":
+            invariant = 3
             # Observer
             xml += "\t<template>\n"
             xml += "\t\t<name>TagObserver</name>\n"
@@ -1411,14 +1412,20 @@ class Automaton:
             # FLAT (loop location)
             xml += self.create_location(s_id, (300, 300), "FLAT")
             d_s_id["FLAT"] = "id" + str(s_id)
-            xml += f'\t\t<label kind="invariant">cl_observer &lt;= 1</label>\n'
+            xml += f'\t\t<label kind="invariant">cl_observer &lt;= {invariant}</label>\n'
+            s_id += 1
+
+            # TRANSITION (loop location)
+            xml += self.create_location(s_id, (900, 300), "TRANSITION")
+            d_s_id["TRANSITION"] = "id" + str(s_id)
+            xml += f'\t\t<label kind="invariant">cl_observer &lt;= {invariant}</label>\n'
             s_id += 1
 
 
             # SPIKE
-            xml += self.create_location(s_id, (900, 0), "SPIKE")
+            xml += self.create_location(s_id, (900, -300), "SPIKE")
             d_s_id["SPIKE"] = "id" + str(s_id)
-            xml += f'\t\t<label kind="invariant">cl_observer &lt;= 1</label>\n'
+            xml += f'\t\t<label kind="invariant">cl_observer &lt;= {invariant}</label>\n'
             s_id += 1
 
 
@@ -1443,7 +1450,7 @@ class Automaton:
             xml += "\t\t<transition>\n"
             xml += f'\t\t\t<source ref="{d_s_id["FLAT"]}"/>\n'
             xml += f'\t\t\t<target ref="{d_s_id["FLAT"]}"/>\n'
-            xml += '\t\t\t<label kind="guard">(temp &lt;= flat_threshold &amp;&amp; cl_observer &gt;= 1 ) </label>\n'
+            xml += f'\t\t\t<label kind="guard">(temp &lt;= flat_threshold) &amp;&amp; (cl_observer &gt;= {invariant}) </label>\n'
             xml += '\t\t\t<label kind="assignment">cl_observer = 0</label>\n'
             xml += "\t\t</transition>\n"
 
@@ -1457,6 +1464,42 @@ class Automaton:
             xml += "\t\t</transition>\n"
 
 
+            # FLAT -> TRANSITION
+            xml += "\t\t<transition>\n"
+            xml += f'\t\t\t<source ref="{d_s_id["FLAT"]}"/>\n'
+            xml += f'\t\t\t<target ref="{d_s_id["TRANSITION"]}"/>\n'
+            xml += '\t\t\t<label kind="guard">(temp &gt; flat_threshold)  &amp;&amp; (temp &lt; spike_threshold)</label>\n'
+            xml += '\t\t\t<label kind="assignment">cl_observer = 0, cl_spike = 0</label>\n'
+            xml += "\t\t</transition>\n"
+
+
+            # --------------------------------------
+            # TRANSITION STATE BEHAVIOUR
+            # --------------------------------------
+            # TRANSITION -> TRANSITION
+            xml += "\t\t<transition>\n"
+            xml += f'\t\t\t<source ref="{d_s_id["TRANSITION"]}"/>\n'
+            xml += f'\t\t\t<target ref="{d_s_id["TRANSITION"]}"/>\n'
+            xml += f'\t\t\t<label kind="guard">(temp &gt; flat_threshold)  &amp;&amp; (temp &lt; spike_threshold) &amp;&amp; (cl_observer &gt;= {invariant} )</label>\n'
+            xml += '\t\t\t<label kind="assignment">cl_observer = 0</label>\n'
+            xml += "\t\t</transition>\n"
+
+            # TRANSITION -> FLAT
+            xml += "\t\t<transition>\n"
+            xml += f'\t\t\t<source ref="{d_s_id["TRANSITION"]}"/>\n'
+            xml += f'\t\t\t<target ref="{d_s_id["FLAT"]}"/>\n'
+            xml += '\t\t\t<label kind="guard">temp &lt;= flat_threshold</label>\n'
+            xml += '\t\t\t<label kind="assignment">cl_observer = 0, cl_spike = 0</label>\n'
+            xml += "\t\t</transition>\n"
+
+            # TRANSITION -> SPIKE
+            xml += "\t\t<transition>\n"
+            xml += f'\t\t\t<source ref="{d_s_id["TRANSITION"]}"/>\n'
+            xml += f'\t\t\t<target ref="{d_s_id["SPIKE"]}"/>\n'
+            xml += '\t\t\t<label kind="guard"> temp &gt;= spike_threshold</label>\n'
+            xml += '\t\t\t<label kind="assignment">cl_observer = 0, cl_flat = 0, SPIKE_seen = true</label>\n'
+            xml += "\t\t</transition>\n"
+
             # --------------------------------------
             # SPIKE STATE BEHAVIOUR
             # --------------------------------------
@@ -1466,7 +1509,7 @@ class Automaton:
             xml += "\t\t<transition>\n"
             xml += f'\t\t\t<source ref="{d_s_id["SPIKE"]}"/>\n'
             xml += f'\t\t\t<target ref="{d_s_id["SPIKE"]}"/>\n'
-            xml += '\t\t\t<label kind="guard">(temp &gt;= spike_threshold) &amp;&amp; cl_observer &gt;= 1</label>\n'
+            xml += f'\t\t\t<label kind="guard">(temp &gt;= spike_threshold) &amp;&amp; ( cl_observer &gt;= {invariant})</label>\n'
             xml += '\t\t\t<label kind="assignment">cl_observer = 0</label>\n'
             xml += "\t\t</transition>\n"
 
@@ -1476,6 +1519,14 @@ class Automaton:
             xml += f'\t\t\t<target ref="{d_s_id["FLAT"]}"/>\n'
             xml += '\t\t\t<label kind="guard">(temp &lt;= flat_threshold)</label>\n'
             xml += '\t\t\t<label kind="assignment">cl_observer = 0,cl_flat = 0, cl_spike = 0</label>\n'
+            xml += "\t\t</transition>\n"
+
+            #  SPIKE -> TRANSITION
+            xml += "\t\t<transition>\n"
+            xml += f'\t\t\t<source ref="{d_s_id["SPIKE"]}"/>\n'
+            xml += f'\t\t\t<target ref="{d_s_id["TRANSITION"]}"/>\n'
+            xml += '\t\t\t<label kind="guard"> (temp &gt; flat_threshold)  &amp;&amp; (temp &lt; spike_threshold)</label>\n'
+            xml += '\t\t\t<label kind="assignment">cl_observer = 0, cl_flat = 0</label>\n'
             xml += "\t\t</transition>\n"
 
             xml += "\t</template>\n"
