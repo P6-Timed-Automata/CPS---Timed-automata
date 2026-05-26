@@ -67,41 +67,6 @@ elif(data_type == "ecg"):
 train_raw_traces = get_trace_files(folder_path = train_folder)
 train_raw_lists = csv_to_temp_time_list(input_files=train_raw_traces)
 
-# PATHS FOR NEGATIVE DATA
-# test_negative_folder = (
-#     BASE_DIR
-#     / "Data"
-#     / "3-ExtractInterval"
-#     / f"{period}-experiment"
-#     / f"{room}-test"
-#     / "negative"
-# )
-#
-# # Folder where all files will be collected
-# combined_negative_folder = test_negative_folder / "combined"
-# combined_negative_folder.mkdir(exist_ok=True)
-#
-# # ======================================================
-# # CONCATENATE FILES FROM SUBFOLDERS
-# # ======================================================
-#
-# for subfolder in test_negative_folder.iterdir():
-#
-#     # Skip if it's not a folder or if it's the output folder itself
-#     if not subfolder.is_dir() or subfolder.name == "combined":
-#         continue
-#
-#     for file in subfolder.iterdir():
-#
-#         if file.is_file():
-#
-#             # Optional: preserve unique filenames
-#             destination = combined_negative_folder / f"{subfolder.name}_{file.name}"
-#
-#             shutil.copy(file, destination)
-#
-# print(f"All negative files copied to: {combined_negative_folder}")
-
 #Prepare test traces (positive and negative samples)
 if (data_type == "temp"):
     test_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" / f"{period}-experiment"/f"{room}-test/positive"
@@ -144,9 +109,6 @@ for w in w_values:
     train_traces, bins, breakpoints, global_mean, global_std = sax_discretization_multi(train_raw_lists,w, symbols)
     symbolic_train_trace, symbol_map, mapping = map_bins_to_symbols(train_traces,bins)
 
-    # test_positive_traces_lists = preprocess_test_traces(test_traces = test_positive_raw_lists, bins = bins)
-    # test_negative_traces_lists = preprocess_test_traces(test_traces = test_negative_raw_lists, bins = bins)
-
     test_positive_traces_lists = sax_preprocess_traces(
         test_positive_raw_lists,
         w,
@@ -172,8 +134,6 @@ for w in w_values:
                                   / f"{room}-{trace_nr}trace-{period}-{discretization_method}-s{symbols}-trace.txt"
                                   )
         symbolic_train_trace_subset = symbolic_train_trace[:trace_nr ]
-
-
 
         format_output(symbolic_traces=symbolic_train_trace_subset, output_path=discretinize_data_path)
 

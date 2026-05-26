@@ -603,12 +603,6 @@ def generate_negative_samples(
                         values[i]
                     )
 
-                    # swap timestamps
-                    # times[i], times[j] = (
-                    #     times[j],
-                    #     times[i]
-                    # )
-
         # ===========================================================
         # 4. REBUILD RAW TRACE
         # ===========================================================
@@ -720,55 +714,3 @@ output_ecg_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{beats}-
 test_ecg_positive_folder = BASE_DIR / "Data" / "3-ExtractInterval" /  "ecg" / f"{beats}-experiment1"/f"{beats}-test/positive"
 test_ecg_negative_folder = BASE_DIR / "Data" / "3-ExtractInterval" / "ecg" / f"{beats}-experiment1"/f"{beats}-test/negative"
 
-
-
-# =============================================================================
-# ECG negative generation workflow
-# Run once to populate the negative folder, then run Metrics_ecg_run.py.
-# =============================================================================
-
-# Step 1 (one-time): split your ECG positives into train/test
-# split_dataset(
-#     input_folder  = all_ecg_traces_folder,
-#     output_folder = output_ecg_folder,
-#     prefix        = beats,
-# )
-
-#Step 2: generate negatives from the test positives
-# test_positive_files = get_trace_files(folder_path=test_ecg_positive_folder)
-# test_positive_lists = csv_to_temp_time_list(input_files=test_positive_files)
-# build_injected_negatives_ecg(
-#     positive_traces = test_positive_lists,
-#     out_folder      = test_ecg_negative_folder,
-#     file_prefix     = file_ecg_prefix,
-#     n_per_mode      = 43,
-# )
-
-# =============================================================================
-# Temperature negative generation
-# Positives are already split into A-train / A-test/positive; skip split_dataset.
-# =============================================================================
-
-# test_positive_files = get_trace_files(folder_path=test_positive_folder)
-# test_positive_lists = csv_to_temp_time_list(input_files=test_positive_files)
-# build_injected_negatives_temp(
-#     positive_traces = test_positive_lists,
-#     out_folder      = test_negative_folder,
-#     file_prefix     = file_prefix,
-#     n_per_mode      = 22,        # 4 × 22 = 88 (close to your previous 86)
-# )
-
-#
-# split_dataset(input_folder = all_ecg_traces_folder,
-#               output_folder = output_ecg_folder,
-#               prefix = beats)
-#
-#
-#
-# test_positive_raw_traces = get_trace_files(folder_path = test_ecg_positive_folder)
-# test_positive_raw_lists = csv_to_temp_time_list(input_files=test_positive_raw_traces)
-#
-# test_negative_raw_lists = generate_negative_samples( positive_traces = test_positive_raw_lists, seed= SEED, out_folder=test_ecg_negative_folder, file_prefix =file_ecg_prefix )
-#
-
-#

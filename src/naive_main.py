@@ -88,14 +88,6 @@ test_negative_traces_lists = preprocess_test_traces(test_traces = test_negative_
 negative_graph =  BASE_DIR / "Data" / "Graphs" / "Observed-negative-samples" / f"{discretization_method}-{period}-s{symbols}-experiment"
 title_prefix = f"{discretization_method}-{period}-s{symbols}"
 
-# plot_and_save_traces(
-#     traces=test_negative_traces_lists,
-#     positive_traces=test_positive_traces_lists,
-#     output_folder=negative_graph,
-#     symbol_map=symbol_map,
-#     title_prefix = title_prefix
-# )
-
 #Path to log data
 if (data_type == "temp"):
     log_data_path = BASE_DIR /"Data" /"8-LoggedData" / "metrics"/ f"{discretization_method}-temp-log.csv"
@@ -127,9 +119,6 @@ for trace_nr in trace_list: #range(start_traces, len_traces):
     symbolic_train_trace_subset = symbolic_train_trace[:trace_nr ]
 
     format_output(symbolic_traces=symbolic_train_trace_subset, output_path=discretinize_data_path)
-
-
-
 
     # Loop over varying K-future
     for k in range(k_min, k_max + 1, k_increment):

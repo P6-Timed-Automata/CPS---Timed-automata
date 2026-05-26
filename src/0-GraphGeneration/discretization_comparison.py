@@ -20,16 +20,6 @@ def load_trace(path):
     data = np.genfromtxt(path, delimiter=';', skip_header=1)
     return data[:, 0], data[:, 1]
 
-
-# def sax_bins_celsius(bins_z, original_trace_values):
-#     # bins_z already includes outer edges from sax_discretization_multi
-#     # just convert z-scores to Celsius using global mean/std
-#     v = np.asarray(original_trace_values, dtype=float)
-#     mean, std = v.mean(), v.std()
-#     if std == 0:
-#         std = 1.0
-#     return np.sort(bins_z) * std + mean
-
 def sax_bins_celsius(bins_z, global_mean, global_std):
     # bins_z already has outer edges — just invert the same normalization
     return np.sort(bins_z) * global_std + global_mean
