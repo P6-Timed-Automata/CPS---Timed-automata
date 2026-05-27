@@ -42,10 +42,10 @@ src/
 │
 ├── 1-Discretization_section/                                §VII.A — fidelity, structural cost, scaling
 │   ├── benchmark_parameters_discretization_run.py           MAE / states / edges / time sweep
-│   ├── Benchmarks_plot.py                                   Regenerates Fig. 8, 10, 20, 21, 24, 25
-│   ├── Scaling_run.py                                       Trace-count scaling sweep (Fig. 11, 12)
+│   ├── Benchmarks_plot.py                                   Plots benchmark Figures
+│   ├── Scaling_run.py                                       Trace-count scaling sweep 
 │   ├── Scaling_plot.py                                      Plots Scaling_run.py figures
-│   ├── exp_seq_characterization.py                          Symbol-distribution analysis (Fig. 9, 22, 23)
+│   ├── exp_seq_characterization.py                          Symbol-distribution analysis 
 │   ├── exp_seq_characterization_raw.py                      Raw-trace symbol characterization
 │   ├── Generate_data.py                                     Local copy used by exp_seq_characterization
 │   └── Generators.py                                        Local copy used by exp_seq_characterization
@@ -54,12 +54,12 @@ src/
 │   ├── Generate_data.py                                     Idempotent dataset generator (canonical)
 │   ├── Generators.py                                        Sinusoidal traces + 4 anomaly modes
 │   ├── Pipeline.py                                          Shared discretize → TAG → evaluate pipeline
-│   ├── Metrics_clean_noisy__run.py                          Rejection-rate experiment (Fig. 13, 14)
-│   └── Data_graphs.py                                       Plots Fig. 13, 14, 15, 26, 27
+│   ├── Metrics_clean_noisy__run.py                          Rejection-rate experiment (
+│   └── Data_graphs.py                                       Plots 
 │
 └── 3-real_data_and_verification/                            §VII.E — UPPAAL simulation validation
     ├── statestik.py                                         KS test + ±2σ coverage vs. UPPAAL sims
-    └── statestikPlot.py                                     Result table rendering (Fig. 45–52)
+    └── statestikPlot.py                                     Result table rendering 
 ```
 
 ## General Pipeline
@@ -83,7 +83,7 @@ python src/2-Synthetic_section/Generate_data.py
 
 Produces `Data/synthetic_data/{clean_train, clean_test, noisy_train, noisy_test, negative/{spikes, shifted, stuck, offset}}`. Generation parameters are fixed in `CONFIG` at the top of `Generate_data.py` and correspond to Table I in the thesis.
 
-### §VII.A — Discretization benchmark (Fig. 8–10, 20–25)
+### §VII.A — Discretization benchmark 
 
 ```bash
 python src/1-Discretization_section/benchmark_parameters_discretization_run.py
@@ -92,7 +92,7 @@ python src/1-Discretization_section/Benchmarks_plot.py
 
 Sweeps each method over its parameter grid (Naive: bins=2..15; SAX: w ∈ {24, 48, 96, 144} × bins ∈ {5, 10, 15}; and reports per-trace MAE, state count, edge count, and training time across 20 randomly drawn traces. Runs are crash-resilient: each variant is wrapped in `try/except` and JSON logs are flushed after every cell so SLURM kills lose at most one in-progress experiment.
 
-### §VII.A — Symbol distribution analysis (Fig. 9, 22, 23)
+### §VII.A — Symbol distribution analysis
 
 ```bash
 python src/1-Discretization_section/exp_seq_characterization.py
@@ -101,7 +101,7 @@ python src/1-Discretization_section/exo_seq_characterization_raw.py
 
 Produces the symbol-frequency histograms used to compare alphabet usage across the three methods.
 
-### §VII.A — Scaling (Fig. 11, 12)
+### §VII.A — Scaling 
 
 ```bash
 python src/1-Discretization_section/Scaling_run.py
@@ -110,7 +110,7 @@ python src/1-Discretization_section/Scaling_plot.py
 
 Measures learning time and TA complexity as a function of training-trace count (1..25, 5 replicates per cell, **disjoint** subsets so variance reflects subset selection rather than timing jitter) on both clean and noisy synthetic data. The missing-pool auto-generation falls back to `Generate_data.CONFIG` when the existing pool is too small.
 
-### §VII.B — Clean vs. noisy synthetic experiments (Fig. 13–15, 26, 27)
+### §VII.B — Clean vs. noisy synthetic experiments
 
 ```bash
 python src/2-Synthetic_section/Metrics_clean_noisy__run.py
@@ -119,7 +119,7 @@ python src/2-Synthetic_section/Data_graphs.py
 
 Trains TAs on clean and noisy synthetic data and computes per-mode rejection rates against the four anomaly types, plus aggregate F1, precision, and recall.
 
-### §VII.C — Real-data pipeline (Fig. 16, 17, 28–33)
+### §VII.C — Real-data pipeline 
 
 Pre-process raw data (real data is not shipped — see the *Data* section below):
 
@@ -144,9 +144,9 @@ Each script sweeps trace count and bin size, writes TA PNGs to `Data/5-TaResults
 - `symbols`, `w` (SAX), `bins` (Persist) — bin and window parameters
 - `k_min` / `k_max` — fixed at 4 throughout the thesis
 
-### §VII.D — UPPAAL verification (Tables II–III, Fig. 34–44)
+### §VII.D — UPPAAL verification 
 
-Verification is performed manually in UPPAAL Stratego on the XML files exported by the §VII.C scripts. The queries (`E<>`, `A[]`, `Pr[…]<>…`), the observer-model overlays used for temperature (Fig. 35) and ECG (Fig. 36), and the TAG → UPPAAL conversion convention (Fig. 34) are documented in the thesis appendix and are not part of the Python pipeline.
+Verification is performed manually in UPPAAL Stratego on the XML files exported by the §VII.C scripts. The queries (`E<>`, `A[]`, `Pr[…]<>…`), the observer-model overlays used for temperature and ECG, and the TAG → UPPAAL conversion convention are documented in the thesis appendix and are not part of the Python pipeline.
 
 The ECG observer thresholds (spike, flat) are calibrated from the training data by:
 
@@ -154,7 +154,7 @@ The ECG observer thresholds (spike, flat) are calibrated from the training data 
 python src/DataProcessing/calibrate_ecg_parameter.py
 ```
 
-### §VII.E — Statistical similarity of UPPAAL simulations (Fig. 45–52)
+### §VII.E — Statistical similarity of UPPAAL simulations 
 
 After exporting simulation traces from UPPAAL into `Data/7-ExtractedUppaalGraphData/<method>/temp/`:
 
@@ -187,6 +187,8 @@ The TAG entry points raise the Python recursion limit to 50 000 (`sys.setrecursi
 
 ## Acknowledgments
 
-- TAG algorithm: Lenaig Cornanguer, *Timed Automata Learning from Time Series* (PhD thesis, 2023).
-- Persist implementation: adapted from Lenaig Cornanguer's reference code (GPL v2 or later).
-- Temperature dataset: Melgaard et al., Aalborg University.
+- TAG algorithm: Lenaig Cornanguer, *Timed Automata Learning from Time Series* (PhD thesis, 2023). https://gitlab.inria.fr/lcornang/tag
+- Persist implementation: adapted from Lenaig Cornanguer's reference code (GPL v2 or later). https://gitlab.inria.fr/x-LCorna/persist_discretization
+- Example of how Lenaig Cornanguer tested in UPPAAL, https://gitlab.inria.fr/x-LCorna/aaai22_tag_supplementary_materials/-/tree/main/TV_logs_experiement?ref_type=heads
+- Temperature dataset: Melgaard et al., Aalborg University. https://zenodo.org/records/10673763
+- 
