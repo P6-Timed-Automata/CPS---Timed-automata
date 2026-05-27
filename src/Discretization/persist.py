@@ -167,6 +167,7 @@ class Persist():
             y[np.nonzero(np.logical_and(self.x >= bins[i], self.x < bins[i + 1]))] = i
         return y
 
+#added (different from lenaugs)
 def discretize_traces_with_bins(traces, bins):
     discretized_traces = []
 

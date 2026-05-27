@@ -34,13 +34,9 @@ def equal_width_discretization(traces, k, verbose=False):
         values = np.array([v for v, _ in trace], dtype=float)
         times = np.array([t for _, t in trace])
 
-        # np.digitize returns 0 for values below bins[0] (impossible here since
-        # bins[0] = min_val), and k+1 for values >= bins[-1]. Subtract 1 so
         # that valid bin indices are 0..k-1, then handle the top edge.
         labels = np.digitize(values, bins) - 1
         labels = np.where(values == bins[-1], k - 1, labels)
-        # All values are guaranteed in [min_val, max_val] for training data,
-        # so labels are now in [0, k-1] without further clipping.
 
         discretized_trace = [(int(l), int(t)) for l, t in zip(labels, times)]
         discretized_traces.append(discretized_trace)

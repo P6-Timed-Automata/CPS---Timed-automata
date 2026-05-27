@@ -177,13 +177,6 @@ def preprocess_test_traces(test_traces, bins, mark_out_of_range=True):
             labels = np.clip(labels, 0, n_symbols - 1)
             symbols = [letters[lbl] for lbl in labels]
 
-        # symbol_time_pairs = list(zip(symbols, times.tolist()))
-        # formatted_traces.append(_format_trace(symbol_time_pairs))
-        # Build list of "symbol:time" strings per trace
-        # all_trace = [f"{s}:{int(t)}" for s, t in zip(symbols, times)]
-        # formatted_traces.append(all_trace)
-
-
         # Convert to TAG format with collapsing + relative delays
         symbol_time_pairs = list(zip(symbols, times.tolist()))
 

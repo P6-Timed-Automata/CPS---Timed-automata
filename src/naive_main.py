@@ -1,10 +1,7 @@
-import json, os
-from TAG.TALearner import TALearner
-import graphviz
-from pathlib import Path
-import random
-import numpy as np
 
+from TAG.TALearner import TALearner
+
+from pathlib import Path
 
 from Discretization.discretizationSetup import (
     csv_to_temp_time_list,
@@ -21,7 +18,7 @@ from DataProcessing.processData import (
 )
 
 from DataProcessing.negative_samples_production import (
-    plot_and_save_traces, period
+    period
 )
 
 
