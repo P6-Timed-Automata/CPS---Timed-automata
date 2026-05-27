@@ -13,8 +13,6 @@ Output (timestamped folder under Graphs/SeqCharacterization/):
   run_length_<method>.png/.svg
   discretization_<method>.png/.svg
 """
-import matplotlib.pyplot as plt
-import numpy as np
 import scipy.stats as stats # <--- ADD THIS LINE
 import csv
 import json
