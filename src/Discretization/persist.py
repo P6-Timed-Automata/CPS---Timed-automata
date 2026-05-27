@@ -191,17 +191,6 @@ def discretize_traces_with_bins(traces, bins):
 
     return discretized_traces
 
-# def get_best_bins(persist_obj, ts):
-#     best_idx = np.argmax(persist_obj.pscores)
-#
-#     bins = persist_obj.bins[best_idx]
-#     bins = bins[~np.isnan(bins)]
-#     bins = np.sort(bins)
-#
-#     # use the real data range as outer bin edges
-#     bins = np.concatenate(([np.min(ts)], bins, [np.max(ts)]))
-#     return bins
-
 def get_best_bins(persist_obj, ts):
 
     print("\n--- PERSISTENCE DEBUG ---")
