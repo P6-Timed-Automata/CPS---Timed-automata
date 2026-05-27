@@ -2,7 +2,7 @@
 exp_51_52_run.py
 ================
 Runs Experiment 5.1 (clean training) and Experiment 5.2 (noisy training)
-across multiple parameter variants per method.
+across one or more parameter variants per method.
 
 Writes results.json to a timestamped folder. The companion plotter
 (exp_51_52_plot.py) reads that file and produces all tables/figures
@@ -11,13 +11,14 @@ without re-running pipelines.
 Usage:
     python exp_51_52_run.py
 """
-import sys
-sys.setrecursionlimit(50000)
 
 import json
-import subprocess
+import sys
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
+
+sys.setrecursionlimit(50000)
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
@@ -28,25 +29,17 @@ from Generators import NEG_MODE_NAMES
 from Pipeline import run_pipeline
 
 
-
 # =============================================================================
 # CONFIG
 # =============================================================================
 
 TAG_K = 4
 
-# Parameter sweep per method. Picks a few values around the benchmark's
-# best for each method to characterise robustness.
+# One variant per method (the values that survived the benchmark).
 METHOD_VARIANTS = {
-    "naive": [
-        {"bins": 10},
-    ],
-    "sax": [
-        {"w": 48,  "bins": 10},
-    ],
-    "persist": [
-        {"bins": 11},
-    ],
+    "naive":   [{"bins": 10}],
+    "sax":     [{"w": 48, "bins": 10}],
+    "persist": [{"bins": 11}],
 }
 
 
@@ -59,17 +52,12 @@ def _variant_label(method, params):
     return f"{method}_{param_str}"
 
 
-def _git_hash():
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=ROOT
-        ).decode().strip()
-    except Exception:
-        return "unknown"
-
-
 def _run_condition(label, train_traces, test_pos, test_neg, neg_modes,
                    out_dir, method_variants, tag_k):
+    """Run every (method, params) variant once on the given training set,
+    against the shared positive/negative test sets. Returns one result dict
+    per variant. Failed variants get status='failed' rather than raising,
+    so a single bad variant doesn't abort the sweep."""
     results = []
     for method, variants in method_variants.items():
         for params in variants:
@@ -92,6 +80,7 @@ def _run_condition(label, train_traces, test_pos, test_neg, neg_modes,
                 print(f"    P={ov['precision']:.3f} R={ov['recall']:.3f} "
                       f"F1={ov['f1']:.3f} states={result['n_states']}")
 
+                # Strip non-essential pipeline-internal fields from `overall`.
                 overall_clean = {k: v for k, v in ov.items()
                                  if k not in ("save_path", "run_id")}
 
@@ -123,19 +112,16 @@ def _run_condition(label, train_traces, test_pos, test_neg, neg_modes,
 
 
 def _save_config(out_dir, tag_k, method_variants, data):
-    from collections import Counter
-
     lines = [
         "=" * 55,
         "Run configuration — Experiment 5.1 / 5.2",
         "=" * 55,
         "",
         f"Timestamp   : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-        f"Git hash    : {_git_hash()}",
         f"TAG k-future: {tag_k}",
         "",
         "--- Method variants ---",
-        ]
+    ]
     total = 0
     for method, variants in method_variants.items():
         lines.append(f"  {method}:")
@@ -157,8 +143,7 @@ def _save_config(out_dir, tag_k, method_variants, data):
         "",
         "--- Negative modes ---",
     ]
-    mode_counts = Counter(data["neg_modes"])
-    for mode_int, count in sorted(mode_counts.items()):
+    for mode_int, count in sorted(Counter(data["neg_modes"]).items()):
         lines.append(f"  {NEG_MODE_NAMES[mode_int]:10s}: {count} traces")
 
     lines += ["", "--- Output folder ---", f"  {out_dir}", "", "=" * 55]
@@ -177,52 +162,33 @@ if __name__ == "__main__":
     print(f"Output folder: {out_dir}\n")
 
     data = load_all_data()
-
     _save_config(out_dir, TAG_K, METHOD_VARIANTS, data)
 
     n_variants = sum(len(v) for v in METHOD_VARIANTS.values())
     print(f"\nTotal variants per condition: {n_variants}")
-    print(f"Total pipeline runs: {n_variants * 2} (clean + noisy)\n")
+    print(f"Total pipeline runs:          {n_variants * 2} (clean + noisy)\n")
 
     log = {
-        "timestamp":       timestamp,
-        "git_hash":        _git_hash(),
-        "tag_k":           TAG_K,
-        "method_variants": METHOD_VARIANTS,
-        "n_train":         len(data["clean_train"]),
-        "n_test":          len(data["clean_test"]),
-        "n_neg":           len(data["neg_traces"]),
-        "results":         [],
+        "timestamp": timestamp,
+        "results":   [],
     }
 
-    # --- Exp 5.1 — clean training -------------------------------------------
-    print("=== Experiment 5.1 — Clean training ===")
-    log["results"] += _run_condition(
-        "clean",
-        data["clean_train"], data["clean_test"],
-        data["neg_traces"],  data["neg_modes"],
-        out_dir, METHOD_VARIANTS, TAG_K,
-    )
+    # Run clean (5.1) then noisy (5.2). Save after each condition so a
+    # crash in the second sweep doesn't lose the first.
+    for cond in ["clean", "noisy"]:
+        exp_num = "5.1" if cond == "clean" else "5.2"
+        print(f"=== Experiment {exp_num} — {cond.capitalize()} training ===")
+        log["results"] += _run_condition(
+            cond,
+            data[f"{cond}_train"], data[f"{cond}_test"],
+            data["neg_traces"], data["neg_modes"],
+            out_dir, METHOD_VARIANTS, TAG_K,
+        )
+        with open(out_dir / "results.json", "w") as f:
+            json.dump(log, f, indent=2)
+        print(f"  Saved: {out_dir / 'results.json'}\n")
 
-    # Save after each condition so a crash doesn't lose everything
-    with open(out_dir / "results.json", "w") as f:
-        json.dump(log, f, indent=2)
-    print(f"  Saved partial results: {out_dir / 'results.json'}")
-
-    # --- Exp 5.2 — noisy training -------------------------------------------
-    print("\n=== Experiment 5.2 — Noisy training ===")
-    log["results"] += _run_condition(
-        "noisy",
-        data["noisy_train"], data["noisy_test"],
-        data["neg_traces"],  data["neg_modes"],
-        out_dir, METHOD_VARIANTS, TAG_K,
-    )
-
-    with open(out_dir / "results.json", "w") as f:
-        json.dump(log, f, indent=2)
-    print(f"\n  Saved: {out_dir / 'results.json'}")
-
-    print(f"\nRun complete. To generate plots:")
-    print(f"  python exp_51_52_plot.py")
-    print(f"or:")
+    print("Run complete. To generate plots:")
+    print("  python exp_51_52_plot.py")
+    print("or:")
     print(f"  python exp_51_52_plot.py --log {out_dir / 'results.json'}")
