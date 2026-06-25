@@ -1,313 +1,9 @@
-""" import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy.stats import ks_2samp
-from pathlib import Path
-
-# ======================================================
-# PATHS
-# ======================================================
-
-BASE_DIR = Path(__file__).resolve().parent
-PROJECT_DIR = BASE_DIR.parent
-DATA_DIR = PROJECT_DIR / "Data"
-
-RESULTS_DIR = PROJECT_DIR / "Results"
-RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-
-GRAPH_DIR = DATA_DIR / "Graphs" / "statestik"
-GRAPH_DIR.mkdir(parents=True, exist_ok=True)
-
-REAL_TRAIN_DIR = DATA_DIR / "3-ExtractInterval" / "1day-experiment" / "A-train"
-REAL_TEST_DIR = DATA_DIR / "3-ExtractInterval" / "1day-experiment" / "A-test" / "positive"
-
-SIMULATION_FILE = DATA_DIR / "7-ExtractedUppaalGraphData" / "SAX" /"1kSimulationsTemp.csv"
-
-SIM_NAME = "1k-sims"
-
-#outpufiler
-SIM_RESULTS_DIR = RESULTS_DIR / SIM_NAME
-SIM_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-
-SIM_GRAPH_DIR = GRAPH_DIR / SIM_NAME
-SIM_GRAPH_DIR.mkdir(parents=True, exist_ok=True)
-
-
-# ======================================================
-# LOAD REAL DATA
-# ======================================================
-
-def load_real_data(folder):
-    data = []
-    for file in folder.glob("roomA-1day-*.csv"):
-        df = pd.read_csv(file, sep=";")
-        data.append(df["temperature"].values)
-    return np.concatenate(data)
-
-
-real_train = load_real_data(REAL_TRAIN_DIR)
-real_test = load_real_data(REAL_TEST_DIR)
-
-print("Loaded train samples:", len(real_train))
-print("Loaded test samples:", len(real_test))
-
-
-# ======================================================
-# LOAD UPPAAL SIMULATIONS (FIXED)
-# ======================================================
-
-print("Loading UPPAAL simulations...")
-
-simulations_up = {}
-current_sim = None
-
-with open(SIMULATION_FILE, "r") as f:
-    for line in f:
-        line = line.strip()
-
-        if not line:
-            continue
-
-        if line.startswith("#"):
-            current_sim = line
-            simulations_up[current_sim] = []
-            continue
-
-        if "temp" in line.lower() and "time" in line.lower():
-            continue
-
-        try:
-            _, temp = line.split(",")
-            simulations_up[current_sim].append(float(temp) / 100.0)
-        except:
-            continue
-
-print("Loaded simulation traces:", len(simulations_up))
-
-
-# ======================================================
-# FIX: MAKE ALL SIMULATIONS SAME LENGTH (IMPORTANT)
-# ======================================================
-
-sim_list = list(simulations_up.values())
-
-lengths = [len(s) for s in sim_list if len(s) > 0]
-
-if len(lengths) == 0:
-    raise ValueError("No valid simulation traces found")
-
-EXPECTED_LEN = int(np.median(lengths))
-
-clean_sims = []
-
-for sim in sim_list:
-
-    sim = np.array(sim)
-
-    # SKIP EMPTY SIMS (IMPORTANT FIX)
-    if len(sim) == 0:
-        continue
-
-    # TRIM LONG SIMS
-    if len(sim) > EXPECTED_LEN:
-        sim = sim[:EXPECTED_LEN]
-
-    # PAD SHORT SIMS
-    elif len(sim) < EXPECTED_LEN:
-        sim = np.pad(sim, (0, EXPECTED_LEN - len(sim)), mode="edge")
-
-    clean_sims.append(sim)
-
-if len(clean_sims) == 0:
-    raise ValueError("All simulation traces were empty")
-
-sim_matrix = np.vstack(clean_sims)
-sim_flat = sim_matrix.flatten()
-
-
-# ======================================================
-# METRICS FUNCTION
-# ======================================================
-
-def evaluate(real_data, sim_matrix, sim_flat, name):
-
-    real_mean = np.mean(real_data)
-    real_std = np.std(real_data)
-
-    sim_means = np.mean(sim_matrix, axis=1)
-    sim_mean = np.mean(sim_means)
-
-    ci_low = np.percentile(sim_means, 2.5)
-    ci_high = np.percentile(sim_means, 97.5)
-
-    ks_stat, p_value = ks_2samp(real_data, sim_flat)
-
-    sim_mean_trace = np.mean(sim_matrix, axis=0)
-    sim_std_trace = np.std(sim_matrix, axis=0)
-
-    min_len = min(len(real_data), len(sim_mean_trace))
-
-    real_cut = real_data[:min_len]
-    mean_cut = sim_mean_trace[:min_len]
-    std_cut = sim_std_trace[:min_len]
-
-    lower = mean_cut - 2 * std_cut
-    upper = mean_cut + 2 * std_cut
-
-    coverage = np.mean((real_cut >= lower) & (real_cut <= upper)) * 100
-
-    return {
-        "dataset": name,
-        "real_mean": real_mean,
-        "real_std": real_std,
-        "sim_mean": sim_mean,
-        "ci_low": ci_low,
-        "ci_high": ci_high,
-        "mean_in_ci": int(ci_low <= real_mean <= ci_high),
-        "ks_stat": ks_stat,
-        "ks_pvalue": p_value,
-        "coverage": coverage
-    }
-
-
-# ======================================================
-# RUN EVALUATION
-# ======================================================
-
-train_result = evaluate(real_train, sim_matrix, sim_flat, "train-1k-sims")
-test_result = evaluate(real_test, sim_matrix, sim_flat, "test-1k-sims")
-
-results = pd.DataFrame([train_result, test_result])
-
-
-# ======================================================
-# SAVE RESULTS
-# ======================================================
-
-results.to_csv(
-    SIM_RESULTS_DIR / f"validation_summary_{SIM_NAME}.csv",
-    index=False
-)
-
-print(f"\nSaved: validation_summary_{SIM_NAME}.csv")
-
-
-# ======================================================
-# PRINT SUMMARY
-# ======================================================
-
-print("\nFINAL SUMMARY")
-print(results)
-
-
-# ======================================================
-# PLOTS (SAFE)
-# ======================================================
-
-sim_mean_trace = np.mean(sim_matrix, axis=0)
-sim_std_trace = np.std(sim_matrix, axis=0)
-
-
-# ---------------- HISTOGRAM ----------------
-
-plt.figure(figsize=(10, 5))
-plt.hist(sim_flat, bins=30, alpha=0.5, label="UPPAAL Simulation")
-plt.hist(real_train, bins=30, alpha=0.5, label="Train Data")
-plt.hist(real_test, bins=30, alpha=0.5, label="Test Data")
-
-plt.xlabel("Temperature (°C)")
-plt.ylabel("Frequency")
-plt.title("Temperature Distribution: Train vs Test vs Simulation")
-plt.legend()
-plt.grid()
-
-plt.savefig(
-    SIM_GRAPH_DIR / f"histogram_train_test_sim_{SIM_NAME}.png",
-    dpi=300,
-    bbox_inches="tight"
-)
-plt.close()
-
-
-# ---------------- TRAIN VS SIM ----------------
-
-
-
-
-min_len_train = min(len(real_train), len(sim_mean_trace))
-time_hours = np.linspace(0, 24, min_len_train)
-
-plt.figure(figsize=(12, 5))
-
-plt.plot(time_hours, real_train[:min_len_train], label="Train Data")
-plt.plot(time_hours, sim_mean_trace[:min_len_train], label="Simulation Mean")
-
-plt.fill_between(
-    time_hours,
-    sim_mean_trace[:min_len_train] - 2 * sim_std_trace[:min_len_train],
-    sim_mean_trace[:min_len_train] + 2 * sim_std_trace[:min_len_train],
-    alpha=0.3,
-    label="±Simulation uncertainty (±2σ)"
-)
-
-plt.xlabel("Time (hours)")
-plt.ylabel("Temperature (°C)")
-
-plt.xticks(np.arange(0, 25, 2))
-
-plt.title("Time Series: Train vs Simulation")
-plt.legend()
-plt.grid()
-
-plt.savefig(
-    SIM_GRAPH_DIR / f"timeseries_train_vs_sim_{SIM_NAME}.png",
-    dpi=300,
-    bbox_inches="tight"
-)
-plt.close()
-
-
-# ---------------- TEST VS SIM ----------------
-
-min_len_test = min(len(real_test), len(sim_mean_trace))
-time_hours = np.linspace(0, 24, min_len_test)
-
-plt.figure(figsize=(12, 5))
-
-plt.plot(time_hours, real_test[:min_len_test], label="Test Data")
-plt.plot(time_hours, sim_mean_trace[:min_len_test], label="Simulation Mean")
-
-plt.fill_between(
-    time_hours,
-    sim_mean_trace[:min_len_test] - 2 * sim_std_trace[:min_len_test],
-    sim_mean_trace[:min_len_test] + 2 * sim_std_trace[:min_len_test],
-    alpha=0.3,
-    label="Simulation uncertainty (±2σ)"
-)
-
-plt.title("Time Series: Test vs Simulation")
-plt.xlabel("Time (hours)")
-plt.ylabel("Temperature (°C)")
-
-plt.xticks(np.arange(0, 25, 2))
-
-plt.legend()
-plt.grid()
-
-plt.savefig(
-    SIM_GRAPH_DIR / f"timeseries_test_vs_sim_{SIM_NAME}.png",
-    dpi=300,
-    bbox_inches="tight"
-)
-plt.close() """
-
-
+import re
+from scipy.signal import welch
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import ks_2samp
 from pathlib import Path
-import re
 
 # ======================================================
 # PATHS
@@ -323,14 +19,43 @@ RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 GRAPH_DIR = DATA_DIR / "Graphs" / "statestik"
 GRAPH_DIR.mkdir(parents=True, exist_ok=True)
 
-REAL_TRAIN_DIR = DATA_DIR / "3-ExtractInterval" / "1day-experiment" / "A-train"
-REAL_TEST_DIR = DATA_DIR / "3-ExtractInterval" / \
-    "1day-experiment" / "A-test" / "positive"
+REAL_TRAIN_DIR = (
+    DATA_DIR /
+    "3-ExtractInterval" /
+    "1day-experiment" /
+    "A-train"
+)
 
-method = "persist"  # "naiv", "persist", "sax"
+REAL_TEST_DIR = (
+    DATA_DIR /
+    "3-ExtractInterval" /
+    "1day-experiment" /
+    "A-test" /
+    "positive"
+)
 
-SIMULATION_FOLDER = DATA_DIR / "7-ExtractedUppaalGraphData"/ method / "temp"
-simulation_files = list(SIMULATION_FOLDER.glob("*.csv"))
+method = "naiv"  # "naiv", "persist", "sax"
+
+if method == "sax":
+
+    SIMULATION_FOLDER = (
+        DATA_DIR /
+        "7-ExtractedUppaalGraphData" /
+        method
+    )
+
+else:
+
+    SIMULATION_FOLDER = (
+        DATA_DIR /
+        "7-ExtractedUppaalGraphData" /
+        method /
+        "temp"
+    )
+
+simulation_files = list(
+    SIMULATION_FOLDER.glob("*.csv")
+)
 
 print(f"Found {len(simulation_files)} simulation files")
 
@@ -340,58 +65,198 @@ print(f"Found {len(simulation_files)} simulation files")
 
 
 def load_real_data(folder):
+
     data = []
+
     for file in folder.glob("roomA-1day-*.csv"):
+
         df = pd.read_csv(file, sep=";")
+
+        if "temperature" not in df.columns:
+            raise ValueError(f"Missing temperature column in {file}")
+
         data.append(df["temperature"].values)
-    return np.concatenate(data)
+
+    if not data:
+        raise ValueError(f"No real data files found in {folder}")
+
+    return np.vstack(data)
 
 
 real_train = load_real_data(REAL_TRAIN_DIR)
 real_test = load_real_data(REAL_TEST_DIR)
 
 # ======================================================
+# RESAMPLE EVENT TRACE
+# ======================================================
+
+
+def resample_trace(
+    events,
+    step=300,
+    end_time=86400
+):
+
+    times = np.arange(
+        0,
+        end_time,
+        step
+    )
+
+    values = np.zeros(len(times))
+
+    if not events:
+        return values
+
+    current_temp = events[0][1]
+
+    event_index = 0
+
+    for i, t in enumerate(times):
+
+        while (
+            event_index + 1 < len(events) and
+            events[event_index + 1][0] <= t
+        ):
+
+            event_index += 1
+
+            current_temp = events[event_index][1]
+
+        values[i] = current_temp / 100.0
+
+    return values
+
+# ======================================================
 # METRICS
 # ======================================================
 
 
-def evaluate(real_data, sim_matrix, sim_flat, name):
+def autocorr(x, lag=1):
 
-    real_mean = np.mean(real_data)
-    real_std = np.std(real_data)
+    if len(x) <= lag:
+        return np.nan
 
-    sim_means = np.mean(sim_matrix, axis=1)
-    sim_mean = np.mean(sim_means)
+    x1 = x[:-lag]
+    x2 = x[lag:]
 
-    ci_low = np.percentile(sim_means, 2.5)
-    ci_high = np.percentile(sim_means, 97.5)
+    # ------------------------------------------
+    # CONSTANT SIGNAL CHECK
+    # ------------------------------------------
 
-    ks_stat, p_value = ks_2samp(real_data, sim_flat)
+    if np.std(x1) == 0 or np.std(x2) == 0:
+        return 1.0
 
-    sim_mean_trace = np.mean(sim_matrix, axis=0)
-    sim_std_trace = np.std(sim_matrix, axis=0)
+    return np.corrcoef(x1, x2)[0, 1]
 
-    min_len = min(len(real_data), len(sim_mean_trace))
 
-    real_cut = real_data[:min_len]
-    mean_cut = sim_mean_trace[:min_len]
-    std_cut = sim_std_trace[:min_len]
+def align_traces(real, sim):
+    n = min(len(real), len(sim))
+    return real[:n], sim[:n]
+
+
+def trend_error(real, sim):
+    real_d = np.diff(real)
+    sim_d = np.diff(sim)
+
+    n = min(len(real_d), len(sim_d))
+    if n == 0:
+        return np.nan
+
+    return np.mean((real_d[:n] - sim_d[:n]) ** 2)
+
+
+def acf_series(x, nlags=100):
+
+    if len(x) <= 1:
+        return np.full(nlags, np.nan)
+
+    return np.array([
+        autocorr(x, lag=i)
+        for i in range(1, nlags + 1)
+    ])
+
+
+def evaluate(
+    real_data,
+    sim_matrix,
+    name
+):
+
+    real_mean_series = np.mean(real_data, axis=0)
+    sim_mean_series = np.mean(sim_matrix, axis=0)
+
+    real_mean = np.mean(real_mean_series)
+    sim_mean = np.mean(sim_mean_series)
+
+    real_std = np.std(real_mean_series, ddof=1)
+    sim_std = np.std(sim_mean_series, ddof=1)
+
+    # ==================================================
+    # RMSE on the aligned mean series
+    # ==================================================
+
+    errors = real_mean_series - sim_mean_series
+    rmse = np.sqrt(np.mean(errors ** 2))
+    mean_error = np.mean(np.abs(errors))
+
+    # ==================================================
+    # Pointwise coverage across the sim ensemble
+    # ==================================================
+
+    lower = np.percentile(sim_matrix, 2.5, axis=0)
+    upper = np.percentile(sim_matrix, 97.5, axis=0)
 
     coverage = np.mean(
-        (real_cut >= mean_cut - 2 * std_cut) &
-        (real_cut <= mean_cut + 2 * std_cut)
+        (real_data >= lower) &
+        (real_data <= upper)
     ) * 100
+
+    # ==================================================
+    # Variance error on the dynamic spread
+    # ==================================================
+
+    real_std_series = np.std(real_data, axis=0, ddof=1)
+    sim_std_series = np.std(sim_matrix, axis=0, ddof=1)
+    variance_error = np.mean((real_std_series - sim_std_series) ** 2)
+
+    # ==================================================
+    # ACF comparison on the mean series
+    # ==================================================
+
+    NLAGS = max(1, len(real_mean_series) - 1)
+    real_acf_series = acf_series(real_mean_series, nlags=NLAGS)
+    sim_acf_series = acf_series(sim_mean_series, nlags=NLAGS)
+    acf_rmse = np.sqrt(np.nanmean((real_acf_series - sim_acf_series) ** 2))
+
+    # ==================================================
+    # PSD comparison on the mean series
+    # ==================================================
+
+    fs = 1.0 / 300.0 # Sampling frequency (1 sample every 300 seconds)
+    nperseg = min(256, len(real_mean_series), len(sim_mean_series))
+
+    try:
+        _, psd_real = welch(real_mean_series, fs=fs, nperseg=nperseg)
+        _, psd_sim = welch(sim_mean_series, fs=fs, nperseg=nperseg)
+        psd_rmse = np.sqrt(np.mean((psd_real - psd_sim) ** 2))
+    except Exception:
+        psd_rmse = np.nan
 
     return {
         "dataset": name,
+        "traces": sim_matrix.shape[0],
+        "symbols": sim_matrix.shape[1],
         "real_mean": real_mean,
         "real_std": real_std,
         "sim_mean": sim_mean,
-        "ci_low": ci_low,
-        "ci_high": ci_high,
-        "ks_stat": ks_stat,
-        "ks_pvalue": p_value,
-        "coverage": coverage
+        "sim_std": sim_std,
+        "mean_error": mean_error,
+        "coverage": coverage,
+        "variance_error": variance_error,
+        "acf_rmse": acf_rmse,
+        "psd_rmse": psd_rmse,
+        "rmse": rmse,
     }
 
 # ======================================================
@@ -400,14 +265,29 @@ def evaluate(real_data, sim_matrix, sim_flat, name):
 
 
 def extract_temp_group(name):
-    match = re.match(r"(\d+t)", name)
-    return match.group(1) if match else "unknown"
+
+    match = re.match(
+        r"(\d+t)",
+        name
+    )
+
+    return (
+        match.group(1)
+        if match else "unknown"
+    )
 
 
 def extract_scenario(name):
-    # extracts s10 from: 50t-sax-s10-w48
-    match = re.search(r"(s\d+)", name)
-    return match.group(1) if match else "unknown"
+
+    match = re.search(
+        r"(s\d+)",
+        name
+    )
+
+    return (
+        match.group(1)
+        if match else "unknown"
+    )
 
 # ======================================================
 # LOOP
@@ -418,27 +298,43 @@ for sim_file in simulation_files:
 
     SIM_NAME = sim_file.stem
 
-    TEMP_GROUP = extract_temp_group(SIM_NAME)   # 50t
-    SCENARIO = extract_scenario(SIM_NAME)       # s10
+    TEMP_GROUP = extract_temp_group(SIM_NAME)
+    SCENARIO = extract_scenario(SIM_NAME)
 
     print("\n" + "=" * 60)
     print(f"{SIM_NAME} → {TEMP_GROUP} / {SCENARIO}")
 
-    # ======================================================
+    # ==================================================
     # OUTPUT STRUCTURE
-    # ======================================================
+    # ==================================================
 
-    GROUP_RESULTS_DIR = RESULTS_DIR / method 
-    GROUP_GRAPH_DIR = GRAPH_DIR / method / TEMP_GROUP / SCENARIO
+    GROUP_RESULTS_DIR = (
+        RESULTS_DIR / method
+    )
 
-    GROUP_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    GROUP_GRAPH_DIR.mkdir(parents=True, exist_ok=True)
+    GROUP_GRAPH_DIR = (
+        GRAPH_DIR /
+        method /
+        TEMP_GROUP /
+        SCENARIO
+    )
 
-    # ======================================================
-    # LOAD SIMS
-    # ======================================================
+    GROUP_RESULTS_DIR.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    GROUP_GRAPH_DIR.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    # ==================================================
+    # LOAD EVENT TRACES
+    # ==================================================
 
     simulations_up = {}
+
     current_sim = None
 
     with open(sim_file, "r") as f:
@@ -446,89 +342,167 @@ for sim_file in simulation_files:
         for line in f:
 
             line = line.strip()
+
             if not line:
                 continue
 
             if line.startswith("#"):
+
                 current_sim = line
-                simulations_up.setdefault(current_sim, [])
+
+                simulations_up[current_sim] = []
+
                 continue
 
             try:
-                t, temp = line.split(",")
-                simulations_up[current_sim].append(float(temp) / 100.0)
+
+                time, temp = line.split(",")
+
+                simulations_up[current_sim].append(
+                    (
+                        float(time),
+                        float(temp)
+                    )
+                )
+
             except:
                 continue
 
-    sim_list = [s for s in simulations_up.values() if len(s) > 5]
-
-    if not sim_list:
-        print(f"Skipping {SIM_NAME}")
-        continue
-
-    lengths = [len(s) for s in sim_list]
-    EXPECTED_LEN = int(np.median(lengths))
+    # ==================================================
+    # RESAMPLE TRACES
+    # ==================================================
 
     clean_sims = []
 
-    for sim in sim_list:
+    for trace in simulations_up.values():
 
-        sim = np.array(sim)
+        if len(trace) < 2:
+            continue
 
-        if len(sim) > EXPECTED_LEN:
-            sim = sim[:EXPECTED_LEN]
-        elif len(sim) < EXPECTED_LEN:
-            sim = np.pad(sim, (0, EXPECTED_LEN - len(sim)), mode="edge")
+        sampled = resample_trace(trace)
 
-        clean_sims.append(sim)
+        clean_sims.append(sampled)
+
+    if not clean_sims:
+
+        print(f"Skipping {SIM_NAME}")
+        continue
 
     sim_matrix = np.vstack(clean_sims)
-    sim_flat = sim_matrix.flatten()
 
-
-
-
-    # ======================================================
+    # ==================================================
     # EVALUATION
-    # ======================================================
+    # ==================================================
 
-    train_result = evaluate(real_train, sim_matrix,
-                            sim_flat, f"train-{SIM_NAME}")
-    test_result = evaluate(real_test, sim_matrix, sim_flat, f"test-{SIM_NAME}")
+    train_result = evaluate(
+        real_train,
+        sim_matrix,
+        f"train-{SIM_NAME}"
+    )
 
-    results = pd.DataFrame([train_result, test_result])
+    test_result = evaluate(
+        real_test,
+        sim_matrix,
+        f"test-{SIM_NAME}"
+    )
 
-    # ======================================================
-    # SAVE
-    # ======================================================
+    results = pd.DataFrame([
+        train_result,
+        test_result
+    ])
+
+    # ==================================================
+    # SAVE CSV
+    # ==================================================
 
     results.to_csv(
-        GROUP_RESULTS_DIR / f"summary_{SIM_NAME}.csv",
+        GROUP_RESULTS_DIR /
+        f"summary_{SIM_NAME}.csv",
         index=False
     )
 
-    print(f"Saved → Results/{TEMP_GROUP}/{SCENARIO}")
+    print(
+        f"Saved → Results/{TEMP_GROUP}/{SCENARIO}"
+    )
 
-    # ======================================================
-    # PLOT
-    # ======================================================
+    # ==================================================
+    # PLOTS
+    # ==================================================
 
+    real_train_flat = real_train.ravel()
+    sim_flat = sim_matrix.ravel()
+    real_train_mean = np.mean(real_train, axis=0)
     sim_mean = np.mean(sim_matrix, axis=0)
-    sim_std = np.std(sim_matrix, axis=0)
 
-    plt.figure(figsize=(10, 5))
-    plt.hist(sim_flat, bins=30, alpha=0.5, label="Sim")
-    plt.hist(real_train, bins=30, alpha=0.5, label="Train")
-    plt.hist(real_test, bins=30, alpha=0.5, label="Test")
+    lower = np.percentile(sim_matrix, 2.5, axis=0)
+    upper = np.percentile(sim_matrix, 97.5, axis=0)
 
+    # Histogram of marginals
+    plt.figure(figsize=(8, 4))
+    plt.hist(sim_flat, bins=30, alpha=0.5, label="Sim", density=True)
+    plt.hist(real_train_flat, bins=30, alpha=0.5,
+             label="Real train", density=True)
+    plt.xlabel("Temperature")
+    plt.ylabel("Density")
+    plt.title(f"Histogram — {SIM_NAME}")
     plt.legend()
     plt.grid()
-
-    plt.savefig(
-        GROUP_GRAPH_DIR / f"hist_{SIM_NAME}.png",
-        dpi=300,
-        bbox_inches="tight"
-    )
+    plt.savefig(GROUP_GRAPH_DIR /
+                f"hist_{SIM_NAME}.png", dpi=300, bbox_inches="tight")
     plt.close()
+
+    # Mean daily profile + coverage band
+    plt.figure(figsize=(12, 5))
+    t = np.arange(sim_matrix.shape[1])
+    plt.plot(t, sim_mean, label="Sim mean", color="tab:orange")
+    plt.plot(t, real_train_mean, label="Real train mean", color="tab:blue")
+    plt.fill_between(t, lower, upper, color="tab:orange",
+                     alpha=0.2, label="Sim 95% band")
+    plt.xlabel("Time index")
+    plt.ylabel("Temperature")
+    plt.title(f"Mean daily profile + coverage band — {SIM_NAME}")
+    plt.legend()
+    plt.grid()
+    plt.savefig(GROUP_GRAPH_DIR /
+                f"profile_{SIM_NAME}.png", dpi=300, bbox_inches="tight")
+    plt.close()
+
+    # ACF comparison on mean series
+    NLAGS = 50
+    real_acf_s = acf_series(real_train_mean, nlags=NLAGS)
+    sim_acf_s = acf_series(sim_mean, nlags=NLAGS)
+
+    plt.figure(figsize=(8, 4))
+    lags = np.arange(1, NLAGS + 1)
+    plt.plot(lags, real_acf_s, label="Real train mean")
+    plt.plot(lags, sim_acf_s, label="Sim mean")
+    plt.xlabel("Lag")
+    plt.ylabel("Autocorrelation")
+    plt.legend()
+    plt.grid()
+    plt.title(f"ACF comparison — {SIM_NAME}")
+    plt.savefig(GROUP_GRAPH_DIR /
+                f"acf_{SIM_NAME}.png", dpi=300, bbox_inches="tight")
+    plt.close()
+
+    # PSD comparison on mean series
+    fs = 1.0 / 300.0
+    nperseg = min(128, len(sim_mean))
+    try:
+        f_r, psd_r = welch(real_train_mean, fs=fs, nperseg=nperseg)
+        f_s, psd_s = welch(sim_mean, fs=fs, nperseg=nperseg)
+        plt.figure(figsize=(8, 4))
+        plt.semilogy(f_r, psd_r, label="Real train mean")
+        plt.semilogy(f_s, psd_s, label="Sim mean")
+        plt.xlabel("Frequency (Hz)")
+        plt.ylabel("PSD")
+        plt.legend()
+        plt.grid()
+        plt.title(f"PSD (Welch) — {SIM_NAME}")
+        plt.savefig(GROUP_GRAPH_DIR /
+                    f"psd_{SIM_NAME}.png", dpi=300, bbox_inches="tight")
+        plt.close()
+    except Exception:
+        pass
 
 print("\nALL DONE")

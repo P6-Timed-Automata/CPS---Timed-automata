@@ -1,8 +1,7 @@
-import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
-
+import numpy as np
 
 # ============================================================
 # PATHS
@@ -11,27 +10,21 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = BASE_DIR.parent
 
-RESULTS_DIR = PROJECT_DIR / "Results"
-DEFAULT_METHOD = "naiv"
+RESULTS_ROOT = PROJECT_DIR / "Results"
 
-parser = argparse.ArgumentParser(
-    description="Plot benchmark statistics for a given method folder in Results"
-)
-parser.add_argument(
-    "--method",
-    default=DEFAULT_METHOD,
-    help="Method subdirectory under Results (e.g. sax, persist, naiv)",
-)
-args = parser.parse_args()
+# Set this manually to sax, persist, or naiv
+METHOD = "naiv"  # Change this to "sax" or "naiv" or "persist"
 
-METHOD = args.method
-INPUT_DIR = RESULTS_DIR / METHOD
+INPUT_DIR = RESULTS_ROOT / METHOD
 
-OUTPUT_DIR = RESULTS_DIR / "SVG" / METHOD
+# if not INPUT_DIR.exists():
+#    INPUT_DIR = RESULTS_ROOT / "system_evaluation" / METHOD
+
+OUTPUT_DIR = RESULTS_ROOT / "SVG" / METHOD
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ============================================================
-# LOAD ALL CSV FILES
+# LOAD DATA
 # ============================================================
 
 csv_files = list(INPUT_DIR.glob("*.csv"))
@@ -39,7 +32,10 @@ csv_files = list(INPUT_DIR.glob("*.csv"))
 if not csv_files:
     raise FileNotFoundError(f"No CSV files found in {INPUT_DIR}")
 
-df = pd.concat([pd.read_csv(f) for f in csv_files], ignore_index=True)
+df = pd.concat(
+    [pd.read_csv(f) for f in csv_files],
+    ignore_index=True
+)
 
 print(f"Loaded {len(csv_files)} files")
 print(f"Total rows: {len(df)}")
@@ -48,45 +44,75 @@ print(f"Total rows: {len(df)}")
 # FEATURE ENGINEERING
 # ============================================================
 
-df["mean_error"] = (df["real_mean"] - df["sim_mean"]).abs()
+if "rmse" not in df.columns and "real_mean" in df.columns and "sim_mean" in df.columns:
+    df["rmse"] = np.sqrt((df["real_mean"] - df["sim_mean"]).pow(2))
 
 # ============================================================
 # PARSE DATASET NAME
-# Examples:
-#   train-10t-sax-s5-w24
-#   train-10t-persist-s10
-#   test-20t-naiv-s15
 # ============================================================
 
-pattern = r"^(train|test)-(\d+)t-([^\s-]+)-s(\d+)(?:-w(\d+))?$"
-parts = df["dataset"].str.extract(pattern)
-parts.columns = ["Type", "Time", "Method", "Symbols", "Window"]
 
-invalid = df[parts["Type"].isna() | parts["Time"].isna(
-) | parts["Method"].isna() | parts["Symbols"].isna()]
-if not invalid.empty:
-    raise ValueError(
-        "Unable to parse the following dataset names: "
-        + ", ".join(invalid["dataset"].astype(str).unique()[:10])
-    )
+def parse_dataset_name(name):
 
-# Cast columns to the correct type
-parts["Time"] = parts["Time"].astype(int)
-parts["Symbols"] = parts["Symbols"].astype(int)
-parts["Window"] = parts["Window"].astype("Int64")
+    parts = str(name).split("-")
 
-for col in ["Type", "Time", "Symbols", "Method", "Window"]:
-    df[col] = parts[col]
+    result = {
+        "Type": None,
+        "Time": None,
+        "Method": None,
+        "Symbols": None,
+        "Window": None
+    }
 
-# Clean label for display
-df["Dataset"] = df["Time"].astype(str) + "t"
+    if len(parts) > 0:
+        result["Type"] = parts[0]
+
+    for p in parts:
+
+        if p.endswith("t") and p[:-1].isdigit():
+            result["Time"] = int(p[:-1])
+
+        elif p.startswith("s") and p[1:].isdigit():
+            result["Symbols"] = int(p[1:])
+
+        elif p.startswith("w") and p[1:].isdigit():
+            result["Window"] = int(p[1:])
+
+    methods = ["sax", "persist", "naiv"]
+
+    for p in parts:
+        if p in methods:
+            result["Method"] = p
+            break
+
+    return pd.Series(result)
+
+
+parsed = df["dataset"].apply(parse_dataset_name)
+
+for col in parsed.columns:
+    df[col] = parsed[col]
 
 # ============================================================
-# SORT DATA (IMPORTANT)
+# CLEAN TYPES
+# ============================================================
+
+for col in ["Time", "Symbols", "Window"]:
+    if col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+
+df["Traces"] = df["Time"].astype("Int64").astype(str)
+
+# ============================================================
+# SORT DATA
 # ============================================================
 
 sort_columns = ["Type", "Method", "Window", "Time", "Symbols"]
-df = df.sort_values(by=sort_columns, na_position="last").reset_index(drop=True)
+
+df = df.sort_values(
+    by=[c for c in sort_columns if c in df.columns],
+    na_position="last"
+).reset_index(drop=True)
 
 # ============================================================
 # FORMAT TABLE
@@ -95,227 +121,302 @@ df = df.sort_values(by=sort_columns, na_position="last").reset_index(drop=True)
 display_df = df.copy()
 
 round_cols = [
-    "real_mean",
-    "real_std",
-    "sim_mean",
+    "real_mean", "real_std",
+    "sim_mean", "sim_std",
     "mean_error",
-    "ks_stat",
-    "ks_pvalue",
     "coverage",
+    "rmse", "acf_rmse",
 ]
 
-display_df[round_cols] = display_df[round_cols].round(3)
+display_df[
+    [c for c in round_cols if c in display_df.columns]
+] = display_df[
+    [c for c in round_cols if c in display_df.columns]
+].round(3)
 
 display_df = display_df.rename(columns={
+
     "real_mean": "μ Real",
     "real_std": "σ Real",
     "sim_mean": "μ Sim",
+    "sim_std": "σ Sim",
     "mean_error": "Mean Error",
-    "ks_stat": "KS Stat",
-    "ks_pvalue": "KS p-value",
+    "rmse": "RMSE",
     "coverage": "Coverage",
+    "acf_rmse": "ACF RMSE",
 })
 
 selected_cols = ["Type"]
+
 if "Window" in display_df.columns and display_df["Window"].notna().any():
     selected_cols.append("Window")
 
 selected_cols += [
-    "Dataset",
+    "Traces",
     "Symbols",
+
     "μ Real",
     "σ Real",
     "μ Sim",
+    "σ Sim",
+
     "Mean Error",
-    "KS Stat",
-    "KS p-value",
+    "RMSE",
     "Coverage",
+    "ACF RMSE",
 ]
+
+selected_cols = [c for c in selected_cols if c in display_df.columns]
 
 display_df = display_df[selected_cols]
 
 # ============================================================
-# SAFE TABLE FUNCTION
+# TABLE FUNCTION
 # ============================================================
 
 
 def save_table(df, title, output_path):
 
     if df.empty:
-        print(f"Skipping empty table: {title}")
         return
 
-    n_rows = len(df)
-    fig_height = max(2, n_rows * 0.45)
+    fig, ax = plt.subplots(figsize=(16, max(2, len(df) * 0.45)))
 
-    fig, ax = plt.subplots(figsize=(14, fig_height))
     ax.axis("off")
 
     table = ax.table(
         cellText=df.values,
         colLabels=df.columns,
         loc="center",
-        cellLoc="center",
-        colLoc="center",
-        edges="closed",
+        cellLoc="center"
     )
 
     table.auto_set_font_size(False)
-    table.set_fontsize(10)
+    table.set_fontsize(9)
     table.scale(1, 1.4)
 
-    # Column index map (CRITICAL FIX)
     col_index = {name: i for i, name in enumerate(df.columns)}
 
-    # Header styling
-    header_color = "#f9d34b"
+    # HEADER
     for col in range(len(df.columns)):
-        cell = table[(0, col)]
-        cell.set_text_props(weight='bold')
-        cell.set_facecolor(header_color)
-        cell.set_edgecolor("black")
-        cell.set_linewidth(1.0)
+        table[(0, col)].set_facecolor("#f9d34b")
 
-    # Body styling
-    for row in range(1, n_rows + 1):
-        for col in range(len(df.columns)):
-            cell = table[(row, col)]
-            cell.set_edgecolor("black")
-            cell.set_linewidth(0.8)
-            cell.set_text_props(ha="center", va="center")
-            cell.set_facecolor("white")
+    # BODY COLORING
+    for i in range(1, len(df) + 1):
 
-    # ========================================================
-    # COLORING
-    # ========================================================
-    for i in range(1, n_rows + 1):
+        # KS
+       # if "KS Stat" in df.columns:
+        #    v = df.iloc[i-1]["KS Stat"]
+        #   c = table[(i, col_index["KS Stat"])]
 
-        # KS STAT
-        ks_value = df.iloc[i - 1]["KS Stat"]
-        ks_cell = table[(i, col_index["KS Stat"])]
+        #  c.set_facecolor(
+        #     "#c7f5cc" if v < 0.2
+        #    else "#fff3bf" if v < 0.5
+        #   else "#ffc9c9"
+        # )
 
-        if ks_value < 0.2:
-            ks_cell.set_facecolor("#c7f5cc")
-        elif ks_value < 0.5:
-            ks_cell.set_facecolor("#fff3bf")
-        else:
-            ks_cell.set_facecolor("#ffc9c9")
+        # RMSE
+        if "RMSE" in df.columns:
+            v = df.iloc[i-1]["RMSE"]
+            c = table[(i, col_index["RMSE"])]
 
-        # COVERAGE
-        cov_value = df.iloc[i - 1]["Coverage"]
-        cov_cell = table[(i, col_index["Coverage"])]
+            c.set_facecolor(
+                "#c7f5cc" if v < 0.5
+                else "#fff3bf" if v < 1.5
+                else "#ffc9c9"
+            )
 
-        if cov_value > 0.8:
-            cov_cell.set_facecolor("#c7f5cc")
-        elif cov_value > 0.5:
-            cov_cell.set_facecolor("#fff3bf")
-        else:
-            cov_cell.set_facecolor("#ffc9c9")
+        # MAE
+        if "MAE" in df.columns:
+            v = df.iloc[i-1]["MAE"]
+            c = table[(i, col_index["MAE"])]
 
-    plt.title(title, fontsize=14, weight="bold", pad=20)
+            c.set_facecolor(
+                "#c7f5cc" if v < 0.5
+                else "#fff3bf" if v < 1.0
+                else "#ffc9c9"
+            )
 
+        # Correlation
+        if "Correlation" in df.columns:
+            v = df.iloc[i-1]["Correlation"]
+            c = table[(i, col_index["Correlation"])]
+
+            c.set_facecolor(
+                "#c7f5cc" if v >= 0.9
+                else "#fff3bf" if v >= 0.7
+                else "#ffc9c9"
+            )
+
+        # Coverage
+        if "Coverage" in df.columns:
+            v = df.iloc[i-1]["Coverage"]
+            c = table[(i, col_index["Coverage"])]
+
+            c.set_facecolor(
+                "#c7f5cc" if v >= 95
+                else "#fff3bf" if v >= 50
+                else "#ffc9c9"
+            )
+
+        # ACF Real
+        if "ACF Real" in df.columns:
+            c = table[(i, col_index["ACF Real"])]
+            c.set_facecolor("#ffffff")
+
+        # ACF Sim
+        if "ACF Sim" in df.columns:
+            c = table[(i, col_index["ACF Sim"])]
+            c.set_facecolor("#ffffff")
+
+        # ACF Error
+        if "ACF Error" in df.columns:
+            v = df.iloc[i-1]["ACF Error"]
+            c = table[(i, col_index["ACF Error"])]
+
+            c.set_facecolor(
+                "#c7f5cc" if v < 0.05
+                else "#fff3bf" if v < 0.15
+                else "#ffc9c9"
+            )
+
+        # Trajectory MSE
+        if "Trajectory MSE" in df.columns:
+            v = df.iloc[i-1]["Trajectory MSE"]
+            c = table[(i, col_index["Trajectory MSE"])]
+
+            c.set_facecolor(
+                "#c7f5cc" if v < 0.5
+                else "#fff3bf" if v < 2
+                else "#ffc9c9"
+            )
+
+        # Trend Error
+        if "Trend Error" in df.columns:
+            v = df.iloc[i-1]["Trend Error"]
+            c = table[(i, col_index["Trend Error"])]
+
+            c.set_facecolor(
+                "#c7f5cc" if v < 0.05
+                else "#fff3bf" if v < 0.15
+                else "#ffc9c9"
+            )
+
+        # ACF RMSE
+        if "ACF RMSE" in df.columns:
+            v = df.iloc[i-1]["ACF RMSE"]
+            c = table[(i, col_index["ACF RMSE"])]
+
+            c.set_facecolor(
+                "#c7f5cc" if v < 0.05
+                else "#fff3bf" if v < 0.15
+                else "#ffc9c9"
+            )
+
+    plt.title(title, fontsize=14, weight="bold")
     plt.tight_layout()
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    plt.savefig(output_path, dpi=300, bbox_inches="tight")
-    plt.close()
+    plt.savefig(
+        output_path,
+        dpi=300,
+        bbox_inches="tight"
+    )
 
-    print(f"Saved: {output_path}")
+    plt.close()
 
 # ============================================================
 # QUALITY SCORE
-# lower KS + lower error + higher coverage
 # ============================================================
 
 
-df["quality_score"] = (
-    (1 - df["ks_stat"]) * 0.5 +
-    (1 / (1 + df["mean_error"])) * 0.3 +
-    (df["coverage"]) * 0.2
-)
+quality = np.zeros(len(df), dtype=float)
 
-best_configs = df.sort_values(by="quality_score", ascending=False).head(10)
-print("Top 10 quality configs:")
-print(best_configs[["dataset", "quality_score",
-      "ks_stat", "mean_error", "coverage"]])
+if "mean_error" in df.columns:
+    quality += (1 / (1 + df["mean_error"])) * 0.30
 
-# ============================================================
-# PLOT KS STATISTIC
-# ============================================================
+if "rmse" in df.columns:
+    quality += (1 / (1 + df["rmse"])) * 0.18
 
-has_window = "Window" in df.columns and df["Window"].notna().any()
+if "coverage" in df.columns:
+    quality += (df["coverage"] / 100) * 0.18
 
-if has_window:
-    windows = sorted(df["Window"].dropna().unique())
-else:
-    windows = [None]
+if "acf_rmse" in df.columns:
+    quality += (1 / (1 + df["acf_rmse"])) * 0.08
 
-for window in windows:
-    if window is None:
-        subset = df[df["Type"] == "test"]
-        output_name = "ks.svg"
-        title = "KS Statistic vs Time Horizon"
-    else:
-        subset = df[(df["Type"] == "test") & (df["Window"] == window)]
-        output_name = f"ks_window_{window}.svg"
-        title = f"KS Statistic vs Time Horizon (Window={window})"
+if "quality_score" in df.columns:
+    df["quality_score_old"] = df["quality_score"]
+df["quality_score"] = quality
 
-    if subset.empty:
-        print(f"Skipping KS plot for {title}: no rows")
-        continue
+best_cols = ["dataset", "quality_score"]
+for col in ["mean_error", "rmse", "coverage", "acf_rmse"]:
+    if col in df.columns:
+        best_cols.append(col)
 
-    plt.figure(figsize=(8, 5))
+best_configs = df.sort_values(
+    "quality_score",
+    ascending=False
+).head(10)
 
-    for s in sorted(subset["Symbols"].unique()):
-        temp = subset[subset["Symbols"] == s]
-        plt.plot(
-            temp["Time"],
-            temp["ks_stat"],
-            marker="o",
-            label=f"s={s}"
-        )
-
-    plt.xlabel("Time Horizon")
-    plt.ylabel("KS Statistic")
-    plt.title(title)
-    plt.legend()
-    plt.grid(True)
-    plt.savefig(OUTPUT_DIR / output_name, dpi=300, bbox_inches="tight")
-    plt.close()
+print("\nTop 10 configs:\n")
+print(best_configs[best_cols])
 
 # ============================================================
-# SAVE ALL TABLES
+# SAVE TABLES
 # ============================================================
 
 
 def build_groups(display_df):
+
     groups = []
-    has_window = "Window" in display_df.columns and display_df["Window"].notna(
-    ).any()
+
+    has_window = (
+        "Window" in display_df.columns and
+        display_df["Window"].notna().any()
+    )
 
     for dataset_type in ["train", "test"]:
+
         if has_window:
-            for window in sorted(display_df["Window"].dropna().unique()):
+
+            for w in sorted(
+                display_df["Window"].dropna().unique()
+            ):
+
                 subset = display_df[
                     (display_df["Type"] == dataset_type) &
-                    (display_df["Window"] == window)
+                    (display_df["Window"] == w)
                 ].drop(columns=["Type", "Window"])
-                groups.append((dataset_type, window, subset))
+
+                groups.append((dataset_type, w, subset))
+
         else:
-            subset = display_df[display_df["Type"] ==
-                                dataset_type].drop(columns=["Type"])
+
+            subset = display_df[
+                display_df["Type"] == dataset_type
+            ].drop(columns=["Type"])
+
             groups.append((dataset_type, None, subset))
 
     return groups
 
 
 for dataset_type, window, table in build_groups(display_df):
-    if window is None:
-        title = f"{METHOD.upper()} Benchmark ({dataset_type.upper()})"
-        output_file = OUTPUT_DIR / f"{dataset_type}.svg"
-    else:
-        title = f"{METHOD.upper()} Benchmark ({dataset_type.upper()}, Window={window})"
-        output_file = OUTPUT_DIR / f"{dataset_type}_window{window}.svg"
 
-    save_table(table, title, output_file)
+    title = (
+        f"{METHOD.upper()} Benchmark ({dataset_type.upper()})"
+        if window is None else
+        f"{METHOD.upper()} Benchmark ({dataset_type.upper()}, Window={window})"
+    )
+
+    out = (
+        OUTPUT_DIR / f"{dataset_type}.svg"
+        if window is None else
+        OUTPUT_DIR / f"{dataset_type}_w{window}.svg"
+    )
+
+    save_table(table, title, out)
+
+print(f"\nSaved tables to {OUTPUT_DIR}")
+print("\nALL DONE")
